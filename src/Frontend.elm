@@ -130,14 +130,14 @@ view model =
             []
             [ elm_ui_hack_layout
             , Html.br [] []
-            , viewContent model
+            , viewPlaying model
             ]
         ]
     }
 
 
-viewContent : Model -> Html.Html FrontendMsg
-viewContent model =
+viewPlaying : Model -> Html.Html FrontendMsg
+viewPlaying model =
     Element.layoutWith
         { options =
             [ Element.noStaticStyleSheet
