@@ -82,7 +82,7 @@ type alias FrontendModel =
 
 type alias BackendModel =
     { message : String
-    , clicks : Int
+    , totalClicks : Int
     , users : List User
     }
 

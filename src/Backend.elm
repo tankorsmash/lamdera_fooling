@@ -28,7 +28,7 @@ subscriptions model =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { message = "Hello!", clicks = 0, users = [] }
+    ( { message = "Hello!", totalClicks = 0, users = [] }
     , Cmd.none
     )
 
@@ -42,7 +42,7 @@ update msg model =
         OnClientConnect sessionId clientId ->
             ( model
             , Cmd.batch
-                [ Lamdera.sendToFrontend sessionId (NewTotalClicks model.clicks)
+                [ Lamdera.sendToFrontend sessionId (NewTotalClicks model.totalClicks)
                 , Lamdera.sendToFrontend sessionId (NewTotalUsers <| List.length model.users)
                 , case getUserBySessionId model.users sessionId of
                     Just user ->
@@ -64,11 +64,11 @@ updateFromFrontend sessionId clientId msg model =
             let
                 newModel : Model
                 newModel =
-                    { model | clicks = model.clicks + 1 }
+                    { model | totalClicks = model.totalClicks + 1 }
             in
             ( newModel
             , Cmd.batch
-                [ Lamdera.broadcast (NewTotalClicks newModel.clicks)
+                [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                 ]
             )
 
