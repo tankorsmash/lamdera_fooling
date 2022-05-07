@@ -55,15 +55,18 @@ type FrontendMsg
     | UrlChanged Url
     | NoOpFrontendMsg
     | SendClickToBackend
+      -- onboarding
     | TryingOutPersonalityType (Maybe PersonalityType)
     | ResetPersonalityType
     | ConfirmedPersonalityType PersonalityType
+    | FinalizeUser
 
 
 type ToBackend
     = NoOpToBackend
     | ToBackendClick
     | UserChoseToBe PersonalityType
+    | UserFinalizedUser
 
 
 type BackendMsg

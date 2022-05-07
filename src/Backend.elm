@@ -97,4 +97,61 @@ updateFromFrontend sessionId clientId msg model =
                         Nothing ->
                             { model | users = toCreate :: model.users }
             in
-            ( model, Lamdera.sendToFrontend clientId (NewUser toCreate) )
+            ( newModel, Lamdera.sendToFrontend clientId (NewUser toCreate) )
+
+        UserFinalizedUser ->
+            let
+                existingUser =
+                    getUserByClientId model.users clientId
+
+                newModel =
+                    case existingUser of
+                        -- if user exists, replace it
+                        Just user ->
+                            { model
+                                | users =
+                                    List.Extra.updateIf
+                                        (\u ->
+                                            getClientId u
+                                                |> Maybe.map (\cid -> cid == clientId)
+                                                |> Maybe.withDefault False
+                                        )
+                                        (\u ->
+                                            case u of
+                                                AnonymousUser mbp ->
+                                                    u
+
+                                                PreppingUser cid pt ->
+                                                    FullUser cid pt
+
+                                                FullUser cid pt ->
+                                                    u
+                                        )
+                                        model.users
+                            }
+
+                        -- otherwise do nothing
+                        Nothing ->
+                            let
+                                _ =
+                                    Debug.log "no match" 123
+                            in
+                            model
+            in
+            ( newModel
+            , getUserByClientId newModel.users clientId
+                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                |> Maybe.withDefault Cmd.none
+            )
+
+
+getUserByClientId : List User -> ClientId -> Maybe User
+getUserByClientId users clientId =
+    users
+        |> List.filter
+            (\user ->
+                getClientId user
+                    |> Maybe.map (\cid -> cid == clientId)
+                    |> Maybe.withDefault False
+            )
+        |> List.head

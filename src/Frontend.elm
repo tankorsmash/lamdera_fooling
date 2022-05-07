@@ -112,6 +112,9 @@ update msg model =
         ConfirmedPersonalityType personalityType ->
             ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
 
+        FinalizeUser ->
+            ( model, Lamdera.sendToBackend (UserFinalizedUser))
+
 
 
 -- end of update
@@ -176,13 +179,44 @@ view model =
                         viewAnon model maybePersonalityType
 
                     PreppingUser clientId personalityType ->
-                        viewPlaying model personalityType
+                        viewPrepping model personalityType
 
                     FullUser clientId personalityType ->
                         viewPlaying model personalityType
             ]
         ]
     }
+
+
+viewPrepping : Model -> PersonalityType -> Element FrontendMsg
+viewPrepping model personalityType =
+    let
+        _ =
+            123
+    in
+    column [ width fill, Font.center, height fill, spacing 10 ]
+        [ text <|
+            (++) "You are: " <|
+                case personalityType of
+                    Idealistic ->
+                        "idealistic, and are going to have the best outcome possible."
+
+                    Realistic ->
+                        "realistic, and trying to make due with what you have."
+        , text "You're going to have to click a lot no matter who you are."
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Secondary
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = FinalizeUser
+                , textLabel = "Are you sure?"
+                , colorTheme = UI.BrightTheme
+                }
+        ]
 
 
 viewAnon : Model -> Maybe PersonalityType -> Element FrontendMsg
