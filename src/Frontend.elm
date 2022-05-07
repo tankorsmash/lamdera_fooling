@@ -2,9 +2,43 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav
-import Html
+import Element
+    exposing
+        ( Color
+        , Element
+        , alignBottom
+        , alignLeft
+        , alignRight
+        , alignTop
+        , centerX
+        , centerY
+        , column
+        , el
+        , explain
+        , fill
+        , fillPortion
+        , height
+        , modular
+        , padding
+        , paddingXY
+        , paragraph
+        , rgb
+        , rgb255
+        , row
+        , scrollbars
+        , spacing
+        , spacingXY
+        , text
+        , width
+        )
+import Element.Background as Background
+import Element.Border as Border
+import Element.Events as Events
+import Element.Font as Font
+import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
+import Interface as UI
 import Lamdera
 import Types exposing (FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..))
 import Url
@@ -73,17 +107,65 @@ updateFromBackend msg model =
 
 view : Model -> Browser.Document FrontendMsg
 view model =
+    let
+        elm_ui_hack_layout =
+            div [ Attr.style "height" "0" ]
+                [ Element.layoutWith
+                    { options =
+                        [ Element.focusStyle
+                            { borderColor = Nothing
+                            , backgroundColor = Nothing
+                            , shadow = Nothing
+                            }
+                        ]
+                    }
+                    [ Element.htmlAttribute <| Attr.id "hack" ]
+                  <|
+                    Element.none
+                ]
+    in
     { title = "Testing Lamdera | TankorSmash"
     , body =
-        [ Html.div [ Attr.style "text-align" "center", Attr.style "padding-top" "40px" ]
-            [ Html.div
-                [ Attr.style "font-family" "sans-serif"
-                , Attr.style "padding-top" "40px"
-                ]
-                [ Html.text model.message
-                , Html.div [ Html.Events.onClick SendClickToBackend ] [ Html.text "CLICK ME" ]
-                , Html.div [] [ Html.text <| String.fromInt model.clicksFromBackend ]
-                ]
+        [ div
+            []
+            [ elm_ui_hack_layout
+            , Html.br [] []
+            , viewContent model
             ]
         ]
     }
+
+
+viewContent : Model -> Html.Html FrontendMsg
+viewContent model =
+    Element.layoutWith
+        { options =
+            [ Element.noStaticStyleSheet
+            , Element.focusStyle
+                { borderColor = Nothing
+                , backgroundColor = Nothing
+                , shadow = Nothing
+                }
+            ]
+        }
+        [ width fill
+        , height fill
+        , padding 20
+        , Element.htmlAttribute <| Attr.id "elm_ui_layout"
+        ]
+    <|
+        column [ width fill, height fill, spacing 10 ]
+            [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.clicksFromBackend
+            , UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , Font.size 24
+                        ]
+                    , onPressMsg = SendClickToBackend
+                    , textLabel = "Click Me"
+                    , colorTheme = UI.BrightTheme
+                    }
+            ]
