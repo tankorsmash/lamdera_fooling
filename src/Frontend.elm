@@ -210,22 +210,23 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width Element.shrink ]
+        , Input.username [ width fill, centerX ]
             { onChange = ChangedUsername
             , text = model.username
             , placeholder =
                 Just
                     (Input.placeholder []
-                        (text <|
-                            case personalityType of
-                                Idealistic ->
-                                    "AnIdeal1st321"
+                        (UI.monospace [] <|
+                            text <|
+                                case personalityType of
+                                    Idealistic ->
+                                        "AnIdeal1st321"
 
-                                Realistic ->
-                                    "R3al1tyB1t3s"
+                                    Realistic ->
+                                        "R3al1tyB1t3s"
                         )
                     )
-            , label = Input.labelAbove [] <| text "Your username (you can be anyone)"
+            , label = Input.labelLeft [] <| text "You can be anyone..."
             }
         , text "You're going to have to click a lot no matter who you are."
         , if String.length model.username > 5 then
