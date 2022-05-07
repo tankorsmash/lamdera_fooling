@@ -121,6 +121,9 @@ update msg model =
         FinalizeUser ->
             ( model, Lamdera.sendToBackend <| UserFinalizedUser model.username )
 
+        LogUserOut ->
+            ( model, Lamdera.sendToBackend <| UserLoggedOut )
+
 
 
 -- end of update
@@ -392,6 +395,18 @@ viewPlaying model personalityType =
                     ]
                 , onPressMsg = SendClickToBackend
                 , textLabel = "Click Me"
+                , colorTheme = UI.BrightTheme
+                }
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = LogUserOut
+                , textLabel = "Log me the heck out"
                 , colorTheme = UI.BrightTheme
                 }
         ]

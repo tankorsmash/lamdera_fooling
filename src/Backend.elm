@@ -143,16 +143,47 @@ updateFromFrontend sessionId clientId msg model =
 
                         -- otherwise do nothing
                         Nothing ->
-                            let
-                                _ =
-                                    Debug.log "no match" 123
-                            in
                             model
             in
             ( newModel
             , getUserBySessionId newModel.users sessionId
                 |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
                 |> Maybe.withDefault Cmd.none
+            )
+
+        UserLoggedOut ->
+            let
+                existingUser =
+                    getUserBySessionId model.users sessionId
+
+                toCreate =
+                    AnonymousUser Nothing
+
+                newModel =
+                    { model
+                        | users =
+                            List.Extra.updateIf
+                                (\u ->
+                                    getSessionId u
+                                        |> Maybe.map (\cid -> cid == sessionId)
+                                        |> Maybe.withDefault False
+                                )
+                                (\u ->
+                                    case u of
+                                        AnonymousUser _ ->
+                                            u
+
+                                        PreppingUser sid pt ->
+                                            toCreate
+
+                                        FullUser userData ->
+                                            FullUser { userData | sessionId = Nothing }
+                                )
+                                model.users
+                    }
+            in
+            ( newModel
+            , Lamdera.sendToFrontend sessionId <| NewUser toCreate
             )
 
 

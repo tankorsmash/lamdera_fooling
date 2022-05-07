@@ -98,6 +98,8 @@ type FrontendMsg
     | ConfirmedPersonalityType PersonalityType
     | ChangedUsername String
     | FinalizeUser
+    -- playing messages
+    | LogUserOut
 
 
 type ToBackend
@@ -105,6 +107,7 @@ type ToBackend
     | ToBackendClick
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String
+    | UserLoggedOut
 
 
 type BackendMsg
