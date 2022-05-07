@@ -110,7 +110,7 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( newModel, Lamdera.sendToFrontend sessionId (NewUser toCreate) )
 
-        UserFinalizedUser ->
+        UserFinalizedUser username ->
             let
                 existingUser =
                     getUserBySessionId model.users sessionId
@@ -132,10 +132,10 @@ updateFromFrontend sessionId clientId msg model =
                                                 AnonymousUser mbp ->
                                                     u
 
-                                                PreppingUser cid pt ->
-                                                    FullUser cid pt
+                                                PreppingUser sessionId_ personalityType ->
+                                                    FullUser { sessionId = Just sessionId_, username = username, personalityType = personalityType }
 
-                                                FullUser cid pt ->
+                                                FullUser userData ->
                                                     u
                                         )
                                         model.users
@@ -163,5 +163,17 @@ getUserBySessionId users sessionId =
             (getSessionId
                 >> Maybe.map ((==) sessionId)
                 >> Maybe.withDefault False
+            )
+        |> List.head
+
+
+getUserByUsername : List User -> String -> Maybe User
+getUserByUsername users username =
+    users
+        |> List.filter
+            (\u ->
+                mapUserData u .username
+                    |> Maybe.map ((==) username)
+                    |> Maybe.withDefault False
             )
         |> List.head

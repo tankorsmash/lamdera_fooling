@@ -35,6 +35,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
+import Element.Input as Input
 import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
@@ -66,6 +67,7 @@ initModel key =
     , message = "Now this is different"
     , clicksFromBackend = 0
     , user = AnonymousUser Nothing
+    , username = ""
 
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
@@ -113,8 +115,11 @@ update msg model =
         ConfirmedPersonalityType personalityType ->
             ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
 
+        ChangedUsername username ->
+            ( { model | username = username }, Cmd.none )
+
         FinalizeUser ->
-            ( model, Lamdera.sendToBackend UserFinalizedUser )
+            ( model, Lamdera.sendToBackend <| UserFinalizedUser model.username )
 
 
 
@@ -176,6 +181,7 @@ view model =
                 , height fill
                 , padding 20
                 , Element.htmlAttribute <| Attr.id "elm_ui_layout"
+                , centerX
                 ]
               <|
                 case model.user of
@@ -185,7 +191,7 @@ view model =
                     PreppingUser clientId personalityType ->
                         viewPrepping model personalityType
 
-                    FullUser clientId personalityType ->
+                    FullUser { personalityType } ->
                         viewPlaying model personalityType
             ]
         ]
@@ -194,28 +200,51 @@ view model =
 
 viewPrepping : Model -> PersonalityType -> Element FrontendMsg
 viewPrepping model personalityType =
-    column [ width fill, Font.center, height fill, spacing 10 ]
+    column [ centerX, Font.center, height fill, spacing 10 ]
         [ text <|
-            (++) "You are: " <|
+            (++) "You are " <|
                 case personalityType of
                     Idealistic ->
                         "idealistic, and are going to have the best outcome possible."
 
                     Realistic ->
                         "realistic, and trying to make due with what you have."
+        , text "What would they call you?"
+        , Input.username [ width Element.shrink ]
+            { onChange = ChangedUsername
+            , text = model.username
+            , placeholder =
+                Just
+                    (Input.placeholder []
+                        (text <|
+                            case personalityType of
+                                Idealistic ->
+                                    "AnIdeal1st321"
+
+                                Realistic ->
+                                    "R3al1tyB1t3s"
+                        )
+                    )
+            , label = Input.labelAbove [] <| text "Your username (you can be anyone)"
+            }
         , text "You're going to have to click a lot no matter who you are."
-        , UI.button <|
-            UI.TextParams
-                { buttonType = UI.Secondary
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , Font.size 24
-                    ]
-                , onPressMsg = FinalizeUser
-                , textLabel = "Are you sure?"
-                , colorTheme = UI.BrightTheme
-                }
+        , if String.length model.username > 5 then
+            el [ padding 30, centerX ] <|
+                UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Secondary
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , Font.size 24
+                            ]
+                        , onPressMsg = FinalizeUser
+                        , textLabel = "Are you sure?"
+                        , colorTheme = UI.BrightTheme
+                        }
+
+          else
+            Element.none
         ]
 
 
