@@ -1,11 +1,11 @@
-module Frontend exposing (..)
+module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav
 import Html
 import Html.Attributes as Attr
 import Lamdera
-import Types exposing (..)
+import Types exposing (FrontendModel, FrontendMsg(..), ToFrontend)
 import Url
 
 
@@ -59,7 +59,7 @@ update msg model =
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
-        NoOpToFrontend ->
+        noOpToFrontend ->
             ( model, Cmd.none )
 
 
