@@ -40,7 +40,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..))
+import Types exposing (FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
 import Url
 
 
@@ -60,12 +60,18 @@ app =
         }
 
 
+initModel : Nav.Key -> Model
+initModel key =
+    { key = key
+    , message = "Now this is different"
+    , clicksFromBackend = 0
+    , user = AnonymousUser
+    }
+
+
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
 init url key =
-    ( { key = key
-      , message = "Now this is different"
-      , clicksFromBackend = 0
-      }
+    ( initModel key
     , Cmd.none
     )
 
@@ -146,10 +152,59 @@ view model =
                 , Element.htmlAttribute <| Attr.id "elm_ui_layout"
                 ]
               <|
-                viewPlaying model
+                case model.user of
+                    AnonymousUser ->
+                        viewAnon model
+
+                    PreppingUser ->
+                        viewPlaying model
+
+                    PreppedUser ->
+                        viewPlaying model
             ]
         ]
     }
+
+
+viewAnon : Model -> Element FrontendMsg
+viewAnon model =
+    let
+        numRegisteredUsers =
+            123
+
+        currentlyActiveUsers =
+            31
+
+        viewChoice sideText =
+            el
+                [ alignLeft
+                , width (fillPortion 1)
+                , Element.pointer
+                , Element.mouseOver [ Background.color <| UI.color_light_grey ]
+                , Border.rounded 2
+                , UI.noUserSelect
+                ]
+            <|
+                paragraph [ padding 10 ] [ text sideText ]
+    in
+    column [ width fill, Font.center, height fill, spacing 10 ]
+        [ paragraph [] [ text <| "You are a nobody." ]
+        , paragraph []
+            [ text <| "There are " ++ String.fromInt numRegisteredUsers ++ " people around you doing something."
+            , text <| " And " ++ String.fromInt currentlyActiveUsers ++ " of them are even doing something right now."
+            ]
+        , paragraph [] [ text "Be somebody." ]
+
+        -- choices
+        , row [ centerX, width (fill |> Element.maximum 1000), padding 20 ]
+            [ viewChoice "Be somebody you want to be"
+            , el [ width (fillPortion 7) ] <| Element.none
+            , viewChoice "Be somebody you never could be "
+            ]
+
+        -- extra text
+        , paragraph [ Font.size <| UI.scaled 1 ] [ text <| "...pick a side so you can finally fit in" ]
+        ]
 
 
 viewPlaying : Model -> Element FrontendMsg

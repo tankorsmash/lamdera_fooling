@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..))
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -6,10 +6,20 @@ import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
 
 
+type User
+    = --user on home screen
+      AnonymousUser
+      -- user choosing a side
+    | PreppingUser
+      -- chosen side and logged in
+    | PreppedUser
+
+
 type alias FrontendModel =
     { key : Key
     , message : String
     , clicksFromBackend : Int
+    , user : User
     }
 
 
