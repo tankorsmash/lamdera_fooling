@@ -2,6 +2,7 @@ module Backend exposing (..)
 
 import Html
 import Lamdera exposing (ClientId, SessionId)
+import List.Extra
 import Types exposing (..)
 
 
@@ -61,4 +62,39 @@ updateFromFrontend sessionId clientId msg model =
             )
 
         UserChoseToBe personalityType ->
-            ( model, Cmd.none )
+            let
+                existingUser =
+                    model.users
+                        |> List.filter
+                            (\user ->
+                                getClientId user
+                                    |> Maybe.map (\cid -> cid == clientId)
+                                    |> Maybe.withDefault False
+                            )
+                        |> List.head
+
+                toCreate : User
+                toCreate =
+                    PreppingUser clientId personalityType
+
+                newModel =
+                    case existingUser of
+                        -- if user exists, replace it
+                        Just user ->
+                            { model
+                                | users =
+                                    List.Extra.updateIf
+                                        (\u ->
+                                            getClientId u
+                                                |> Maybe.map (\cid -> cid == clientId)
+                                                |> Maybe.withDefault False
+                                        )
+                                        (always toCreate)
+                                        model.users
+                            }
+
+                        -- otherwise add it
+                        Nothing ->
+                            { model | users = toCreate :: model.users }
+            in
+            ( model, Lamdera.sendToFrontend clientId  (NewUser toCreate)  )

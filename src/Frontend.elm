@@ -126,6 +126,9 @@ updateFromBackend msg model =
         NewTotalClicks totalClicks ->
             ( { model | clicksFromBackend = totalClicks }, Cmd.none )
 
+        NewUser user ->
+            ( { model | user = user }, Cmd.none )
+
 
 view : Model -> Browser.Document FrontendMsg
 view model =
@@ -172,11 +175,11 @@ view model =
                     AnonymousUser maybePersonalityType ->
                         viewAnon model maybePersonalityType
 
-                    PreppingUser clientId ->
-                        viewPlaying model
+                    PreppingUser clientId personalityType ->
+                        viewPlaying model personalityType
 
-                    PreppedUser clientId ->
-                        viewPlaying model
+                    FullUser clientId personalityType ->
+                        viewPlaying model personalityType
             ]
         ]
     }
@@ -312,8 +315,8 @@ viewAnon model maybePersonalityType =
         ]
 
 
-viewPlaying : Model -> Element FrontendMsg
-viewPlaying model =
+viewPlaying : Model -> PersonalityType -> Element FrontendMsg
+viewPlaying model personalityType =
     column [ width fill, height fill, spacing 10 ]
         [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.clicksFromBackend
         , UI.button <|

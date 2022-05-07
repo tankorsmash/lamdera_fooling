@@ -1,4 +1,4 @@
-module Types exposing (PersonalityType(..), BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
+module Types exposing (getClientId, BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..))
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -15,9 +15,24 @@ type User
     = --user on home screen
       AnonymousUser (Maybe PersonalityType)
       -- user choosing a side
-    | PreppingUser ClientId
+    | PreppingUser ClientId PersonalityType
       -- chosen side and logged in
-    | PreppedUser ClientId
+    | FullUser ClientId PersonalityType
+
+
+{-| get client id from user, if possible
+-}
+getClientId : User -> Maybe ClientId
+getClientId user =
+    case user of
+        AnonymousUser _ ->
+            Nothing
+
+        PreppingUser clientId _ ->
+            Just clientId
+
+        FullUser clientId _ ->
+            Just clientId
 
 
 type alias FrontendModel =
@@ -59,3 +74,4 @@ type BackendMsg
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
+    | NewUser User
