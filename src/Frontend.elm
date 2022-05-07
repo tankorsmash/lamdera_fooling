@@ -104,7 +104,7 @@ update msg model =
             ( model, Cmd.none )
 
         SendClickToBackend ->
-            ( model, Lamdera.sendToBackend ToBackendClick )
+            ( model, Lamdera.sendToBackend UserGainedAClick )
 
         TryingOutPersonalityType personalityType ->
             ( { model | user = AnonymousUser personalityType }, Cmd.none )

@@ -60,7 +60,7 @@ updateFromFrontend sessionId clientId msg model =
         NoOpToBackend ->
             ( model, Cmd.none )
 
-        ToBackendClick ->
+        UserGainedAClick ->
             let
                 newModel : Model
                 newModel =

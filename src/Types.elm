@@ -104,7 +104,7 @@ type FrontendMsg
 
 type ToBackend
     = NoOpToBackend
-    | ToBackendClick
+    | UserGainedAClick
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String
     | UserLoggedOut
