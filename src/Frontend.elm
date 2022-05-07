@@ -3,10 +3,10 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav
 import Html
-import Html.Events
 import Html.Attributes as Attr
+import Html.Events
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), ToFrontend(..),  ToBackend(..))
+import Types exposing (FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..))
 import Url
 
 
@@ -68,7 +68,7 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         NewTotalClicks totalClicks ->
-            ( { model | clicksFromBackend = totalClicks}, Cmd.none)
+            ( { model | clicksFromBackend = totalClicks }, Cmd.none )
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -76,14 +76,13 @@ view model =
     { title = "Testing Lamdera | TankorSmash"
     , body =
         [ Html.div [ Attr.style "text-align" "center", Attr.style "padding-top" "40px" ]
-            [ Html.img [ Attr.src "https://lamdera.app/lamdera-logo-black.png", Attr.width 150 ] []
-            , Html.div
+            [ Html.div
                 [ Attr.style "font-family" "sans-serif"
                 , Attr.style "padding-top" "40px"
                 ]
                 [ Html.text model.message
-                , Html.div [Html.Events.onClick SendClickToBackend] [ Html.text  "CLICK ME"]
-                , Html.div [] [ Html.text  <| String.fromInt model.clicksFromBackend]
+                , Html.div [ Html.Events.onClick SendClickToBackend ] [ Html.text "CLICK ME" ]
+                , Html.div [] [ Html.text <| String.fromInt model.clicksFromBackend ]
                 ]
             ]
         ]
