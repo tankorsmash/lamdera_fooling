@@ -67,8 +67,10 @@ initModel key =
     , clicksFromBackend = 0
     , user = AnonymousUser Nothing
 
+
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
+    , totalUsers = 0
     }
 
 
@@ -132,6 +134,8 @@ updateFromBackend msg model =
         NewUser user ->
             ( { model | user = user }, Cmd.none )
 
+        NewTotalUsers totalUsers ->
+            ( {model | totalUsers = totalUsers}, Cmd.none)
 
 view : Model -> Browser.Document FrontendMsg
 view model =
@@ -190,10 +194,6 @@ view model =
 
 viewPrepping : Model -> PersonalityType -> Element FrontendMsg
 viewPrepping model personalityType =
-    let
-        _ =
-            123
-    in
     column [ width fill, Font.center, height fill, spacing 10 ]
         [ text <|
             (++) "You are: " <|
@@ -223,7 +223,7 @@ viewAnon : Model -> Maybe PersonalityType -> Element FrontendMsg
 viewAnon model maybePersonalityType =
     let
         numRegisteredUsers =
-            123
+            model.totalUsers
 
         currentlyActiveUsers =
             31

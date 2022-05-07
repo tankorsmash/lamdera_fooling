@@ -40,7 +40,10 @@ update msg model =
             ( model, Cmd.none )
 
         OnClientConnect sessionId clientId ->
-            ( model, Lamdera.sendToFrontend clientId (NewTotalClicks model.clicks) )
+            ( model, Cmd.batch
+                [Lamdera.sendToFrontend clientId (NewTotalClicks model.clicks)
+                , Lamdera.sendToFrontend clientId (NewTotalUsers <| List.length model.users)
+                ])
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )

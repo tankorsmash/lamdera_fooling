@@ -40,6 +40,7 @@ type alias FrontendModel =
     , message : String
     , clicksFromBackend : Int
     , user : User
+    , totalUsers : Int
     }
 
 
@@ -78,3 +79,4 @@ type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
     | NewUser User
+    | NewTotalUsers Int
