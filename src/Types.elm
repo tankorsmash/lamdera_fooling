@@ -1,8 +1,8 @@
-module Types exposing (..)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..))
 
-import Lamdera exposing (ClientId, SessionId)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
 
 
