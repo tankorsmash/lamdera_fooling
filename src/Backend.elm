@@ -20,8 +20,9 @@ app =
 
 subscriptions : Model -> Sub BackendMsg
 subscriptions model =
-        Lamdera.onConnect OnClientConnect
-        
+    Sub.batch
+        [ Lamdera.onConnect OnClientConnect
+        ]
 
 
 init : ( Model, Cmd BackendMsg )
@@ -59,7 +60,6 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( newModel
             , Cmd.batch
-                [ Lamdera.sendToFrontend clientId (NewTotalClicks newModel.clicks)
-                , Lamdera.broadcast (NewTotalClicks newModel.clicks)
+                [ Lamdera.broadcast (NewTotalClicks newModel.clicks)
                 ]
             )
