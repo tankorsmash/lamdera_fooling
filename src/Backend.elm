@@ -18,6 +18,11 @@ app =
         }
 
 
+subscriptions : Model -> Sub BackendMsg
+subscriptions model =
+    Sub.none
+
+
 init : ( Model, Cmd BackendMsg )
 init =
     ( { message = "Hello!", clicks = 0 }
