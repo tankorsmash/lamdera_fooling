@@ -40,7 +40,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
+import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..))
 import Url
 
 
@@ -65,7 +65,11 @@ initModel key =
     { key = key
     , message = "Now this is different"
     , clicksFromBackend = 0
-    , user = AnonymousUser
+
+    -- , user = AnonymousUser (Nothing)
+    , user = AnonymousUser (Just Idealistic)
+
+    -- , user = AnonymousUser (Just Realistic)
     }
 
 
@@ -153,8 +157,8 @@ view model =
                 ]
               <|
                 case model.user of
-                    AnonymousUser ->
-                        viewAnon model
+                    AnonymousUser maybePersonalityType ->
+                        viewAnon model maybePersonalityType
 
                     PreppingUser ->
                         viewPlaying model
@@ -166,8 +170,8 @@ view model =
     }
 
 
-viewAnon : Model -> Element FrontendMsg
-viewAnon model =
+viewAnon : Model -> Maybe PersonalityType -> Element FrontendMsg
+viewAnon model maybePersonalityType =
     let
         numRegisteredUsers =
             123
@@ -186,20 +190,67 @@ viewAnon model =
                 ]
             <|
                 paragraph [ padding 10 ] [ text sideText ]
+
+        youAreText =
+            maybePersonalityType
+                |> Maybe.map
+                    (\personalityType ->
+                        case personalityType of
+                            Idealistic ->
+                                "idealistic person"
+
+                            Realistic ->
+                                "realistic person"
+                    )
+                |> Maybe.withDefault "nobody"
+
+        realisticText =
+            maybePersonalityType
+                |> Maybe.map
+                    (\personalityType ->
+                        case personalityType of
+                            Idealistic ->
+                                "know you'd have to be if things didn't work out"
+
+                            Realistic ->
+                                "you know you have to be"
+                    )
+                |> Maybe.withDefault "you have to be"
+
+        idealisticText =
+            maybePersonalityType
+                |> Maybe.map
+                    (\personalityType ->
+                        case personalityType of
+                            Idealistic ->
+                                "know you are going to be"
+
+                            Realistic ->
+                                "you know you don't have a chance to be"
+                    )
+                |> Maybe.withDefault "you want to be"
     in
     column [ width fill, Font.center, height fill, spacing 10 ]
-        [ paragraph [] [ text <| "You are a nobody." ]
+        [ paragraph [] [ text <| "You are a " ++ youAreText ++ "." ]
         , paragraph []
             [ text <| "There are " ++ String.fromInt numRegisteredUsers ++ " people around you doing something."
             , text <| " And " ++ String.fromInt currentlyActiveUsers ++ " of them are even doing something right now."
             ]
-        , paragraph [] [ text "Be somebody." ]
+        , paragraph []
+            [ text <|
+                "Be somebody"
+                    ++ (maybePersonalityType
+                            |> Maybe.map (always " else")
+                            |> Maybe.withDefault ""
+                       )
+                    ++ "."
+            ]
 
         -- choices
         , row [ centerX, width (fill |> Element.maximum 1000), padding 20 ]
-            [ viewChoice "Be somebody you want to be"
-            , el [ width (fillPortion 7) ] <| Element.none
-            , viewChoice "Be somebody you never could be "
+            [ viewChoice <| "Be somebody " ++ realisticText
+            , el [ width (fillPortion 3) ] <| Element.none
+            , viewChoice <| "Be somebody " ++ idealisticText
             ]
 
         -- extra text

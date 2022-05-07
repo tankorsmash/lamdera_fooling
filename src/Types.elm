@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
+module Types exposing (PersonalityType(..), BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), ToBackend(..), ToFrontend(..), User(..))
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -6,9 +6,14 @@ import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
 
 
+type PersonalityType
+    = Idealistic
+    | Realistic
+
+
 type User
     = --user on home screen
-      AnonymousUser
+      AnonymousUser (Maybe PersonalityType)
       -- user choosing a side
     | PreppingUser
       -- chosen side and logged in
