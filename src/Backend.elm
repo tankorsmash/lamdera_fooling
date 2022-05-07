@@ -44,4 +44,9 @@ updateFromFrontend sessionId clientId msg model =
                 newModel =
                     { model | clicks = model.clicks + 1 }
             in
-            ( newModel, Lamdera.sendToFrontend clientId (NewTotalClicks newModel.clicks) )
+            ( newModel
+            , Cmd.batch
+                [ Lamdera.sendToFrontend clientId (NewTotalClicks newModel.clicks)
+                , Lamdera.broadcast (NewTotalClicks newModel.clicks)
+                ]
+            )
