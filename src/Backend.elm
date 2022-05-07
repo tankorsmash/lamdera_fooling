@@ -1,7 +1,7 @@
 module Backend exposing (..)
 
 import Html
-import Lamdera exposing (ClientId, SessionId)
+import Lamdera exposing (SessionId)
 import List.Extra
 import Types exposing (..)
 
@@ -40,13 +40,21 @@ update msg model =
             ( model, Cmd.none )
 
         OnClientConnect sessionId clientId ->
-            ( model, Cmd.batch
-                [Lamdera.sendToFrontend clientId (NewTotalClicks model.clicks)
-                , Lamdera.sendToFrontend clientId (NewTotalUsers <| List.length model.users)
-                ])
+            ( model
+            , Cmd.batch
+                [ Lamdera.sendToFrontend sessionId (NewTotalClicks model.clicks)
+                , Lamdera.sendToFrontend sessionId (NewTotalUsers <| List.length model.users)
+                , case getUserBySessionId model.users sessionId of
+                    Just user ->
+                        Lamdera.sendToFrontend sessionId (NewUser user)
+
+                    Nothing ->
+                        Cmd.none
+                ]
+            )
 
 
-updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
         NoOpToBackend ->
@@ -70,15 +78,15 @@ updateFromFrontend sessionId clientId msg model =
                     model.users
                         |> List.filter
                             (\user ->
-                                getClientId user
-                                    |> Maybe.map (\cid -> cid == clientId)
+                                getSessionId user
+                                    |> Maybe.map (\cid -> cid == sessionId)
                                     |> Maybe.withDefault False
                             )
                         |> List.head
 
                 toCreate : User
                 toCreate =
-                    PreppingUser clientId personalityType
+                    PreppingUser sessionId personalityType
 
                 newModel =
                     case existingUser of
@@ -88,8 +96,8 @@ updateFromFrontend sessionId clientId msg model =
                                 | users =
                                     List.Extra.updateIf
                                         (\u ->
-                                            getClientId u
-                                                |> Maybe.map (\cid -> cid == clientId)
+                                            getSessionId u
+                                                |> Maybe.map (\cid -> cid == sessionId)
                                                 |> Maybe.withDefault False
                                         )
                                         (always toCreate)
@@ -100,12 +108,12 @@ updateFromFrontend sessionId clientId msg model =
                         Nothing ->
                             { model | users = toCreate :: model.users }
             in
-            ( newModel, Lamdera.sendToFrontend clientId (NewUser toCreate) )
+            ( newModel, Lamdera.sendToFrontend sessionId (NewUser toCreate) )
 
         UserFinalizedUser ->
             let
                 existingUser =
-                    getUserByClientId model.users clientId
+                    getUserBySessionId model.users sessionId
 
                 newModel =
                     case existingUser of
@@ -115,8 +123,8 @@ updateFromFrontend sessionId clientId msg model =
                                 | users =
                                     List.Extra.updateIf
                                         (\u ->
-                                            getClientId u
-                                                |> Maybe.map (\cid -> cid == clientId)
+                                            getSessionId u
+                                                |> Maybe.map (\cid -> cid == sessionId)
                                                 |> Maybe.withDefault False
                                         )
                                         (\u ->
@@ -142,18 +150,18 @@ updateFromFrontend sessionId clientId msg model =
                             model
             in
             ( newModel
-            , getUserByClientId newModel.users clientId
-                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+            , getUserBySessionId newModel.users sessionId
+                |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
                 |> Maybe.withDefault Cmd.none
             )
 
 
-getUserByClientId : List User -> ClientId -> Maybe User
-getUserByClientId users clientId =
+getUserBySessionId : List User -> SessionId -> Maybe User
+getUserBySessionId users sessionId =
     users
         |> List.filter
-            (getClientId
-                >> Maybe.map ((==) clientId)
+            (getSessionId
+                >> Maybe.map ((==) sessionId)
                 >> Maybe.withDefault False
             )
         |> List.head

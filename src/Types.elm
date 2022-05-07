@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getClientId)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -15,15 +15,15 @@ type User
     = --user on home screen
       AnonymousUser (Maybe PersonalityType)
       -- user choosing a side
-    | PreppingUser ClientId PersonalityType
+    | PreppingUser SessionId PersonalityType
       -- chosen side and logged in
-    | FullUser ClientId PersonalityType
+    | FullUser SessionId PersonalityType
 
 
 {-| get client id from user, if possible
 -}
-getClientId : User -> Maybe ClientId
-getClientId user =
+getSessionId : User -> Maybe SessionId
+getSessionId user =
     case user of
         AnonymousUser _ ->
             Nothing

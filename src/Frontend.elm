@@ -67,7 +67,6 @@ initModel key =
     , clicksFromBackend = 0
     , user = AnonymousUser Nothing
 
-
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
@@ -115,7 +114,7 @@ update msg model =
             ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
 
         FinalizeUser ->
-            ( model, Lamdera.sendToBackend (UserFinalizedUser))
+            ( model, Lamdera.sendToBackend UserFinalizedUser )
 
 
 
@@ -135,7 +134,8 @@ updateFromBackend msg model =
             ( { model | user = user }, Cmd.none )
 
         NewTotalUsers totalUsers ->
-            ( {model | totalUsers = totalUsers}, Cmd.none)
+            ( { model | totalUsers = totalUsers }, Cmd.none )
+
 
 view : Model -> Browser.Document FrontendMsg
 view model =
