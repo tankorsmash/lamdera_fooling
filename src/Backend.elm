@@ -39,10 +39,6 @@ update msg model =
             ( model, Cmd.none )
 
         OnClientConnect sessionId clientId ->
-            let
-                _ =
-                    Debug.log "OnClientConnect backend" 123
-            in
             ( model, Lamdera.sendToFrontend clientId (NewTotalClicks model.clicks) )
 
 

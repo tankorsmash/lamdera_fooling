@@ -68,7 +68,7 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         NewTotalClicks totalClicks ->
-            Debug.log "new totalClicks frontend" <| ( { model | clicksFromBackend = totalClicks}, Cmd.none)
+            ( { model | clicksFromBackend = totalClicks}, Cmd.none)
 
 
 view : Model -> Browser.Document FrontendMsg
