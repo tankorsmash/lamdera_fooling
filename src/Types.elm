@@ -1,4 +1,4 @@
-module Types exposing (mapUserData, BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, mapUserData)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -98,7 +98,7 @@ type FrontendMsg
     | ConfirmedPersonalityType PersonalityType
     | ChangedUsername String
     | FinalizeUser
-    -- playing messages
+      -- playing messages
     | LogUserOut
 
 
