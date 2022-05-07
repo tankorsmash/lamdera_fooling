@@ -149,7 +149,7 @@ view : Model -> Browser.Document FrontendMsg
 view model =
     let
         elm_ui_hack_layout =
-            div [ Attr.style "height" "0" ]
+            div [ Attr.style "height" "0"]
                 [ Element.layoutWith
                     { options =
                         [ Element.focusStyle
@@ -167,7 +167,6 @@ view model =
     { title = "Testing Lamdera | TankorSmash"
     , body =
         [ elm_ui_hack_layout
-        , Html.br [] []
         , Element.layoutWith
             { options =
                 [ Element.noStaticStyleSheet
