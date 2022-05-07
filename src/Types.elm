@@ -15,9 +15,9 @@ type User
     = --user on home screen
       AnonymousUser (Maybe PersonalityType)
       -- user choosing a side
-    | PreppingUser
+    | PreppingUser ClientId
       -- chosen side and logged in
-    | PreppedUser
+    | PreppedUser ClientId
 
 
 type alias FrontendModel =
@@ -31,6 +31,7 @@ type alias FrontendModel =
 type alias BackendModel =
     { message : String
     , clicks : Int
+    , users : List User
     }
 
 
@@ -39,11 +40,15 @@ type FrontendMsg
     | UrlChanged Url
     | NoOpFrontendMsg
     | SendClickToBackend
+    | TryingOutPersonalityType (Maybe PersonalityType)
+    | ResetPersonalityType
+    | ConfirmedPersonalityType PersonalityType
 
 
 type ToBackend
     = NoOpToBackend
     | ToBackendClick
+    | UserChoseToBe PersonalityType
 
 
 type BackendMsg

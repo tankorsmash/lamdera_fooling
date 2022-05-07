@@ -27,7 +27,7 @@ subscriptions model =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { message = "Hello!", clicks = 0 }
+    ( { message = "Hello!", clicks = 0, users = [] }
     , Cmd.none
     )
 
@@ -59,3 +59,6 @@ updateFromFrontend sessionId clientId msg model =
                 [ Lamdera.broadcast (NewTotalClicks newModel.clicks)
                 ]
             )
+
+        UserChoseToBe personalityType ->
+            ( model, Cmd.none )

@@ -65,10 +65,9 @@ initModel key =
     { key = key
     , message = "Now this is different"
     , clicksFromBackend = 0
+    , user = AnonymousUser Nothing
 
-    -- , user = AnonymousUser (Nothing)
-    , user = AnonymousUser (Just Idealistic)
-
+    -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
     }
 
@@ -103,6 +102,19 @@ update msg model =
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend ToBackendClick )
+
+        TryingOutPersonalityType personalityType ->
+            ( { model | user = AnonymousUser personalityType }, Cmd.none )
+
+        ResetPersonalityType ->
+            ( { model | user = AnonymousUser Nothing }, Cmd.none )
+
+        ConfirmedPersonalityType personalityType ->
+            ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
+
+
+
+-- end of update
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
@@ -160,10 +172,10 @@ view model =
                     AnonymousUser maybePersonalityType ->
                         viewAnon model maybePersonalityType
 
-                    PreppingUser ->
+                    PreppingUser clientId ->
                         viewPlaying model
 
-                    PreppedUser ->
+                    PreppedUser clientId ->
                         viewPlaying model
             ]
         ]
@@ -179,7 +191,7 @@ viewAnon model maybePersonalityType =
         currentlyActiveUsers =
             31
 
-        viewChoice sideText =
+        viewChoice sideText personalityType =
             el
                 [ alignLeft
                 , width (fillPortion 1)
@@ -187,6 +199,29 @@ viewAnon model maybePersonalityType =
                 , Element.mouseOver [ Background.color <| UI.color_light_grey ]
                 , Border.rounded 2
                 , UI.noUserSelect
+                , Events.onClick <|
+                    case maybePersonalityType of
+                        Nothing ->
+                            TryingOutPersonalityType <| Just personalityType
+
+                        Just currentPersonalityType ->
+                            if currentPersonalityType == personalityType then
+                                TryingOutPersonalityType Nothing
+
+                            else
+                                TryingOutPersonalityType <| Just personalityType
+                , Background.color <|
+                    (maybePersonalityType
+                        |> Maybe.map
+                            (\pt ->
+                                if pt == personalityType then
+                                    UI.color_light_grey
+
+                                else
+                                    UI.color_white
+                            )
+                        |> Maybe.withDefault UI.color_white
+                    )
                 ]
             <|
                 paragraph [ padding 10 ] [ text sideText ]
@@ -248,13 +283,32 @@ viewAnon model maybePersonalityType =
 
         -- choices
         , row [ centerX, width (fill |> Element.maximum 1000), padding 20 ]
-            [ viewChoice <| "Be somebody " ++ realisticText
+            [ viewChoice ("Be somebody " ++ realisticText) Realistic
             , el [ width (fillPortion 3) ] <| Element.none
-            , viewChoice <| "Be somebody " ++ idealisticText
+            , viewChoice ("Be somebody " ++ idealisticText) Idealistic
             ]
 
         -- extra text
-        , paragraph [ Font.size <| UI.scaled 1 ] [ text <| "...pick a side so you can finally fit in" ]
+        , case maybePersonalityType of
+            Nothing ->
+                paragraph [ Font.size <| UI.scaled 1 ]
+                    [ text <|
+                        "...pick a side so you can finally fit in"
+                    ]
+
+            Just personalityType ->
+                UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Secondary
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , Font.size 24
+                            ]
+                        , onPressMsg = ConfirmedPersonalityType personalityType
+                        , textLabel = "Are you sure?"
+                        , colorTheme = UI.BrightTheme
+                        }
         ]
 
 
