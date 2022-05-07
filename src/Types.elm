@@ -1,4 +1,4 @@
-module Types exposing (getClientId, BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..))
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getClientId)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)

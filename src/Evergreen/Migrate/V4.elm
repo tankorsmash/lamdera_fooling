@@ -43,7 +43,8 @@ toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
 toBackend old =
     MsgMigrated <|
         case old of
-            Old.NoOpToBackend -> (New.NoOpToBackend, Cmd.none)
+            Old.NoOpToBackend ->
+                ( New.NoOpToBackend, Cmd.none )
 
 
 backendMsg : Old.BackendMsg -> MsgMigration New.BackendMsg New.BackendMsg

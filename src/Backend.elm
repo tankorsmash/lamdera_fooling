@@ -97,4 +97,4 @@ updateFromFrontend sessionId clientId msg model =
                         Nothing ->
                             { model | users = toCreate :: model.users }
             in
-            ( model, Lamdera.sendToFrontend clientId  (NewUser toCreate)  )
+            ( model, Lamdera.sendToFrontend clientId (NewUser toCreate) )
