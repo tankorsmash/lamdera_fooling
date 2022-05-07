@@ -166,37 +166,34 @@ view model =
     in
     { title = "Testing Lamdera | TankorSmash"
     , body =
-        [ div
-            []
-            [ elm_ui_hack_layout
-            , Html.br [] []
-            , Element.layoutWith
-                { options =
-                    [ Element.noStaticStyleSheet
-                    , Element.focusStyle
-                        { borderColor = Nothing
-                        , backgroundColor = Nothing
-                        , shadow = Nothing
-                        }
-                    ]
-                }
-                [ width fill
-                , height fill
-                , padding 20
-                , Element.htmlAttribute <| Attr.id "elm_ui_layout"
-                , centerX
+        [ elm_ui_hack_layout
+        , Html.br [] []
+        , Element.layoutWith
+            { options =
+                [ Element.noStaticStyleSheet
+                , Element.focusStyle
+                    { borderColor = Nothing
+                    , backgroundColor = Nothing
+                    , shadow = Nothing
+                    }
                 ]
-              <|
-                case model.user of
-                    AnonymousUser maybePersonalityType ->
-                        viewAnon model maybePersonalityType
-
-                    PreppingUser clientId personalityType ->
-                        viewPrepping model personalityType
-
-                    FullUser { personalityType } ->
-                        viewPlaying model personalityType
+            }
+            [ width fill
+            , height fill
+            , padding 20
+            , Element.htmlAttribute <| Attr.id "elm_ui_layout"
+            , centerX
             ]
+          <|
+            case model.user of
+                AnonymousUser maybePersonalityType ->
+                    viewAnon model maybePersonalityType
+
+                PreppingUser clientId personalityType ->
+                    viewPrepping model personalityType
+
+                FullUser { personalityType } ->
+                    viewPlaying model personalityType
         ]
     }
 
@@ -404,6 +401,7 @@ viewPlaying model personalityType =
                     [ centerX
                     , width Element.shrink
                     , Font.size 24
+                    , alignBottom
                     ]
                 , onPressMsg = LogUserOut
                 , textLabel = "Log me the heck out"
