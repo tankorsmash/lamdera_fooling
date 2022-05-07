@@ -130,42 +130,42 @@ view model =
             []
             [ elm_ui_hack_layout
             , Html.br [] []
-            , viewPlaying model
+            , Element.layoutWith
+                { options =
+                    [ Element.noStaticStyleSheet
+                    , Element.focusStyle
+                        { borderColor = Nothing
+                        , backgroundColor = Nothing
+                        , shadow = Nothing
+                        }
+                    ]
+                }
+                [ width fill
+                , height fill
+                , padding 20
+                , Element.htmlAttribute <| Attr.id "elm_ui_layout"
+                ]
+              <|
+                viewPlaying model
             ]
         ]
     }
 
 
-viewPlaying : Model -> Html.Html FrontendMsg
+viewPlaying : Model -> Element FrontendMsg
 viewPlaying model =
-    Element.layoutWith
-        { options =
-            [ Element.noStaticStyleSheet
-            , Element.focusStyle
-                { borderColor = Nothing
-                , backgroundColor = Nothing
-                , shadow = Nothing
+    column [ width fill, height fill, spacing 10 ]
+        [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.clicksFromBackend
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = SendClickToBackend
+                , textLabel = "Click Me"
+                , colorTheme = UI.BrightTheme
                 }
-            ]
-        }
-        [ width fill
-        , height fill
-        , padding 20
-        , Element.htmlAttribute <| Attr.id "elm_ui_layout"
         ]
-    <|
-        column [ width fill, height fill, spacing 10 ]
-            [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.clicksFromBackend
-            , UI.button <|
-                UI.TextParams
-                    { buttonType = UI.Outline
-                    , customAttrs =
-                        [ centerX
-                        , width Element.shrink
-                        , Font.size 24
-                        ]
-                    , onPressMsg = SendClickToBackend
-                    , textLabel = "Click Me"
-                    , colorTheme = UI.BrightTheme
-                    }
-            ]
