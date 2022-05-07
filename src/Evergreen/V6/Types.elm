@@ -33,7 +33,7 @@ type ToBackend
 
 type BackendMsg
     = NoOpBackendMsg
-    | TestCC Lamdera.SessionId Lamdera.ClientId
+    | OnClientConnect Lamdera.SessionId Lamdera.ClientId
 
 
 type ToFrontend
