@@ -149,9 +149,8 @@ getUserByClientId : List User -> ClientId -> Maybe User
 getUserByClientId users clientId =
     users
         |> List.filter
-            (\user ->
-                getClientId user
-                    |> Maybe.map (\cid -> cid == clientId)
-                    |> Maybe.withDefault False
+            (getClientId
+                >> Maybe.map ((==) clientId)
+                >> Maybe.withDefault False
             )
         |> List.head
