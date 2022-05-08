@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (PersonalityTypeDict, BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -99,6 +99,7 @@ initFrontendModel key =
     -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
     , ignoreme = -1
+    , usernamesByPersonalityTypes = Dict.empty
     }
 
 
@@ -112,6 +113,7 @@ type alias FrontendModel =
     , user : User
     , totalUsers : Int
     , ignoreme : Int
+    , usernamesByPersonalityTypes : PersonalityTypeDict (List String)
     }
 
 
@@ -191,10 +193,14 @@ type BackendMsg
     | OnClientConnect SessionId ClientId
 
 
+type alias PersonalityTypeDict a =
+    Dict.Dict PersonalityTypeDataId a
+
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
-    | NewClicksByPersonalityType (Dict.Dict PersonalityTypeDataId Int)
+    | NewClicksByPersonalityType (PersonalityTypeDict Int)
     | NewUser User
     | NewTotalUsers Int
     | NewClicksByUser Int
+    | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List String))

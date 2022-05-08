@@ -53,8 +53,37 @@ update msg model =
                         Cmd.none
 
                 -- , Lamdera.sendToFrontend clientId
+                , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes model.users))
                 ]
             )
+
+
+usernamesByPersonalityTypes : List User -> PersonalityTypeDict (List String)
+usernamesByPersonalityTypes users =
+    List.foldl
+        (\user acc ->
+            case user of
+                AnonymousUser _ ->
+                    acc
+
+                PreppingUser _ _ ->
+                    acc
+
+                FullUser userData ->
+                    Dict.update
+                        (personalityTypeToDataId userData.personalityType)
+                        (\v ->
+                            case v of
+                                Just names ->
+                                    Just (userData.username :: names)
+
+                                Nothing ->
+                                    Just [ userData.username ]
+                        )
+                        acc
+        )
+        Dict.empty
+        users
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -157,7 +186,12 @@ updateFromFrontend sessionId clientId msg model =
                         Nothing ->
                             { model | users = toCreate :: model.users }
             in
-            ( newModel, Lamdera.sendToFrontend sessionId (NewUser toCreate) )
+            ( newModel
+            , Cmd.batch
+                [ Lamdera.sendToFrontend sessionId (NewUser toCreate)
+                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes model.users))
+                ]
+            )
 
         UserFinalizedUser username ->
             let

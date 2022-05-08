@@ -137,6 +137,9 @@ updateFromBackend msg model =
         NewClicksByUser newClicks ->
             ( { model | userClicksFromBackend = newClicks }, Cmd.none )
 
+        NewUsernamesByPersonalityTypes usernamesByPersonalityTypes ->
+            ( { model | usernamesByPersonalityTypes = usernamesByPersonalityTypes }, Cmd.none )
+
 
 view : Model -> Browser.Document FrontendMsg
 view model =
@@ -390,6 +393,23 @@ viewPlaying model personalityType =
                     )
                 |> Maybe.withDefault
                     (text <| "Clicks from randos: " ++ strCount)
+
+        viewUsersInPersonalityType alliedPersonalityType =
+            model.usernamesByPersonalityTypes
+                |> Dict.get (Types.personalityTypeToDataId alliedPersonalityType)
+                |> Maybe.map
+                    (\names ->
+                        let
+                            header =
+                                el [ Font.underline ] <|
+                                    (text <|
+                                        Types.personalityTypeToDataId alliedPersonalityType
+                                    )
+                        in
+                        column [] <|
+                            (header :: List.map text names)
+                    )
+                |> Maybe.withDefault Element.none
     in
     column [ width fill, height fill, spacing 10 ]
         [ el [ centerX ] <| text <| "All clicks: " ++ String.fromInt model.totalClicksFromBackend
@@ -428,6 +448,10 @@ viewPlaying model personalityType =
                 , textLabel = "Click Me"
                 , colorTheme = UI.BrightTheme
                 }
+        , row [ width fill, centerX, Element.spaceEvenly ]
+            [ viewUsersInPersonalityType Realistic
+            , viewUsersInPersonalityType Idealistic
+            ]
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
