@@ -113,7 +113,7 @@ type alias FrontendModel =
     , user : User
     , totalUsers : Int
     , ignoreme : Int
-    , usernamesByPersonalityTypes : PersonalityTypeDict (List String)
+    , usernamesByPersonalityTypes : PersonalityTypeDict (List (String, Int))
     }
 
 
@@ -203,4 +203,4 @@ type ToFrontend
     | NewUser User
     | NewTotalUsers Int
     | NewClicksByUser Int
-    | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List String))
+    | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List (String, Int)))

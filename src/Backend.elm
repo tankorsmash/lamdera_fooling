@@ -53,13 +53,13 @@ update msg model =
                         Cmd.none
 
                 -- , Lamdera.sendToFrontend clientId
-                , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes model.users))
+                , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
                 ]
             )
 
 
-usernamesByPersonalityTypes : List User -> PersonalityTypeDict (List String)
-usernamesByPersonalityTypes users =
+usernamesDataByPersonalityTypes : List User -> PersonalityTypeDict (List ( String, Int ))
+usernamesDataByPersonalityTypes users =
     List.foldl
         (\user acc ->
             case user of
@@ -73,12 +73,16 @@ usernamesByPersonalityTypes users =
                     Dict.update
                         (personalityTypeToDataId userData.personalityType)
                         (\v ->
+                            let
+                                toAdd =
+                                    ( userData.username, userData.userClicks )
+                            in
                             case v of
                                 Just names ->
-                                    Just (userData.username :: names)
+                                    Just (toAdd :: names)
 
                                 Nothing ->
-                                    Just [ userData.username ]
+                                    Just [ toAdd ]
                         )
                         acc
         )
@@ -143,6 +147,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Cmd.batch
                                 [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                                 , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
                                 , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks + 1)
                                 ]
                             )
@@ -189,7 +194,7 @@ updateFromFrontend sessionId clientId msg model =
             ( newModel
             , Cmd.batch
                 [ Lamdera.sendToFrontend sessionId (NewUser toCreate)
-                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes model.users))
+                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
                 ]
             )
 
@@ -239,7 +244,7 @@ updateFromFrontend sessionId clientId msg model =
                     (\u ->
                         Cmd.batch
                             [ Lamdera.sendToFrontend sessionId <| NewUser u
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes newModel.users))
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
                             ]
                     )
                 |> Maybe.withDefault Cmd.none
