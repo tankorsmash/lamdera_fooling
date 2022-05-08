@@ -206,13 +206,13 @@ updateFromFrontend sessionId clientId msg model =
                                 | users =
                                     List.Extra.updateIf
                                         (\u ->
-                                            Types.getUsername u
-                                                |> Maybe.map (\uname -> uname == username)
+                                            Types.getSessionId u
+                                                |> Maybe.map ((==) sessionId)
                                                 |> Maybe.withDefault False
                                         )
                                         (\u ->
                                             case u of
-                                                AnonymousUser mbp ->
+                                                AnonymousUser _ ->
                                                     u
 
                                                 PreppingUser sessionId_ personalityType ->
@@ -223,7 +223,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         , userClicks = 0
                                                         }
 
-                                                FullUser userData ->
+                                                FullUser _ ->
                                                     u
                                         )
                                         model.users
