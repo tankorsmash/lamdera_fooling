@@ -428,11 +428,14 @@ viewPlaying model personalityType =
                         in
                         column [ alignTop ] <|
                             (header
-                                :: List.map
-                                    (\( name, count ) ->
-                                        text <| name ++ " x" ++ String.fromInt count
-                                    )
-                                    names
+                                :: (names
+                                        |> List.sortBy Tuple.second
+                                        |> List.reverse
+                                        |> List.map
+                                            (\( name, count ) ->
+                                                text <| name ++ " x" ++ String.fromInt count
+                                            )
+                                   )
                             )
                     )
                 |> Maybe.withDefault Element.none
