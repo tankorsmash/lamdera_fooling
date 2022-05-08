@@ -106,7 +106,7 @@ update msg model =
             ( { model | newUsername = newUsername }, Cmd.none )
 
         FinalizeUser ->
-            ( { model | newUsername = ""}, Lamdera.sendToBackend <| UserFinalizedUser model.newUsername )
+            ( { model | newUsername = "" }, Lamdera.sendToBackend <| UserFinalizedUser model.newUsername )
 
         LogUserOut ->
             ( model, Lamdera.sendToBackend <| UserLoggedOut )
@@ -195,6 +195,14 @@ view model =
 
 viewPrepping : Model -> PersonalityType -> Element FrontendMsg
 viewPrepping model personalityType =
+    let
+        finalizeMsg =
+            if String.length model.newUsername > 3 then
+                FinalizeUser
+
+            else
+                NoOpFrontendMsg
+    in
     column [ centerX, Font.center, height fill, spacing 10 ]
         [ text <|
             (++) "You are " <|
@@ -205,7 +213,7 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width fill, centerX ]
+        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg ]
             { onChange = ChangedUsername
             , text = model.newUsername
             , placeholder =
@@ -234,7 +242,7 @@ viewPrepping model personalityType =
                             , width Element.shrink
                             , Font.size 24
                             ]
-                        , onPressMsg = FinalizeUser
+                        , onPressMsg = finalizeMsg
                         , textLabel = "Are you sure?"
                         , colorTheme = UI.BrightTheme
                         }
