@@ -237,7 +237,7 @@ viewPrepping model personalityType =
             , label = Input.labelLeft [] <| text "You can be anyone..."
             }
         , text "You're going to have to click a lot no matter who you are."
-        , if String.length model.username > 5 then
+        , if String.length model.username > 3 then
             el [ padding 30, centerX ] <|
                 UI.button <|
                     UI.TextParams
@@ -431,7 +431,7 @@ viewPlaying model personalityType =
                 |> List.map
                     viewCountFromPersonality
             )
-        , el [centerX] <| text <| "You've contributed: " ++ String.fromInt model.userClicksFromBackend
+        , el [ centerX ] <| text <| "You've contributed: " ++ String.fromInt model.userClicksFromBackend
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
