@@ -31,7 +31,11 @@ initModel : BackendModel
 initModel =
     { message = "Hello!"
     , totalClicks = 0
-    , clicksByPersonalityType = Dict.fromList [ ( "Idealistic", 0 ), ( "Realistic", 1 ) ]
+    , clicksByPersonalityType =
+        Dict.fromList
+            [ ( "Idealistic", 0 )
+            , ( "Realistic", 0 )
+            ]
     , users = []
     }
 
