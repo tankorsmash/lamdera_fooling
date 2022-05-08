@@ -419,13 +419,21 @@ viewPlaying model personalityType =
                     (\names ->
                         let
                             header =
-                                el [ Font.underline ] <|
+                                el [ Font.underline, paddingXY 0 5 ] <|
                                     (text <|
-                                        Types.personalityTypeToDataId alliedPersonalityType
+                                        "The "
+                                            ++ Types.personalityTypeToDataId alliedPersonalityType
+                                            ++ "s"
                                     )
                         in
-                        column [] <|
-                            (header :: List.map (\( name, count ) -> text <| name ++ " x" ++ String.fromInt count) names)
+                        column [ alignTop ] <|
+                            (header
+                                :: List.map
+                                    (\( name, count ) ->
+                                        text <| name ++ " x" ++ String.fromInt count
+                                    )
+                                    names
+                            )
                     )
                 |> Maybe.withDefault Element.none
     in
