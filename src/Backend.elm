@@ -206,8 +206,8 @@ updateFromFrontend sessionId clientId msg model =
                                 | users =
                                     List.Extra.updateIf
                                         (\u ->
-                                            getSessionId u
-                                                |> Maybe.map (\cid -> cid == sessionId)
+                                            Types.getUsername u
+                                                |> Maybe.map (\uname -> uname == username)
                                                 |> Maybe.withDefault False
                                         )
                                         (\u ->
@@ -234,7 +234,7 @@ updateFromFrontend sessionId clientId msg model =
                             model
             in
             ( newModel
-            , getUserBySessionId newModel.users sessionId
+            , getUserByUsername newModel.users username
                 |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
                 |> Maybe.withDefault Cmd.none
             )
