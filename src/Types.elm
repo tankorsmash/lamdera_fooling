@@ -93,7 +93,7 @@ initFrontendModel key =
     , personalityTypeClicksFromBackend = Dict.empty
     , userClicksFromBackend = 0
     , user = AnonymousUser Nothing
-    , username = ""
+    , newUsername = ""
 
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
@@ -108,7 +108,7 @@ type alias FrontendModel =
     , totalClicksFromBackend : Int
     , personalityTypeClicksFromBackend : Dict.Dict PersonalityTypeDataId Int
     , userClicksFromBackend : Int
-    , username : String
+    , newUsername : String
     , user : User
     , totalUsers : Int
     , usernamesByPersonalityTypes : PersonalityTypeDict (List ( String, Int ))

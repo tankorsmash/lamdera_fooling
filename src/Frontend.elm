@@ -102,11 +102,11 @@ update msg model =
         ConfirmedPersonalityType personalityType ->
             ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
 
-        ChangedUsername username ->
-            ( { model | username = username }, Cmd.none )
+        ChangedUsername newUsername ->
+            ( { model | newUsername = newUsername }, Cmd.none )
 
         FinalizeUser ->
-            ( model, Lamdera.sendToBackend <| UserFinalizedUser model.username )
+            ( { model | newUsername = ""}, Lamdera.sendToBackend <| UserFinalizedUser model.newUsername )
 
         LogUserOut ->
             ( model, Lamdera.sendToBackend <| UserLoggedOut )
@@ -137,8 +137,8 @@ updateFromBackend msg model =
         NewClicksByUser newClicks ->
             ( { model | userClicksFromBackend = newClicks }, Cmd.none )
 
-        NewUsernamesByPersonalityTypes usernamesByPersonalityTypes ->
-            ( { model | usernamesByPersonalityTypes = usernamesByPersonalityTypes }, Cmd.none )
+        NewUsernamesByPersonalityTypes newUsernamesByPersonalityTypes ->
+            ( { model | usernamesByPersonalityTypes = newUsernamesByPersonalityTypes }, Cmd.none )
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -207,7 +207,7 @@ viewPrepping model personalityType =
         , text "What would they call you?"
         , Input.username [ width fill, centerX ]
             { onChange = ChangedUsername
-            , text = model.username
+            , text = model.newUsername
             , placeholder =
                 Just
                     (Input.placeholder []
@@ -224,7 +224,7 @@ viewPrepping model personalityType =
             , label = Input.labelLeft [] <| text "You can be anyone..."
             }
         , text "You're going to have to click a lot no matter who you are."
-        , if String.length model.username > 3 then
+        , if String.length model.newUsername > 3 then
             el [ padding 30, centerX ] <|
                 UI.button <|
                     UI.TextParams
