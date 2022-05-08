@@ -2,6 +2,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
 import Browser exposing (UrlRequest(..))
 import Browser.Navigation as Nav
+import Dict
 import Element
     exposing
         ( Color
@@ -65,7 +66,8 @@ initModel : Nav.Key -> Model
 initModel key =
     { key = key
     , message = "Now this is different"
-    , clicksFromBackend = 0
+    , totalClicksFromBackend = 0
+    , personalityTypeClicksFromBackend = Dict.empty
     , user = AnonymousUser Nothing
     , username = ""
 
@@ -136,7 +138,10 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         NewTotalClicks totalClicks ->
-            ( { model | clicksFromBackend = totalClicks }, Cmd.none )
+            ( { model | totalClicksFromBackend = totalClicks }, Cmd.none )
+
+        NewClicksByPersonalityType clicksTracker ->
+            ( { model | personalityTypeClicksFromBackend = clicksTracker }, Cmd.none )
 
         NewUser user ->
             ( { model | user = user }, Cmd.none )
@@ -149,7 +154,7 @@ view : Model -> Browser.Document FrontendMsg
 view model =
     let
         elm_ui_hack_layout =
-            div [ Attr.style "height" "0"]
+            div [ Attr.style "height" "0" ]
                 [ Element.layoutWith
                     { options =
                         [ Element.focusStyle
@@ -381,7 +386,7 @@ viewAnon model maybePersonalityType =
 viewPlaying : Model -> PersonalityType -> Element FrontendMsg
 viewPlaying model personalityType =
     column [ width fill, height fill, spacing 10 ]
-        [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.clicksFromBackend
+        [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.totalClicksFromBackend
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline

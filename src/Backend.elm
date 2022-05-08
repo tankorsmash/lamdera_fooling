@@ -1,5 +1,6 @@
 module Backend exposing (..)
 
+import Dict
 import Html
 import Lamdera exposing (SessionId)
 import List.Extra
@@ -26,9 +27,18 @@ subscriptions model =
         ]
 
 
+initModel : BackendModel
+initModel =
+    { message = "Hello!"
+    , totalClicks = 0
+    , clicksByPersonalityType = Dict.fromList [ ( "Idealistic", 0 ), ( "Realistic", 1 ) ]
+    , users = []
+    }
+
+
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { message = "Hello!", totalClicks = 0, users = [] }
+    ( initModel
     , Cmd.none
     )
 
@@ -56,21 +66,48 @@ update msg model =
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
     case msg of
         NoOpToBackend ->
             ( model, Cmd.none )
 
         UserGainedAClick ->
-            let
-                newModel : Model
-                newModel =
-                    { model | totalClicks = model.totalClicks + 1 }
-            in
-            ( newModel
-            , Cmd.batch
-                [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                ]
-            )
+            case getUserBySessionId model.users sessionId of
+                Just user ->
+                    case user of
+                        AnonymousUser _ ->
+                            noop
+
+                        PreppingUser _ _ ->
+                            noop
+
+                        FullUser userData ->
+                            let
+                                updatedClicksTracker =
+                                    Dict.update
+                                        (personalityTypeToDataId userData.personalityType)
+                                        (Maybe.map ((+) 1))
+                                        model.clicksByPersonalityType
+
+                                newModel : Model
+                                newModel =
+                                    { model
+                                        | totalClicks = model.totalClicks + 1
+                                        , clicksByPersonalityType = updatedClicksTracker
+                                    }
+                            in
+                            ( newModel
+                            , Cmd.batch
+                                [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                                , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                                ]
+                            )
+
+                Nothing ->
+                    noop
 
         UserChoseToBe personalityType ->
             let

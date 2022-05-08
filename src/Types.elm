@@ -1,7 +1,8 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, mapUserData)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, mapUserData, personalityTypeToDataId)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
 
@@ -73,16 +74,45 @@ getSessionId user =
 type alias FrontendModel =
     { key : Key
     , message : String
-    , clicksFromBackend : Int
+    , totalClicksFromBackend : Int
+    , personalityTypeClicksFromBackend : Dict.Dict PersonalityTypeDataId Int
     , username : String
     , user : User
     , totalUsers : Int
     }
 
 
+type alias PersonalityTypeDataId =
+    String
+
+
+personalityTypeToDataId : PersonalityType -> String
+personalityTypeToDataId personalityType =
+    case personalityType of
+        Idealistic ->
+            "Idealistic"
+
+        Realistic ->
+            "Realistic"
+
+
+stringToPersonalityType : String -> Maybe PersonalityType
+stringToPersonalityType strType =
+    case strType of
+        "Idealistic" ->
+            Just Idealistic
+
+        "Realistic" ->
+            Just Realistic
+
+        _ ->
+            Nothing
+
+
 type alias BackendModel =
     { message : String
     , totalClicks : Int
+    , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
     , users : List User
     }
 
@@ -118,5 +148,6 @@ type BackendMsg
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
+    | NewClicksByPersonalityType (Dict.Dict PersonalityTypeDataId Int)
     | NewUser User
     | NewTotalUsers Int
