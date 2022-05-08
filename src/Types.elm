@@ -98,7 +98,6 @@ initFrontendModel key =
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
-    , ignoreme = -1
     , usernamesByPersonalityTypes = Dict.empty
     }
 
@@ -112,7 +111,6 @@ type alias FrontendModel =
     , username : String
     , user : User
     , totalUsers : Int
-    , ignoreme : Int
     , usernamesByPersonalityTypes : PersonalityTypeDict (List ( String, Int ))
     }
 
