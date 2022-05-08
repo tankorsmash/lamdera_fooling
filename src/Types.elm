@@ -152,7 +152,6 @@ initBackendModel =
             , ( "Realistic", 0 )
             ]
     , users = []
-    , ignoreme2 = -1
     }
 
 
@@ -161,7 +160,6 @@ type alias BackendModel =
     , totalClicks : Int
     , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
     , users : List User
-    , ignoreme2 : Int
     }
 
 
