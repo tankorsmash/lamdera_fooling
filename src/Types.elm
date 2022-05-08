@@ -1,5 +1,6 @@
 module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
+import Time
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
@@ -189,6 +190,7 @@ type ToBackend
 type BackendMsg
     = NoOpBackendMsg
     | OnClientConnect SessionId ClientId
+    | UpdateTick Time.Posix
 
 
 type alias PersonalityTypeDict a =

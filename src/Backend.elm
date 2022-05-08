@@ -1,9 +1,11 @@
 module Backend exposing (..)
 
 import Dict
-import Html
 import Lamdera exposing (SessionId)
 import List.Extra
+import Process
+import Task
+import Time
 import Types exposing (..)
 
 
@@ -55,8 +57,14 @@ update msg model =
                 -- , Lamdera.sendToFrontend clientId
                 , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
                 , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.clicksByPersonalityType)
+                , Process.sleep 500
+                    |> Task.andThen (always Time.now)
+                    |> Task.perform UpdateTick
                 ]
             )
+
+        UpdateTick time ->
+            ( model, Cmd.none )
 
 
 usernamesDataByPersonalityTypes : List User -> PersonalityTypeDict (List ( String, Int ))
@@ -125,9 +133,7 @@ updateFromFrontend sessionId clientId msg model =
                                             (\u ->
                                                 getUsername u
                                                     |> Maybe.map
-                                                        (\username ->
-                                                            username == userData.username
-                                                        )
+                                                        ((==) userData.username)
                                                     |> Maybe.withDefault False
                                             )
                                             (\oldUser ->
@@ -285,6 +291,15 @@ updateFromFrontend sessionId clientId msg model =
             ( newModel
             , Lamdera.sendToFrontend sessionId <| NewUser toCreate
             )
+
+
+{-| Basically setTimeout that'll make a Msg come through `millis` milliseconds
+later
+-}
+delay : Float -> msg -> Cmd msg
+delay millis msg =
+    Process.sleep millis
+        |> Task.perform (\_ -> msg)
 
 
 getUserBySessionId : List User -> SessionId -> Maybe User
