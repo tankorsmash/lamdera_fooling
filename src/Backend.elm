@@ -52,14 +52,16 @@ update msg model =
         OnClientConnect sessionId clientId ->
             ( model
             , Cmd.batch
-                [ Lamdera.sendToFrontend sessionId (NewTotalClicks model.totalClicks)
-                , Lamdera.sendToFrontend sessionId (NewTotalUsers <| List.length model.users)
+                [ Lamdera.sendToFrontend clientId (NewTotalClicks model.totalClicks)
+                , Lamdera.sendToFrontend clientId (NewTotalUsers <| List.length model.users)
                 , case getUserBySessionId model.users sessionId of
                     Just user ->
                         Lamdera.sendToFrontend sessionId (NewUser user)
 
                     Nothing ->
                         Cmd.none
+
+                -- , Lamdera.sendToFrontend clientId
                 ]
             )
 
@@ -92,17 +94,36 @@ updateFromFrontend sessionId clientId msg model =
                                         (Maybe.map ((+) 1))
                                         model.clicksByPersonalityType
 
+                                newUsers =
+                                    model.users
+                                        |> List.Extra.updateIf
+                                            (\u ->
+                                                getUsername u
+                                                    |> Maybe.map
+                                                        (\username ->
+                                                            username == userData.username
+                                                        )
+                                                    |> Maybe.withDefault False
+                                            )
+                                            (\oldUser ->
+                                                mapUserData oldUser (\ud -> { ud | userClicks = ud.userClicks + 1 })
+                                                    |> Maybe.map FullUser
+                                                    |> Maybe.withDefault oldUser
+                                            )
+
                                 newModel : Model
                                 newModel =
                                     { model
                                         | totalClicks = model.totalClicks + 1
                                         , clicksByPersonalityType = updatedClicksTracker
+                                        , users = newUsers
                                     }
                             in
                             ( newModel
                             , Cmd.batch
                                 [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                                 , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                                , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks + 1)
                                 ]
                             )
 
@@ -170,7 +191,12 @@ updateFromFrontend sessionId clientId msg model =
                                                     u
 
                                                 PreppingUser sessionId_ personalityType ->
-                                                    FullUser { sessionId = Just sessionId_, username = username, personalityType = personalityType }
+                                                    FullUser
+                                                        { sessionId = Just sessionId_
+                                                        , username = username
+                                                        , personalityType = personalityType
+                                                        , userClicks = 0
+                                                        }
 
                                                 FullUser userData ->
                                                     u

@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, mapUserData, personalityTypeToDataId, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -16,6 +16,7 @@ type alias UserData =
     { personalityType : PersonalityType
     , sessionId : Maybe SessionId
     , username : String
+    , userClicks : Int
     }
 
 
@@ -56,6 +57,19 @@ mapUserData user mapper =
             Just (mapper userData)
 
 
+setUserData : User -> UserData -> User
+setUserData user newUserData =
+    case user of
+        AnonymousUser _ ->
+            user
+
+        PreppingUser _ _ ->
+            user
+
+        FullUser userData ->
+            FullUser newUserData
+
+
 {-| get session id from user, if possible
 -}
 getSessionId : User -> Maybe SessionId
@@ -76,6 +90,7 @@ type alias FrontendModel =
     , message : String
     , totalClicksFromBackend : Int
     , personalityTypeClicksFromBackend : Dict.Dict PersonalityTypeDataId Int
+    , userClicksFromBackend : Int
     , username : String
     , user : User
     , totalUsers : Int
@@ -151,3 +166,4 @@ type ToFrontend
     | NewClicksByPersonalityType (Dict.Dict PersonalityTypeDataId Int)
     | NewUser User
     | NewTotalUsers Int
+    | NewClicksByUser Int

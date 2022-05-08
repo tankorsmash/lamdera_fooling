@@ -68,6 +68,7 @@ initModel key =
     , message = "Now this is different"
     , totalClicksFromBackend = 0
     , personalityTypeClicksFromBackend = Dict.empty
+    , userClicksFromBackend = 0
     , user = AnonymousUser Nothing
     , username = ""
 
@@ -148,6 +149,9 @@ updateFromBackend msg model =
 
         NewTotalUsers totalUsers ->
             ( { model | totalUsers = totalUsers }, Cmd.none )
+
+        NewClicksByUser newClicks ->
+            ( { model | userClicksFromBackend = newClicks }, Cmd.none )
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -427,6 +431,7 @@ viewPlaying model personalityType =
                 |> List.map
                     viewCountFromPersonality
             )
+        , el [centerX] <| text <| "You've contributed: " ++ String.fromInt model.userClicksFromBackend
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
