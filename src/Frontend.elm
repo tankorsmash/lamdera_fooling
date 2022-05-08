@@ -404,7 +404,7 @@ viewPlaying model personalityType =
                 |> Maybe.map
                     (\persType ->
                         if persType == personalityType then
-                            text <| "Clicks from your people " ++ strCount
+                            text <| "Clicks from your people: " ++ strCount
 
                         else
                             text <| "Clicks from the other guys: " ++ strCount
