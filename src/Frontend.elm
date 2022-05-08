@@ -407,7 +407,7 @@ viewPlaying model personalityType =
                                     )
                         in
                         column [] <|
-                            (header :: List.map (\(name, count) -> text <| name ++ " x" ++ String.fromInt count) names)
+                            (header :: List.map (\( name, count ) -> text <| name ++ " x" ++ String.fromInt count) names)
                     )
                 |> Maybe.withDefault Element.none
     in

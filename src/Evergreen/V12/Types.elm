@@ -7,7 +7,8 @@ import Lamdera
 import Url
 
 
-type alias PersonalityTypeDataId = String
+type alias PersonalityTypeDataId =
+    String
 
 
 type PersonalityType
@@ -15,9 +16,9 @@ type PersonalityType
     | Realistic
 
 
-type alias UserData = 
+type alias UserData =
     { personalityType : PersonalityType
-    , sessionId : (Maybe Lamdera.SessionId)
+    , sessionId : Maybe Lamdera.SessionId
     , username : String
     , userClicks : Int
     }
@@ -33,7 +34,7 @@ type alias FrontendModel =
     { key : Browser.Navigation.Key
     , message : String
     , totalClicksFromBackend : Int
-    , personalityTypeClicksFromBackend : (Dict.Dict PersonalityTypeDataId Int)
+    , personalityTypeClicksFromBackend : Dict.Dict PersonalityTypeDataId Int
     , userClicksFromBackend : Int
     , username : String
     , user : User
@@ -45,8 +46,8 @@ type alias FrontendModel =
 type alias BackendModel =
     { message : String
     , totalClicks : Int
-    , clicksByPersonalityType : (Dict.Dict PersonalityTypeDataId Int)
-    , users : (List User)
+    , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
+    , users : List User
     }
 
 
