@@ -42,7 +42,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), stringToPersonalityType)
+import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), initFrontendModel, stringToPersonalityType)
 import Url
 
 
@@ -62,25 +62,9 @@ app =
         }
 
 
-initModel : Nav.Key -> Model
-initModel key =
-    { key = key
-    , message = "Now this is different"
-    , totalClicksFromBackend = 0
-    , personalityTypeClicksFromBackend = Dict.empty
-    , userClicksFromBackend = 0
-    , user = AnonymousUser Nothing
-    , username = ""
-
-    -- , user = AnonymousUser (Just Idealistic)
-    -- , user = AnonymousUser (Just Realistic)
-    , totalUsers = 0
-    }
-
-
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
 init url key =
-    ( initModel key
+    ( initFrontendModel key
     , Cmd.none
     )
 

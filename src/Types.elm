@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -85,6 +85,23 @@ getSessionId user =
             userData.sessionId
 
 
+initFrontendModel : Key -> FrontendModel
+initFrontendModel key =
+    { key = key
+    , message = "Now this is different"
+    , totalClicksFromBackend = 0
+    , personalityTypeClicksFromBackend = Dict.empty
+    , userClicksFromBackend = 0
+    , user = AnonymousUser Nothing
+    , username = ""
+
+    -- , user = AnonymousUser (Just Idealistic)
+    -- , user = AnonymousUser (Just Realistic)
+    , totalUsers = 0
+    , ignoreme = -1
+    }
+
+
 type alias FrontendModel =
     { key : Key
     , message : String
@@ -94,6 +111,7 @@ type alias FrontendModel =
     , username : String
     , user : User
     , totalUsers : Int
+    , ignoreme : Int
     }
 
 
@@ -124,11 +142,26 @@ stringToPersonalityType strType =
             Nothing
 
 
+initBackendModel : BackendModel
+initBackendModel =
+    { message = "Hello!"
+    , totalClicks = 0
+    , clicksByPersonalityType =
+        Dict.fromList
+            [ ( "Idealistic", 0 )
+            , ( "Realistic", 0 )
+            ]
+    , users = []
+    , ignoreme2 = -1
+    }
+
+
 type alias BackendModel =
     { message : String
     , totalClicks : Int
     , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
     , users : List User
+    , ignoreme2 : Int
     }
 
 

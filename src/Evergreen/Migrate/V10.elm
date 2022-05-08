@@ -27,11 +27,7 @@ backendModel old =
     ModelMigrated
         ( { message = old.message
           , totalClicks = old.clicks
-          , clicksByPersonalityType =
-                Dict.fromList
-                    [ ( "Idealistic", 0 )
-                    , ( "Realistic", 0 )
-                    ]
+          , clicksByPersonalityType = Dict.empty
           , users = []
           }
         , Cmd.none
