@@ -448,7 +448,7 @@ viewPlaying model personalityType =
                 |> List.map
                     (Tuple.mapFirst stringToPersonalityType)
                 |> List.sortWith
-                    (\( left, _ ) ( right, _ ) ->
+                    (\left right ->
                         Maybe.map2
                             (\l _ ->
                                 if l == personalityType then
@@ -457,8 +457,8 @@ viewPlaying model personalityType =
                                 else
                                     GT
                             )
-                            left
-                            right
+                            (Tuple.first left)
+                            (Tuple.first right)
                             |> Maybe.withDefault EQ
                     )
                 |> List.map
