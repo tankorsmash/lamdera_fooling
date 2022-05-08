@@ -42,7 +42,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), initFrontendModel, stringToPersonalityType)
+import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getUsername, initFrontendModel, stringToPersonalityType)
 import Url
 
 
@@ -460,17 +460,23 @@ viewPlaying model personalityType =
             [ viewUsersInPersonalityType Realistic
             , viewUsersInPersonalityType Idealistic
             ]
-        , UI.button <|
-            UI.TextParams
-                { buttonType = UI.Outline
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , Font.size 24
-                    , alignBottom
-                    ]
-                , onPressMsg = LogUserOut
-                , textLabel = "Log me the heck out"
-                , colorTheme = UI.BrightTheme
-                }
+        , column [ centerX, alignBottom, spacing 5 ]
+            [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
+                text <|
+                    (getUsername model.user
+                        |> Maybe.map identity
+                        |> Maybe.withDefault ""
+                    )
+            , UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ width Element.shrink
+                        , Font.size 24
+                        ]
+                    , onPressMsg = LogUserOut
+                    , textLabel = "Log me the heck out"
+                    , colorTheme = UI.BrightTheme
+                    }
+            ]
         ]
