@@ -292,9 +292,12 @@ viewAnon model maybePersonalityType =
                             )
                         |> Maybe.withDefault UI.color_white
                     )
+                , height (fill |> Element.minimum 150)
+                , centerY
+                , Font.center
                 ]
             <|
-                paragraph [ padding 10 ] [ text sideText ]
+                paragraph [ Font.center, centerY, padding 10 ] [ text sideText ]
 
         youAreText =
             maybePersonalityType
@@ -361,10 +364,17 @@ viewAnon model maybePersonalityType =
         -- extra text
         , case maybePersonalityType of
             Nothing ->
-                paragraph [ Font.size <| UI.scaled 1 ]
-                    [ text <|
-                        "...pick a side so you can finally fit in"
-                    ]
+                el [ width fill ] <|
+                    paragraph
+                        [ Font.center
+                        , Font.size <| UI.scaled 1
+                        , centerY
+                        , alignTop
+                        , padding 10
+                        ]
+                        [ text <|
+                            "...pick a side so you can finally fit in"
+                        ]
 
             Just personalityType ->
                 UI.button <|
