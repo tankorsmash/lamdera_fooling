@@ -42,7 +42,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..))
+import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), stringToPersonalityType)
 import Url
 
 
@@ -385,8 +385,48 @@ viewAnon model maybePersonalityType =
 
 viewPlaying : Model -> PersonalityType -> Element FrontendMsg
 viewPlaying model personalityType =
+    let
+        viewCountFromPersonality ( maybePersType, count ) =
+            let
+                strCount =
+                    String.fromInt count
+            in
+            maybePersType
+                |> Maybe.map
+                    (\persType ->
+                        if persType == personalityType then
+                            text <| "Clicks from your people " ++ strCount
+
+                        else
+                            text <| "Clicks from the other guys: " ++ strCount
+                    )
+                |> Maybe.withDefault
+                    (text <| "Clicks from randos: " ++ strCount)
+    in
     column [ width fill, height fill, spacing 10 ]
-        [ el [ centerX ] <| text <| "Clicks: " ++ String.fromInt model.totalClicksFromBackend
+        [ el [ centerX ] <| text <| "All clicks: " ++ String.fromInt model.totalClicksFromBackend
+        , row [ centerX, spacing 10 ] <|
+            (model.personalityTypeClicksFromBackend
+                |> Dict.toList
+                |> List.map
+                    (Tuple.mapFirst stringToPersonalityType)
+                |> List.sortWith
+                    (\( left, _ ) ( right, _ ) ->
+                        Maybe.map2
+                            (\l _ ->
+                                if l == personalityType then
+                                    LT
+
+                                else
+                                    GT
+                            )
+                            left
+                            right
+                            |> Maybe.withDefault EQ
+                    )
+                |> List.map
+                    viewCountFromPersonality
+            )
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
