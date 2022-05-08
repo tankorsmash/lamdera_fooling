@@ -218,8 +218,8 @@ viewPrepping model personalityType =
             , text = model.newUsername
             , placeholder =
                 Just
-                    (Input.placeholder []
-                        (UI.monospace [] <|
+                    (Input.placeholder [ Font.center, width fill ]
+                        (UI.monospace [ Font.center, width fill ] <|
                             text <|
                                 case personalityType of
                                     Idealistic ->
