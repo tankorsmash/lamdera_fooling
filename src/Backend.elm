@@ -235,7 +235,13 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( newModel
             , getUserByUsername newModel.users username
-                |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                |> Maybe.map
+                    (\u ->
+                        Cmd.batch
+                            [ Lamdera.sendToFrontend sessionId <| NewUser u
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesByPersonalityTypes newModel.users))
+                            ]
+                    )
                 |> Maybe.withDefault Cmd.none
             )
 
