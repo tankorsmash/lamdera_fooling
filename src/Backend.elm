@@ -110,57 +110,53 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         UserGainedAClick ->
-            case getUserBySessionId model.users sessionId of
-                Just user ->
-                    case user of
-                        AnonymousUser _ ->
-                            noop
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+                |> Maybe.map
+                    (\userData ->
+                        let
+                            updatedClicksTracker =
+                                Dict.update
+                                    (personalityTypeToDataId userData.personalityType)
+                                    (Maybe.map ((+) 1))
+                                    model.clicksByPersonalityType
 
-                        PreppingUser _ _ ->
-                            noop
+                            newUsers =
+                                model.users
+                                    |> List.Extra.updateIf
+                                        (\u ->
+                                            getUsername u
+                                                |> Maybe.map
+                                                    ((==) userData.username)
+                                                |> Maybe.withDefault False
+                                        )
+                                        (\oldUser ->
+                                            mapUserData oldUser
+                                                (\ud ->
+                                                    { ud | userClicks = ud.userClicks + 1 }
+                                                )
+                                                |> Maybe.map FullUser
+                                                |> Maybe.withDefault oldUser
+                                        )
 
-                        FullUser userData ->
-                            let
-                                updatedClicksTracker =
-                                    Dict.update
-                                        (personalityTypeToDataId userData.personalityType)
-                                        (Maybe.map ((+) 1))
-                                        model.clicksByPersonalityType
-
-                                newUsers =
-                                    model.users
-                                        |> List.Extra.updateIf
-                                            (\u ->
-                                                getUsername u
-                                                    |> Maybe.map
-                                                        ((==) userData.username)
-                                                    |> Maybe.withDefault False
-                                            )
-                                            (\oldUser ->
-                                                mapUserData oldUser (\ud -> { ud | userClicks = ud.userClicks + 1 })
-                                                    |> Maybe.map FullUser
-                                                    |> Maybe.withDefault oldUser
-                                            )
-
-                                newModel : Model
-                                newModel =
-                                    { model
-                                        | totalClicks = model.totalClicks + 1
-                                        , clicksByPersonalityType = updatedClicksTracker
-                                        , users = newUsers
-                                    }
-                            in
-                            ( newModel
-                            , Cmd.batch
-                                [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                                , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
-                                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
-                                , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks + 1)
-                                ]
-                            )
-
-                Nothing ->
-                    noop
+                            newModel : Model
+                            newModel =
+                                { model
+                                    | totalClicks = model.totalClicks + 1
+                                    , clicksByPersonalityType = updatedClicksTracker
+                                    , users = newUsers
+                                }
+                        in
+                        ( newModel
+                        , Cmd.batch
+                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
+                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks + 1)
+                            ]
+                        )
+                    )
+                |> Maybe.withDefault noop
 
         UserChoseToBe personalityType ->
             let

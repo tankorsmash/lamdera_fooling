@@ -1,10 +1,10 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), getSessionId, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
-import Time
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
+import Time
 import Url exposing (Url)
 
 
@@ -56,6 +56,11 @@ mapUserData user mapper =
 
         FullUser userData ->
             Just (mapper userData)
+
+
+getUserData : User -> Maybe UserData
+getUserData user =
+    mapUserData user identity
 
 
 setUserData : User -> UserData -> User
