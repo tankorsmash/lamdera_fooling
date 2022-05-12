@@ -173,7 +173,6 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | NoOpFrontendMsg
-    | SendClickToBackend
       -- onboarding
     | TryingOutPersonalityType (Maybe PersonalityType)
     | ResetPersonalityType
@@ -182,11 +181,14 @@ type FrontendMsg
     | FinalizeUser
       -- playing messages
     | LogUserOut
+    | SendClickToBackend
+    | SendWantsToSpendToBackend
 
 
 type ToBackend
     = NoOpToBackend
     | UserGainedAClick
+    | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String
     | UserLoggedOut

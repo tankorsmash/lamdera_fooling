@@ -93,6 +93,9 @@ update msg model =
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
+        SendWantsToSpendToBackend ->
+            ( model, Lamdera.sendToBackend UserWantsToSpend )
+
         TryingOutPersonalityType personalityType ->
             ( { model | user = AnonymousUser personalityType }, Cmd.none )
 
@@ -412,6 +415,19 @@ actionArea =
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = SendWantsToSpendToBackend
+                , textLabel = "WIP"
+                , colorTheme = UI.BrightTheme
+                }
+        , el [ centerX, Font.underline ] <| text "Spend your team's clicks"
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
