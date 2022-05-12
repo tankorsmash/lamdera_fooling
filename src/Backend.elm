@@ -31,13 +31,8 @@ subscriptions model =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    Debug.log "init backend" <| ( initBackendModel
-    -- , Cmd.batch
-    --     [ Process.sleep 1000
-    --         |> Task.andThen (always Time.now)
-    --         |> Task.perform UpdateTick
-    --     ]
-    , Task.perform UpdateTick (Debug.log "ASDASD" Time.now)
+    ( initBackendModel
+    , Task.perform UpdateTick Time.now
     )
 
 
@@ -66,13 +61,13 @@ update msg model =
             )
 
         UpdateTick time ->
-            Debug.log "updatetick" <| ( model
+            ( model
             , Cmd.batch
                 [ Process.sleep 1000
                     -- |> Task.andThen (\_ -> Task.succeed UpdateTick )
                     -- |> Task.perform Time.now
                     |> Task.andThen (\_ -> Time.now)
-                    |> Task.perform (Debug.log "TICKING!!!!" UpdateTick)
+                    |> Task.perform UpdateTick
                 , Lamdera.broadcast (NewTotalClicks model.totalClicks)
                 , Lamdera.broadcast (NewTick time)
                 ]
