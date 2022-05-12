@@ -140,6 +140,9 @@ updateFromBackend msg model =
         NewUsernamesByPersonalityTypes newUsernamesByPersonalityTypes ->
             ( { model | usernamesByPersonalityTypes = newUsernamesByPersonalityTypes }, Cmd.none )
 
+        NewTick time ->
+            ( model, Cmd.none )
+
 
 view : Model -> Browser.Document FrontendMsg
 view model =
@@ -392,26 +395,41 @@ viewAnon model maybePersonalityType =
         ]
 
 
-viewPlaying : Model -> PersonalityType -> Element FrontendMsg
-viewPlaying model personalityType =
+actionArea : Element FrontendMsg
+actionArea =
+    column [ centerX, width fill, spacing 10 ]
+        [ el [ centerX, Font.underline ] <| text "Take action"
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = SendClickToBackend
+                , textLabel = "Contribute"
+                , colorTheme = UI.BrightTheme
+                }
+        , el [ centerX, Font.underline ] <| text "Spend your clicks"
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , Font.size 24
+                    ]
+                , onPressMsg = SendClickToBackend
+                , textLabel = "WIP"
+                , colorTheme = UI.BrightTheme
+                }
+        ]
+
+
+viewPlayers : Model -> Element FrontendMsg
+viewPlayers model =
     let
-        viewCountFromPersonality ( maybePersType, count ) =
-            let
-                strCount =
-                    String.fromInt count
-            in
-            maybePersType
-                |> Maybe.map
-                    (\persType ->
-                        if persType == personalityType then
-                            text <| "Clicks from your people: " ++ strCount
-
-                        else
-                            text <| "Clicks from the other guys: " ++ strCount
-                    )
-                |> Maybe.withDefault
-                    (text <| "Clicks from randos: " ++ strCount)
-
         viewUsersInPersonalityType alliedPersonalityType =
             model.usernamesByPersonalityTypes
                 |> Dict.get (Types.personalityTypeToDataId alliedPersonalityType)
@@ -440,7 +458,47 @@ viewPlaying model personalityType =
                     )
                 |> Maybe.withDefault Element.none
     in
+    row [ width fill, centerX, Element.spaceEvenly ]
+        [ viewUsersInPersonalityType Realistic
+        , viewUsersInPersonalityType Idealistic
+        ]
+
+
+viewPlaying : Model -> PersonalityType -> Element FrontendMsg
+viewPlaying model personalityType =
     column [ width fill, height fill, spacing 10 ]
+        [ scoreboard model personalityType
+        , column
+            [ width fill
+            , Element.inFront <| viewPlayers model
+            ]
+            [ actionArea
+            ]
+        , bottomBar model.user personalityType
+        ]
+
+
+scoreboard : Model -> PersonalityType -> Element FrontendMsg
+scoreboard model personalityType =
+    let
+        viewCountFromPersonality ( maybePersType, count ) =
+            let
+                strCount =
+                    String.fromInt count
+            in
+            maybePersType
+                |> Maybe.map
+                    (\persType ->
+                        if persType == personalityType then
+                            text <| "Clicks from your people: " ++ strCount
+
+                        else
+                            text <| "Clicks from the other guys: " ++ strCount
+                    )
+                |> Maybe.withDefault
+                    (text <| "Clicks from randos: " ++ strCount)
+    in
+    column [ width fill ]
         [ el [ centerX ] <| text <| "All clicks: " ++ String.fromInt model.totalClicksFromBackend
         , row [ centerX, spacing 10 ] <|
             (model.personalityTypeClicksFromBackend
@@ -465,39 +523,26 @@ viewPlaying model personalityType =
                     viewCountFromPersonality
             )
         , el [ centerX ] <| text <| "You've contributed: " ++ String.fromInt model.userClicksFromBackend
+        ]
+
+
+bottomBar user personalityType =
+    column [ centerX, alignBottom, spacing 5 ]
+        [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
+            text <|
+                (getUsername user
+                    |> Maybe.map identity
+                    |> Maybe.withDefault ""
+                )
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
                 , customAttrs =
-                    [ centerX
-                    , width Element.shrink
+                    [ width Element.shrink
                     , Font.size 24
                     ]
-                , onPressMsg = SendClickToBackend
-                , textLabel = "Click Me"
+                , onPressMsg = LogUserOut
+                , textLabel = "Log me the heck out"
                 , colorTheme = UI.BrightTheme
                 }
-        , row [ width fill, centerX, Element.spaceEvenly ]
-            [ viewUsersInPersonalityType Realistic
-            , viewUsersInPersonalityType Idealistic
-            ]
-        , column [ centerX, alignBottom, spacing 5 ]
-            [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
-                text <|
-                    (getUsername model.user
-                        |> Maybe.map identity
-                        |> Maybe.withDefault ""
-                    )
-            , UI.button <|
-                UI.TextParams
-                    { buttonType = UI.Outline
-                    , customAttrs =
-                        [ width Element.shrink
-                        , Font.size 24
-                        ]
-                    , onPressMsg = LogUserOut
-                    , textLabel = "Log me the heck out"
-                    , colorTheme = UI.BrightTheme
-                    }
-            ]
         ]

@@ -31,8 +31,13 @@ subscriptions model =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( initBackendModel
-    , Cmd.none
+    Debug.log "init backend" <| ( initBackendModel
+    -- , Cmd.batch
+    --     [ Process.sleep 1000
+    --         |> Task.andThen (always Time.now)
+    --         |> Task.perform UpdateTick
+    --     ]
+    , Task.perform UpdateTick (Debug.log "ASDASD" Time.now)
     )
 
 
@@ -57,14 +62,21 @@ update msg model =
                 -- , Lamdera.sendToFrontend clientId
                 , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
                 , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.clicksByPersonalityType)
-                , Process.sleep 500
-                    |> Task.andThen (always Time.now)
-                    |> Task.perform UpdateTick
                 ]
             )
 
         UpdateTick time ->
-            ( model, Cmd.none )
+            Debug.log "updatetick" <| ( model
+            , Cmd.batch
+                [ Process.sleep 1000
+                    -- |> Task.andThen (\_ -> Task.succeed UpdateTick )
+                    -- |> Task.perform Time.now
+                    |> Task.andThen (\_ -> Time.now)
+                    |> Task.perform (Debug.log "TICKING!!!!" UpdateTick)
+                , Lamdera.broadcast (NewTotalClicks model.totalClicks)
+                , Lamdera.broadcast (NewTick time)
+                ]
+            )
 
 
 usernamesDataByPersonalityTypes : List User -> PersonalityTypeDict (List ( String, Int ))

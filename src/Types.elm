@@ -210,3 +210,4 @@ type ToFrontend
     | NewTotalUsers Int
     | NewClicksByUser Int
     | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List ( String, Int )))
+    | NewTick Time.Posix
