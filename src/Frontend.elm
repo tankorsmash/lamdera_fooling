@@ -470,7 +470,7 @@ viewPlaying model personalityType =
         [ scoreboard model personalityType
         , column
             [ width fill
-            , Element.inFront <| viewPlayers model
+            , Element.behindContent <| viewPlayers model
             ]
             [ actionArea
             ]
