@@ -348,6 +348,24 @@ updateFromFrontend sessionId clientId msg model =
             , Lamdera.sendToFrontend sessionId <| NewUser toCreate
             )
 
+        UserSentMessage chatContent ->
+            getUserBySessionId model.users sessionId
+                |> Debug.log "user?"
+                |> Maybe.map
+                    (\user ->
+                        let
+                            newMessage =
+                                { user = user, message = chatContent, date = "" }
+
+                            newAllChatMessages =
+                                newMessage :: model.allChatMessages
+                        in
+                        ( { model | allChatMessages = newAllChatMessages }
+                        , Lamdera.broadcast <| NewAllChatMessages newAllChatMessages
+                        )
+                    )
+                |> Maybe.withDefault noop
+
 
 {-| Basically setTimeout that'll make a Msg come through `millis` milliseconds
 later

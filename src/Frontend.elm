@@ -114,6 +114,17 @@ update msg model =
         LogUserOut ->
             ( model, Lamdera.sendToBackend <| UserLoggedOut )
 
+        ChatInputChanged newMessage ->
+            ( { model | userChatMessage = newMessage }, Cmd.none )
+
+        ChatInputSent ->
+            ( { model | userChatMessage = Nothing }
+            , model.userChatMessage
+                |> Debug.log "chat msg"
+                |> Maybe.map (\chatMsg -> Lamdera.sendToBackend <| UserSentMessage chatMsg)
+                |> Maybe.withDefault Cmd.none
+            )
+
 
 
 -- end of update
@@ -145,6 +156,9 @@ updateFromBackend msg model =
 
         NewTick time ->
             ( model, Cmd.none )
+
+        NewAllChatMessages allChatMessages ->
+            ( { model | allChatMessages = allChatMessages }, Cmd.none )
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -424,7 +438,7 @@ actionArea =
                     , Font.size 24
                     ]
                 , onPressMsg = SendWantsToSpendToBackend
-                , textLabel = "WIP"
+                , textLabel = "-1 clicks"
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your team's clicks"
@@ -490,7 +504,7 @@ viewPlaying model personalityType =
             ]
             [ actionArea
             ]
-        , bottomBar model.user personalityType
+        , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
         ]
 
 
@@ -542,7 +556,7 @@ scoreboard model personalityType =
         ]
 
 
-bottomBar user personalityType =
+bottomBar userChatMessage allChatMessages user personalityType =
     column [ centerX, alignBottom, spacing 5 ]
         [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
             text <|
@@ -550,6 +564,26 @@ bottomBar user personalityType =
                     |> Maybe.map identity
                     |> Maybe.withDefault ""
                 )
+        , row []
+            [ Input.text []
+                { label = Input.labelAbove [] <| text "message"
+                , onChange = ChatInputChanged << Just
+                , placeholder = Just <| Input.placeholder [] <| text "placeholder"
+                , text = userChatMessage |> Maybe.withDefault ""
+                }
+            , UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ width Element.shrink
+                        , Font.size 24
+                        ]
+                    , onPressMsg = ChatInputSent
+                    , textLabel = "Send"
+                    , colorTheme = UI.BrightTheme
+                    }
+            ]
+        , column [] <| List.map (\chatMsg -> text chatMsg.message) allChatMessages
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline

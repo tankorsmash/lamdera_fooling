@@ -105,6 +105,15 @@ initFrontendModel key =
     -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
     , usernamesByPersonalityTypes = Dict.empty
+    , userChatMessage = Nothing
+    , allChatMessages = []
+    }
+
+
+type alias ChatMessage =
+    { user : User
+    , message : String
+    , date : String
     }
 
 
@@ -118,6 +127,8 @@ type alias FrontendModel =
     , user : User
     , totalUsers : Int
     , usernamesByPersonalityTypes : PersonalityTypeDict (List ( String, Int ))
+    , userChatMessage : Maybe String
+    , allChatMessages : List ChatMessage
     }
 
 
@@ -158,6 +169,7 @@ initBackendModel =
             , ( "Realistic", 0 )
             ]
     , users = []
+    , allChatMessages = []
     }
 
 
@@ -166,6 +178,7 @@ type alias BackendModel =
     , totalClicks : Int
     , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
     , users : List User
+    , allChatMessages : List ChatMessage
     }
 
 
@@ -183,6 +196,9 @@ type FrontendMsg
     | LogUserOut
     | SendClickToBackend
     | SendWantsToSpendToBackend
+      -- chat messages
+    | ChatInputChanged (Maybe String)
+    | ChatInputSent 
 
 
 type ToBackend
@@ -192,6 +208,7 @@ type ToBackend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String
     | UserLoggedOut
+    | UserSentMessage String
 
 
 type BackendMsg
@@ -213,3 +230,4 @@ type ToFrontend
     | NewClicksByUser Int
     | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List ( String, Int )))
     | NewTick Time.Posix
+    | NewAllChatMessages (List ChatMessage)
