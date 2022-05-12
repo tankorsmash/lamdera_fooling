@@ -122,10 +122,13 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         let
+                            modifyClicks clicks =
+                                clicks + 1
+
                             updatedClicksTracker =
                                 Dict.update
                                     (personalityTypeToDataId userData.personalityType)
-                                    (Maybe.map ((+) 1))
+                                    (Maybe.map modifyClicks)
                                     model.clicksByPersonalityType
 
                             newUsers =
@@ -133,14 +136,13 @@ updateFromFrontend sessionId clientId msg model =
                                     |> List.Extra.updateIf
                                         (\u ->
                                             getUsername u
-                                                |> Maybe.map
-                                                    ((==) userData.username)
+                                                |> Maybe.map ((==) userData.username)
                                                 |> Maybe.withDefault False
                                         )
                                         (\oldUser ->
                                             mapUserData oldUser
                                                 (\ud ->
-                                                    { ud | userClicks = ud.userClicks + 1 }
+                                                    { ud | userClicks = modifyClicks ud.userClicks }
                                                 )
                                                 |> Maybe.map FullUser
                                                 |> Maybe.withDefault oldUser
@@ -149,7 +151,7 @@ updateFromFrontend sessionId clientId msg model =
                             newModel : Model
                             newModel =
                                 { model
-                                    | totalClicks = model.totalClicks + 1
+                                    | totalClicks = modifyClicks model.totalClicks
                                     , clicksByPersonalityType = updatedClicksTracker
                                     , users = newUsers
                                 }
@@ -159,7 +161,7 @@ updateFromFrontend sessionId clientId msg model =
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks + 1)
+                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             ]
                         )
                     )
@@ -171,10 +173,13 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         let
+                            modifyClicks clicks =
+                                clicks - 1
+
                             updatedClicksTracker =
                                 Dict.update
                                     (personalityTypeToDataId userData.personalityType)
-                                    (Maybe.map (\clicks -> clicks - 1))
+                                    (Maybe.map modifyClicks)
                                     model.clicksByPersonalityType
 
                             newUsers =
@@ -182,14 +187,13 @@ updateFromFrontend sessionId clientId msg model =
                                     |> List.Extra.updateIf
                                         (\u ->
                                             getUsername u
-                                                |> Maybe.map
-                                                    ((==) userData.username)
+                                                |> Maybe.map ((==) userData.username)
                                                 |> Maybe.withDefault False
                                         )
                                         (\oldUser ->
                                             mapUserData oldUser
                                                 (\ud ->
-                                                    { ud | userClicks = ud.userClicks - 1 }
+                                                    { ud | userClicks = modifyClicks ud.userClicks }
                                                 )
                                                 |> Maybe.map FullUser
                                                 |> Maybe.withDefault oldUser
@@ -198,7 +202,7 @@ updateFromFrontend sessionId clientId msg model =
                             newModel : Model
                             newModel =
                                 { model
-                                    | totalClicks = model.totalClicks + 1
+                                    | totalClicks = modifyClicks model.totalClicks
                                     , clicksByPersonalityType = updatedClicksTracker
                                     , users = newUsers
                                 }
@@ -208,12 +212,11 @@ updateFromFrontend sessionId clientId msg model =
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks - 1)
+                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             ]
                         )
                     )
                 |> Maybe.withDefault noop
-
 
         UserChoseToBe personalityType ->
             let
