@@ -107,6 +107,33 @@ usernamesDataByPersonalityTypes users =
         users
 
 
+userMatchesSessionId : SessionId -> User -> Bool
+userMatchesSessionId sessionId user =
+    Types.getSessionId user
+        |> Maybe.map ((==) sessionId)
+        |> Maybe.withDefault False
+
+
+userMatchesUsername : String -> User -> Bool
+userMatchesUsername username user =
+    Types.getUsername user
+        |> Maybe.map ((==) username)
+        |> Maybe.withDefault False
+
+
+userIsPrepping : User -> Bool
+userIsPrepping user =
+    case user of
+        AnonymousUser _ ->
+            False
+
+        PreppingUser _ _ ->
+            True
+
+        FullUser _ ->
+            False
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -119,7 +146,9 @@ updateFromFrontend sessionId clientId msg model =
 
         UserGainedAClick ->
             getUserBySessionId model.users sessionId
+                |> Debug.log "clicking user?"
                 |> Maybe.andThen getUserData
+                |> Debug.log "clicking userdata?"
                 |> Maybe.map
                     (\userData ->
                         let
@@ -170,7 +199,8 @@ updateFromFrontend sessionId clientId msg model =
 
         UserWantsToSpend ->
             let
-                clickCost = 3
+                clickCost =
+                    3
             in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
@@ -290,27 +320,31 @@ updateFromFrontend sessionId clientId msg model =
 
         UserFinalizedUser username ->
             let
-                existingUser =
+                existingUserBySession =
                     getUserBySessionId model.users sessionId
 
+                existingUserByUsername =
+                    getUserByUsername model.users username
+
                 newModel =
-                    case existingUser of
-                        -- if user exists, replace it
-                        Just user ->
+                    case Debug.log "matching users" ( existingUserBySession, existingUserByUsername ) of
+                        -- if user with session id exists, replace it with a reset one
+                        ( Just sessionUser, Nothing ) ->
+                            let
+                                _ =
+                                    Debug.log "sessionid matches" 123
+                            in
                             { model
                                 | users =
                                     List.Extra.updateIf
-                                        (\u ->
-                                            Types.getSessionId u
-                                                |> Maybe.map ((==) sessionId)
-                                                |> Maybe.withDefault False
-                                        )
+                                        (userMatchesSessionId sessionId)
                                         (\u ->
                                             case u of
                                                 AnonymousUser _ ->
                                                     u
 
                                                 PreppingUser sessionId_ personalityType ->
+                                                    --promote to full user
                                                     FullUser
                                                         { sessionId = Just sessionId_
                                                         , username = username
@@ -318,14 +352,73 @@ updateFromFrontend sessionId clientId msg model =
                                                         , userClicks = 0
                                                         }
 
-                                                FullUser _ ->
-                                                    u
+                                                FullUser userData ->
+                                                    -- just replace session id, dont reset
+                                                    FullUser
+                                                        { sessionId = Just sessionId
+                                                        , username = username
+                                                        , personalityType = userData.personalityType
+                                                        , userClicks = userData.userClicks
+                                                        }
                                         )
                                         model.users
                             }
 
+                        -- if the username exists on a user, just take it over
+                        ( _, Just usernameUser ) ->
+                            model
+                                |> (\m ->
+                                        { m
+                                            | users =
+                                                List.Extra.updateIf
+                                                    (userMatchesUsername username)
+                                                    (\u ->
+                                                        case u of
+                                                            AnonymousUser _ ->
+                                                                u
+
+                                                            PreppingUser _ personalityType ->
+                                                                --promote to full user
+                                                                FullUser
+                                                                    { sessionId = Just sessionId
+                                                                    , username = username
+                                                                    , personalityType = personalityType
+                                                                    , userClicks = 0
+                                                                    }
+
+                                                            FullUser userData ->
+                                                                -- override session id
+                                                                FullUser
+                                                                    { sessionId = Just sessionId
+                                                                    , username = username
+                                                                    , personalityType = userData.personalityType
+                                                                    , userClicks = userData.userClicks
+                                                                    }
+                                                    )
+                                                    model.users
+                                        }
+                                   )
+                                |> --remove old prepping user now that its been promoted
+                                   (\m ->
+                                        let
+                                            newUsers =
+                                                List.partition
+                                                    (\u ->
+                                                        userMatchesSessionId sessionId u
+                                                            && userIsPrepping u
+                                                    )
+                                                    m.users
+                                                    |> Tuple.second
+                                        in
+                                        { m | users = newUsers }
+                                   )
+
                         -- otherwise do nothing
-                        Nothing ->
+                        _ ->
+                            let
+                                _ =
+                                    Debug.log "no user to finalize" 123
+                            in
                             model
             in
             ( newModel
@@ -333,7 +426,7 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\u ->
                         Cmd.batch
-                            [ Lamdera.sendToFrontend sessionId <| NewUser u
+                            [ Lamdera.sendToFrontend clientId <| NewUser u
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
                             ]
                     )

@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -57,6 +57,32 @@ mapUserData user mapper =
 
         FullUser userData ->
             Just (mapper userData)
+
+
+mapPreppingUser : (SessionId -> PersonalityType -> User) -> User -> User
+mapPreppingUser callback user =
+    case user of
+        AnonymousUser _ ->
+            user
+
+        PreppingUser sessionId personalityType ->
+            callback sessionId personalityType
+
+        FullUser _ ->
+            user
+
+
+mapFullUser : (UserData -> User) -> User -> User
+mapFullUser callback user =
+    case user of
+        AnonymousUser _ ->
+            user
+
+        PreppingUser _ _ ->
+            user
+
+        FullUser userData ->
+            callback userData
 
 
 getUserData : User -> Maybe UserData
