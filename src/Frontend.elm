@@ -277,7 +277,7 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad ]
+        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad]
             { onChange = ChangedUsername
             , text = model.newUsername
             , placeholder =
@@ -618,7 +618,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     |> Maybe.withDefault ""
                 )
         , row []
-            [ Input.text [ UI.onEnter ChatInputSent, Input.focusedOnLoad, UI.defineHtmlId "chat-message-input" ]
+            [ Input.text [ UI.onEnter ChatInputSent, UI.defineHtmlId "chat-message-input" ]
                 { label = Input.labelHidden "chat message input"
                 , onChange = ChatInputChanged << Just
                 , placeholder = Just <| Input.placeholder [] <| text "speak your mind"
