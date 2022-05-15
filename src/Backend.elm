@@ -174,14 +174,28 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         let
-                            modifyClicks clicks =
+                            modifySelfClicks clicks =
+                                clicks - 3
+
+                            modifyEnemyClicks clicks =
                                 clicks - 1
 
                             updatedClicksTracker =
-                                Dict.update
-                                    (personalityTypeToDataId userData.personalityType)
-                                    (Maybe.map modifyClicks)
-                                    model.clicksByPersonalityType
+                                model.clicksByPersonalityType
+                                    |> --remove their own clicks
+                                       Dict.update
+                                        (personalityTypeToDataId userData.personalityType)
+                                        (Maybe.map modifySelfClicks)
+                                    |> --remove enemy teams clicks
+                                       Dict.update
+                                        (case userData.personalityType of
+                                            Realistic ->
+                                                personalityTypeToDataId Idealistic
+
+                                            Idealistic ->
+                                                personalityTypeToDataId Realistic
+                                        )
+                                        (Maybe.map modifyEnemyClicks)
 
                             newUsers =
                                 model.users
@@ -194,7 +208,7 @@ updateFromFrontend sessionId clientId msg model =
                                         (\oldUser ->
                                             mapUserData oldUser
                                                 (\ud ->
-                                                    { ud | userClicks = modifyClicks ud.userClicks }
+                                                    { ud | userClicks = modifySelfClicks ud.userClicks }
                                                 )
                                                 |> Maybe.map FullUser
                                                 |> Maybe.withDefault oldUser
@@ -203,7 +217,7 @@ updateFromFrontend sessionId clientId msg model =
                             newModel : Model
                             newModel =
                                 { model
-                                    | totalClicks = modifyClicks model.totalClicks
+                                    | totalClicks = modifySelfClicks model.totalClicks
                                     , clicksByPersonalityType = updatedClicksTracker
                                     , users = newUsers
                                 }
@@ -213,7 +227,7 @@ updateFromFrontend sessionId clientId msg model =
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifySelfClicks userData.userClicks)
                             ]
                         )
                     )

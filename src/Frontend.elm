@@ -424,7 +424,7 @@ actionArea =
                     , Font.size 24
                     ]
                 , onPressMsg = SendClickToBackend
-                , textLabel = "Contribute"
+                , textLabel = "Contribute +1"
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
@@ -437,7 +437,7 @@ actionArea =
                     , Font.size 24
                     ]
                 , onPressMsg = SendWantsToSpendToBackend
-                , textLabel = "-1 clicks"
+                , textLabel = "Spend -3 to reduce theirs by -1"
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your team's clicks"
