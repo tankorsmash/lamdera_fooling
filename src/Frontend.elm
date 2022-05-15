@@ -1,6 +1,7 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
 import Browser exposing (UrlRequest(..))
+import Browser.Dom
 import Browser.Navigation as Nav
 import Dict
 import Element
@@ -42,6 +43,8 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
+import Process
+import Task
 import Types exposing (ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getUsername, initFrontendModel, stringToPersonalityType)
 import Url
 
@@ -67,6 +70,21 @@ init url key =
     ( initFrontendModel key
     , Cmd.none
     )
+
+
+focusChatInput : Cmd FrontendMsg
+focusChatInput =
+    focusElement "chat-message-input"
+
+
+{-| delays a few ms to give it time to redraw, seems like 0ms and 1ms aren't long enough
+-}
+focusElement : String -> Cmd FrontendMsg
+focusElement htmlId =
+    Process.sleep 10
+        |> Task.andThen
+            (always (Browser.Dom.focus htmlId))
+        |> Task.attempt FocusError
 
 
 update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg )
@@ -109,7 +127,21 @@ update msg model =
             ( { model | newUsername = newUsername }, Cmd.none )
 
         FinalizeUser ->
-            ( { model | newUsername = "" }, Lamdera.sendToBackend <| UserFinalizedUser model.newUsername )
+            let
+                sendCmd : Cmd FrontendMsg
+                sendCmd =
+                    Lamdera.sendToBackend <| UserFinalizedUser model.newUsername
+
+                focusCmd : Cmd FrontendMsg
+                focusCmd =
+                    focusChatInput
+            in
+            ( { model | newUsername = "" }
+            , Cmd.batch
+                [ sendCmd
+                , focusCmd
+                ]
+            )
 
         LogUserOut ->
             ( model, Lamdera.sendToBackend <| UserLoggedOut )
@@ -120,9 +152,22 @@ update msg model =
         ChatInputSent ->
             ( { model | userChatMessage = Nothing }
             , model.userChatMessage
-                |> Maybe.map (\chatMsg -> Lamdera.sendToBackend <| UserSentMessage chatMsg)
+                |> Maybe.map
+                    (\chatMsg ->
+                        Cmd.batch
+                            [ Lamdera.sendToBackend <| UserSentMessage chatMsg
+                            , focusChatInput
+                            ]
+                    )
                 |> Maybe.withDefault Cmd.none
             )
+
+        FocusError err ->
+            let
+                _ =
+                    Debug.log "focus error" err
+            in
+            ( model, Cmd.none )
 
 
 
@@ -232,7 +277,7 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg ]
+        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad ]
             { onChange = ChangedUsername
             , text = model.newUsername
             , placeholder =
@@ -573,7 +618,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     |> Maybe.withDefault ""
                 )
         , row []
-            [ Input.text [ UI.onEnter ChatInputSent ]
+            [ Input.text [ UI.onEnter ChatInputSent, Input.focusedOnLoad, UI.defineHtmlId "chat-message-input" ]
                 { label = Input.labelHidden "chat message input"
                 , onChange = ChatInputChanged << Just
                 , placeholder = Just <| Input.placeholder [] <| text "speak your mind"
