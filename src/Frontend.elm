@@ -574,7 +574,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     |> Maybe.withDefault ""
                 )
         , row []
-            [ Input.text [UI.onEnter ChatInputSent ]
+            [ Input.text [ UI.onEnter ChatInputSent ]
                 { label = Input.labelHidden "chat message input"
                 , onChange = ChatInputChanged << Just
                 , placeholder = Just <| Input.placeholder [] <| text "speak your mind"
@@ -594,7 +594,10 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     }
             ]
         , column [] <|
-            List.map viewChatMessage allChatMessages
+            (allChatMessages
+                |> List.take 5
+                |> List.map viewChatMessage
+            )
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
