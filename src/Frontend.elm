@@ -274,7 +274,7 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad]
+        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad ]
             { onChange = ChangedUsername
             , text = model.newUsername
             , placeholder =
@@ -593,7 +593,10 @@ scoreboard model personalityType =
                 |> List.map
                     viewCountFromPersonality
             )
-        , el [ centerX ] <| text <| "You've contributed " ++ String.fromInt model.userClicksFromBackend ++ " clicks towards being better than those other guys."
+        , paragraph [ centerX, Font.center ]
+            [ text <| "You've contributed " ++ String.fromInt model.userClicksFromBackend ++ " clicks towards being better than those other guys."
+            ]
+        , paragraph [] [ el [ UI.scaled_font 1 ] <| text <| "Every 100 clicks from your team earns the team 1 point. Spend the points on upgrades to make your clicks worth more." ]
         ]
 
 
