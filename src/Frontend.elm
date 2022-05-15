@@ -593,7 +593,7 @@ scoreboard model personalityType =
                 |> List.map
                     viewCountFromPersonality
             )
-        , el [ centerX ] <| text <| "You've contributed: " ++ String.fromInt model.userClicksFromBackend
+        , el [ centerX ] <| text <| "You've contributed " ++ String.fromInt model.userClicksFromBackend ++ " clicks towards being better than those other guys."
         ]
 
 
