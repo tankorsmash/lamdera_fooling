@@ -238,6 +238,7 @@ view model =
             , padding 20
             , Element.htmlAttribute <| Attr.id "elm_ui_layout"
             , centerX
+            , UI.noUserSelect
             ]
           <|
             case model.user of
