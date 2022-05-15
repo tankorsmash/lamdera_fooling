@@ -57,6 +57,7 @@ update msg model =
                 -- , Lamdera.sendToFrontend clientId
                 , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
                 , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.clicksByPersonalityType)
+                , Lamdera.sendToFrontend clientId (NewAllChatMessages model.allChatMessages)
                 ]
             )
 
