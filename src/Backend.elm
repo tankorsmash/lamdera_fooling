@@ -146,9 +146,7 @@ updateFromFrontend sessionId clientId msg model =
 
         UserGainedAClick ->
             getUserBySessionId model.users sessionId
-                |> Debug.log "clicking user?"
                 |> Maybe.andThen getUserData
-                |> Debug.log "clicking userdata?"
                 |> Maybe.map
                     (\userData ->
                         let
@@ -327,13 +325,9 @@ updateFromFrontend sessionId clientId msg model =
                     getUserByUsername model.users username
 
                 newModel =
-                    case Debug.log "matching users" ( existingUserBySession, existingUserByUsername ) of
+                    case ( existingUserBySession, existingUserByUsername ) of
                         -- if user with session id exists, replace it with a reset one
                         ( Just sessionUser, Nothing ) ->
-                            let
-                                _ =
-                                    Debug.log "sessionid matches" 123
-                            in
                             { model
                                 | users =
                                     List.Extra.updateIf
@@ -415,10 +409,6 @@ updateFromFrontend sessionId clientId msg model =
 
                         -- otherwise do nothing
                         _ ->
-                            let
-                                _ =
-                                    Debug.log "no user to finalize" 123
-                            in
                             model
             in
             ( newModel

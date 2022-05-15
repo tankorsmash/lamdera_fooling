@@ -163,10 +163,6 @@ update msg model =
             )
 
         FocusError err ->
-            let
-                _ =
-                    Debug.log "focus error" err
-            in
             ( model, Cmd.none )
 
 
