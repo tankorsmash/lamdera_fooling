@@ -574,10 +574,10 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     |> Maybe.withDefault ""
                 )
         , row []
-            [ Input.text []
-                { label = Input.labelAbove [] <| text "message"
+            [ Input.text [UI.onEnter ChatInputSent ]
+                { label = Input.labelHidden "chat message input"
                 , onChange = ChatInputChanged << Just
-                , placeholder = Just <| Input.placeholder [] <| text "placeholder"
+                , placeholder = Just <| Input.placeholder [] <| text "speak your mind"
                 , text = userChatMessage |> Maybe.withDefault ""
                 }
             , UI.button <|
@@ -586,6 +586,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     , customAttrs =
                         [ width Element.shrink
                         , Font.size 24
+                        , alignBottom
                         ]
                     , onPressMsg = ChatInputSent
                     , textLabel = "Send"
