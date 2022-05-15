@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -123,7 +123,7 @@ initFrontendModel key =
     { key = key
     , message = "Now this is different"
     , totalClicksFromBackend = 0
-    , personalityTypeClicksFromBackend = Dict.empty
+    , teamsFromBackend = initTeams
     , userClicksFromBackend = 0
     , user = AnonymousUser Nothing
     , newUsername = ""
@@ -131,7 +131,7 @@ initFrontendModel key =
     -- , user = AnonymousUser (Just Idealistic)
     -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
-    , usernamesByPersonalityTypes = Dict.empty
+    , teamsUserClicks = { realists = [], idealists = [] }
     , userChatMessage = Nothing
     , allChatMessages = []
     }
@@ -144,16 +144,20 @@ type alias ChatMessage =
     }
 
 
+type alias TeamsUserClicks =
+    { realists : List ( String, Int ), idealists : List ( String, Int ) }
+
+
 type alias FrontendModel =
     { key : Key
     , message : String
     , totalClicksFromBackend : Int
-    , personalityTypeClicksFromBackend : Dict.Dict PersonalityTypeDataId Int
+    , teamsFromBackend : Teams
     , userClicksFromBackend : Int
     , newUsername : String
     , user : User
     , totalUsers : Int
-    , usernamesByPersonalityTypes : PersonalityTypeDict (List ( String, Int ))
+    , teamsUserClicks : TeamsUserClicks
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     }
@@ -190,20 +194,31 @@ initBackendModel : BackendModel
 initBackendModel =
     { message = "Hello!"
     , totalClicks = 0
-    , clicksByPersonalityType =
-        Dict.fromList
-            [ ( "Idealistic", 0 )
-            , ( "Realistic", 0 )
-            ]
+    , teams =
+        { realists = { totalTeamClicks = 0, totalTeamPoints = 0 }
+        , idealists = { totalTeamClicks = 0, totalTeamPoints = 0 }
+        }
     , users = []
     , allChatMessages = []
+    }
+
+
+type alias Team =
+    { totalTeamClicks : Int
+    , totalTeamPoints : Int
+    }
+
+
+initTeams =
+    { realists = { totalTeamPoints = 0, totalTeamClicks = 0 }
+    , idealists = { totalTeamPoints = 0, totalTeamClicks = 0 }
     }
 
 
 type alias BackendModel =
     { message : String
     , totalClicks : Int
-    , clicksByPersonalityType : Dict.Dict PersonalityTypeDataId Int
+    , teams : Teams
     , users : List User
     , allChatMessages : List ChatMessage
     }
@@ -249,13 +264,17 @@ type alias PersonalityTypeDict a =
     Dict.Dict PersonalityTypeDataId a
 
 
+type alias Teams =
+    { realists : Team, idealists : Team }
+
+
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
-    | NewClicksByPersonalityType (PersonalityTypeDict Int)
+    | NewClicksByPersonalityType Teams
     | NewUser User
     | NewTotalUsers Int
     | NewClicksByUser Int
-    | NewUsernamesByPersonalityTypes (PersonalityTypeDict (List ( String, Int )))
+    | NewUsernamesByPersonalityTypes TeamsUserClicks
     | NewTick Time.Posix
     | NewAllChatMessages (List ChatMessage)

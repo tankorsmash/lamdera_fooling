@@ -56,7 +56,7 @@ update msg model =
 
                 -- , Lamdera.sendToFrontend clientId
                 , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
-                , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.clicksByPersonalityType)
+                , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.teams)
                 , Lamdera.sendToFrontend clientId (NewAllChatMessages model.allChatMessages)
                 ]
             )
@@ -75,7 +75,7 @@ update msg model =
             )
 
 
-usernamesDataByPersonalityTypes : List User -> PersonalityTypeDict (List ( String, Int ))
+usernamesDataByPersonalityTypes : List User -> Types.TeamsUserClicks
 usernamesDataByPersonalityTypes users =
     List.foldl
         (\user acc ->
@@ -87,23 +87,18 @@ usernamesDataByPersonalityTypes users =
                     acc
 
                 FullUser userData ->
-                    Dict.update
-                        (personalityTypeToDataId userData.personalityType)
-                        (\v ->
-                            let
-                                toAdd =
-                                    ( userData.username, userData.userClicks )
-                            in
-                            case v of
-                                Just names ->
-                                    Just (toAdd :: names)
+                    let
+                        toAdd =
+                            ( userData.username, userData.userClicks )
+                    in
+                    case userData.personalityType of
+                        Idealistic ->
+                            { acc | idealists = toAdd :: acc.idealists }
 
-                                Nothing ->
-                                    Just [ toAdd ]
-                        )
-                        acc
+                        Realistic ->
+                            { acc | realists = toAdd :: acc.realists }
         )
-        Dict.empty
+        { realists = [], idealists = [] }
         users
 
 
@@ -134,6 +129,26 @@ userIsPrepping user =
             False
 
 
+updateTeamByPersonalityType : Teams -> PersonalityType -> (Team -> Team) -> Teams
+updateTeamByPersonalityType teams personalityType updater =
+    case personalityType of
+        Realistic ->
+            updateRealists teams updater
+
+        Idealistic ->
+            updateIdealists teams updater
+
+
+updateRealists : Teams -> (Team -> Team) -> Teams
+updateRealists teams updater =
+    { teams | realists = updater teams.realists }
+
+
+updateIdealists : Teams -> (Team -> Team) -> Teams
+updateIdealists teams updater =
+    { teams | idealists = updater teams.idealists }
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -154,10 +169,10 @@ updateFromFrontend sessionId clientId msg model =
                                 clicks + 1
 
                             updatedClicksTracker =
-                                Dict.update
-                                    (personalityTypeToDataId userData.personalityType)
-                                    (Maybe.map modifyClicks)
-                                    model.clicksByPersonalityType
+                                updateTeamByPersonalityType
+                                    model.teams
+                                    userData.personalityType
+                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
 
                             newUsers =
                                 model.users
@@ -180,14 +195,14 @@ updateFromFrontend sessionId clientId msg model =
                             newModel =
                                 { model
                                     | totalClicks = modifyClicks model.totalClicks
-                                    , clicksByPersonalityType = updatedClicksTracker
+                                    , teams = updatedClicksTracker
                                     , users = newUsers
                                 }
                         in
                         ( newModel
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             ]
@@ -220,22 +235,29 @@ updateFromFrontend sessionId clientId msg model =
                             modifyEnemyClicks clicks =
                                 clicks - 1
 
+                            updatedClicksTracker : Teams
                             updatedClicksTracker =
-                                model.clicksByPersonalityType
-                                    |> --remove their own clicks
-                                       Dict.update
-                                        (personalityTypeToDataId userData.personalityType)
-                                        (Maybe.map modifySelfClicks)
+                                model.teams
                                     |> --remove enemy teams clicks
-                                       Dict.update
-                                        (case userData.personalityType of
-                                            Realistic ->
-                                                personalityTypeToDataId Idealistic
+                                       (\teams ->
+                                            updateTeamByPersonalityType
+                                                teams
+                                                userData.personalityType
+                                                (\team -> { team | totalTeamClicks = modifySelfClicks team.totalTeamClicks })
+                                       )
+                                    |> --remove enemy teams clicks
+                                       (\teams ->
+                                            updateTeamByPersonalityType
+                                                teams
+                                                (case userData.personalityType of
+                                                    Realistic ->
+                                                        Idealistic
 
-                                            Idealistic ->
-                                                personalityTypeToDataId Realistic
-                                        )
-                                        (Maybe.map modifyEnemyClicks)
+                                                    Idealistic ->
+                                                        Realistic
+                                                )
+                                                (\team -> { team | totalTeamClicks = modifyEnemyClicks team.totalTeamClicks })
+                                       )
 
                             newUsers =
                                 model.users
@@ -258,14 +280,14 @@ updateFromFrontend sessionId clientId msg model =
                             newModel =
                                 { model
                                     | totalClicks = modifySelfClicks model.totalClicks
-                                    , clicksByPersonalityType = updatedClicksTracker
+                                    , teams = updatedClicksTracker
                                     , users = newUsers
                                 }
                         in
                         ( newModel
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.clicksByPersonalityType)
+                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifySelfClicks userData.userClicks)
                             ]

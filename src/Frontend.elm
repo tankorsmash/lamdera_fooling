@@ -179,8 +179,8 @@ updateFromBackend msg model =
         NewTotalClicks totalClicks ->
             ( { model | totalClicksFromBackend = totalClicks }, Cmd.none )
 
-        NewClicksByPersonalityType clicksTracker ->
-            ( { model | personalityTypeClicksFromBackend = clicksTracker }, Cmd.none )
+        NewClicksByPersonalityType teams ->
+            ( { model | teamsFromBackend = teams }, Cmd.none )
 
         NewUser user ->
             ( { model | user = user }, Cmd.none )
@@ -192,7 +192,7 @@ updateFromBackend msg model =
             ( { model | userClicksFromBackend = newClicks }, Cmd.none )
 
         NewUsernamesByPersonalityTypes newUsernamesByPersonalityTypes ->
-            ( { model | usernamesByPersonalityTypes = newUsernamesByPersonalityTypes }, Cmd.none )
+            ( { model | teamsUserClicks = newUsernamesByPersonalityTypes }, Cmd.none )
 
         NewTick time ->
             ( model, Cmd.none )
@@ -502,10 +502,16 @@ viewPlayers : Model -> Element FrontendMsg
 viewPlayers model =
     let
         viewUsersInPersonalityType alliedPersonalityType =
-            model.usernamesByPersonalityTypes
-                |> Dict.get (Types.personalityTypeToDataId alliedPersonalityType)
-                |> Maybe.map
-                    (\names ->
+            model.teamsUserClicks
+                |> (\tuc ->
+                        case alliedPersonalityType of
+                            Realistic ->
+                                tuc.realists
+
+                            Idealistic ->
+                                tuc.idealists
+                   )
+                |> (\names ->
                         let
                             header =
                                 el [ Font.underline, paddingXY 0 5 ] <|
@@ -526,8 +532,7 @@ viewPlayers model =
                                             )
                                    )
                             )
-                    )
-                |> Maybe.withDefault Element.none
+                   )
     in
     row [ width fill, centerX, Element.spaceEvenly ]
         [ viewUsersInPersonalityType Realistic
@@ -552,47 +557,19 @@ viewPlaying model personalityType =
 scoreboard : Model -> PersonalityType -> Element FrontendMsg
 scoreboard model personalityType =
     let
-        viewCountFromPersonality ( maybePersType, count ) =
-            let
-                strCount =
-                    String.fromInt count
-            in
-            maybePersType
-                |> Maybe.map
-                    (\persType ->
-                        if persType == personalityType then
-                            text <| "Clicks from your people: " ++ strCount
+        viewCountFromPersonality teamPersonalityType team =
+            if teamPersonalityType == personalityType then
+                text <| "Clicks from your people: " ++ String.fromInt team.totalTeamClicks
 
-                        else
-                            text <| "Clicks from the other guys: " ++ strCount
-                    )
-                |> Maybe.withDefault
-                    (text <| "Clicks from randos: " ++ strCount)
+            else
+                text <| "Clicks from the other guys: " ++ String.fromInt team.totalTeamClicks
     in
     column [ width fill ]
         [ el [ centerX ] <| text <| "All clicks: " ++ String.fromInt model.totalClicksFromBackend
         , row [ centerX, spacing 10 ] <|
-            (model.personalityTypeClicksFromBackend
-                |> Dict.toList
-                |> List.map
-                    (Tuple.mapFirst stringToPersonalityType)
-                |> List.sortWith
-                    (\left right ->
-                        Maybe.map2
-                            (\l _ ->
-                                if l == personalityType then
-                                    LT
-
-                                else
-                                    GT
-                            )
-                            (Tuple.first left)
-                            (Tuple.first right)
-                            |> Maybe.withDefault EQ
-                    )
-                |> List.map
-                    viewCountFromPersonality
-            )
+            [ viewCountFromPersonality Idealistic model.teamsFromBackend.idealists
+            , viewCountFromPersonality Realistic model.teamsFromBackend.realists
+            ]
         , paragraph [ centerX, Font.center ]
             [ text <| "You've contributed " ++ String.fromInt model.userClicksFromBackend ++ " clicks towards being better than those other guys."
             ]
