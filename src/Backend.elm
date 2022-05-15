@@ -351,11 +351,12 @@ updateFromFrontend sessionId clientId msg model =
         UserSentMessage chatContent ->
             getUserBySessionId model.users sessionId
                 |> Debug.log "user?"
+                |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\user ->
+                    (\userData ->
                         let
                             newMessage =
-                                { user = user, message = chatContent, date = "" }
+                                { userData = userData, message = chatContent, date = "" }
 
                             newAllChatMessages =
                                 newMessage :: model.allChatMessages

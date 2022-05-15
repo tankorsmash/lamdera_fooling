@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (ChatMessage, BackendModel, BackendMsg(..), FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
@@ -111,7 +111,7 @@ initFrontendModel key =
 
 
 type alias ChatMessage =
-    { user : User
+    { userData : UserData
     , message : String
     , date : String
     }

@@ -42,7 +42,7 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
-import Types exposing (FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getUsername, initFrontendModel, stringToPersonalityType)
+import Types exposing (ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getUsername, initFrontendModel, stringToPersonalityType)
 import Url
 
 
@@ -556,7 +556,16 @@ scoreboard model personalityType =
         ]
 
 
+bottomBar : Maybe String -> List ChatMessage -> User -> PersonalityType -> Element FrontendMsg
 bottomBar userChatMessage allChatMessages user personalityType =
+    let
+        viewChatMessage : ChatMessage -> Element FrontendMsg
+        viewChatMessage chatMessage =
+            paragraph [ Element.width (fill |> Element.maximum 500) ]
+                [ el [ centerY, Font.center, UI.scaled_font 1, height fill ] <| text <| chatMessage.userData.username ++ ": "
+                , el [ centerY, Font.center, height fill ] <| text <| chatMessage.message
+                ]
+    in
     column [ centerX, alignBottom, spacing 5 ]
         [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
             text <|
@@ -583,7 +592,8 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     , colorTheme = UI.BrightTheme
                     }
             ]
-        , column [] <| List.map (\chatMsg -> text chatMsg.message) allChatMessages
+        , column [] <|
+            List.map viewChatMessage allChatMessages
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline

@@ -626,6 +626,7 @@ colorFromInt int positiveColor neutralColor negativeColor =
         negativeColor
 
 
+monospace : List (Element.Attribute msg) -> Element msg -> Element msg
 monospace attrs el =
     Element.el (Font.family [ Font.monospace ] :: attrs) el
 
