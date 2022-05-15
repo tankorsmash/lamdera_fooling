@@ -120,7 +120,6 @@ update msg model =
         ChatInputSent ->
             ( { model | userChatMessage = Nothing }
             , model.userChatMessage
-                |> Debug.log "chat msg"
                 |> Maybe.map (\chatMsg -> Lamdera.sendToBackend <| UserSentMessage chatMsg)
                 |> Maybe.withDefault Cmd.none
             )

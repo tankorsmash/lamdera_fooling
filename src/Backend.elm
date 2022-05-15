@@ -351,7 +351,6 @@ updateFromFrontend sessionId clientId msg model =
 
         UserSentMessage chatContent ->
             getUserBySessionId model.users sessionId
-                |> Debug.log "user?"
                 |> Maybe.andThen getUserData
                 |> Maybe.map
                     (\userData ->
