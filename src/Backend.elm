@@ -169,13 +169,25 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserWantsToSpend ->
+            let
+                clickCost = 3
+            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
+                |> --kinda hackily make sure they can afford this by returning nothing. not sure if this is elm style
+                   Maybe.andThen
+                    (\userData ->
+                        if userData.userClicks < clickCost then
+                            Nothing
+
+                        else
+                            Just userData
+                    )
                 |> Maybe.map
                     (\userData ->
                         let
                             modifySelfClicks clicks =
-                                clicks - 3
+                                clicks - clickCost
 
                             modifyEnemyClicks clicks =
                                 clicks - 1
