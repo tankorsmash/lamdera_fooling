@@ -122,10 +122,10 @@ update msg model =
             ( { model | user = AnonymousUser Nothing }, Cmd.none )
 
         ConfirmedPersonalityType personalityType ->
-            ( model, Cmd.batch [ focusElement "set-username" , Lamdera.sendToBackend (UserChoseToBe personalityType)] )
+            ( model, Cmd.batch [ focusElement "set-username", Lamdera.sendToBackend (UserChoseToBe personalityType) ] )
 
         ChangedUsername newUsername ->
-            ( { model | newUsername = newUsername }, Cmd.none)
+            ( { model | newUsername = newUsername }, Cmd.none )
 
         FinalizeUser ->
             let
@@ -285,10 +285,10 @@ viewPrepping model personalityType =
                             text <|
                                 case personalityType of
                                     Idealistic ->
-                                        "AnIdeal1st321"
+                                        "AnIdeal1st2003"
 
                                     Realistic ->
-                                        "R3al1tyB1t3s"
+                                        "xXDeadAirHangsXx"
                         )
                     )
             , label = Input.labelLeft [] <| text "You can be anyone..."
@@ -527,7 +527,12 @@ viewPlayers model =
                                                )
                                     )
                         in
-                        column [ alignTop ] <|
+                        column
+                            [ alignTop
+                            , --- this does not work because the overlay is behind the content, so its not allowing clicks though to this element
+                              UI.allowUserSelect
+                            ]
+                        <|
                             (header
                                 :: (names
                                         |> List.sortBy .clicks
