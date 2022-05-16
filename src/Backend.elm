@@ -424,6 +424,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         , personalityType = personalityType
                                                         , userClicks = 0
                                                         , isOnline = True
+                                                        , xp = 0
                                                         }
 
                                                 FullUser userData ->
@@ -434,6 +435,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         , personalityType = userData.personalityType
                                                         , userClicks = userData.userClicks
                                                         , isOnline = True
+                                                        , xp = userData.xp
                                                         }
                                         )
                                         model.users
@@ -460,6 +462,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                     , personalityType = personalityType
                                                                     , userClicks = 0
                                                                     , isOnline = True
+                                                                    , xp = 0
                                                                     }
 
                                                             FullUser userData ->
@@ -470,6 +473,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                     , personalityType = userData.personalityType
                                                                     , userClicks = userData.userClicks
                                                                     , isOnline = True
+                                                                    , xp = userData.xp
                                                                     }
                                                     )
                                                     model.users

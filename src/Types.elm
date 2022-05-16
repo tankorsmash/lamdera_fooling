@@ -20,6 +20,7 @@ type alias UserData =
     , username : String
     , userClicks : Int
     , isOnline : Bool
+    , xp : Int
     }
 
 
@@ -128,9 +129,6 @@ initFrontendModel key =
     , userClicksFromBackend = 0
     , user = AnonymousUser Nothing
     , newUsername = ""
-
-    -- , user = AnonymousUser (Just Idealistic)
-    -- , user = AnonymousUser (Just Realistic)
     , totalUsers = 0
     , teamsUserClicks = { realists = [], idealists = [] }
     , userChatMessage = Nothing
