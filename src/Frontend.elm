@@ -167,7 +167,7 @@ update msg model =
             ( model, Cmd.none )
 
         SendBuyUpgrade upgradeType ->
-            ( model, Lamdera.sendToBackend (Types.UserWantsToBuyUpgrade upgradeType))
+            ( model, Lamdera.sendToBackend (Types.UserWantsToBuyUpgrade upgradeType) )
 
 
 
@@ -573,7 +573,7 @@ viewPlayers model =
 
 
 viewPlaying : Model -> Types.UserData -> Element FrontendMsg
-viewPlaying model {personalityType, xp} =
+viewPlaying model { personalityType, xp } =
     column [ width fill, height fill, spacing 10 ]
         [ scoreboard model personalityType
         , column
@@ -614,7 +614,18 @@ bottomBar userChatMessage allChatMessages user personalityType =
         viewChatMessage : ChatMessage -> Element FrontendMsg
         viewChatMessage chatMessage =
             paragraph [ Element.width (fill |> Element.maximum 500) ]
-                [ el [ centerY, Font.center, UI.scaled_font 1, height fill ] <| text <| chatMessage.userData.username ++ ": "
+                [ el
+                    ((if chatMessage.userData.isOnline then
+                        [ Font.color <| UI.convertColor Color.lightGreen ]
+
+                      else
+                        []
+                     )
+                        ++ [ centerY, Font.center, UI.scaled_font 1, height fill ]
+                    )
+                  <|
+                    text <|
+                        (chatMessage.userData.username ++ ": ")
                 , el [ centerY, Font.center, height fill ] <| text <| chatMessage.message
                 ]
     in
@@ -622,7 +633,6 @@ bottomBar userChatMessage allChatMessages user personalityType =
         [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
             text <|
                 (getUsername user
-                    |> Maybe.map identity
                     |> Maybe.withDefault ""
                 )
         , row []
