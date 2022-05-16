@@ -585,24 +585,15 @@ processChatMessages users allChatMessages =
         |> List.take 5
         |> List.map
             (\({ userData } as chatMessage) ->
-                let
-                    matchingUser =
-                        getUserByUsername users userData.username
-
-                    newUserData =
-                        matchingUser
-                            |> Maybe.andThen getUserData
-                            |> Maybe.map
-                                (\ud ->
-                                    { userData | isOnline = ud.isOnline }
-                                )
-                in
-                case newUserData of
-                    Just ud ->
-                        { chatMessage | userData = ud }
-
-                    Nothing ->
-                        chatMessage
+                getUserByUsername users userData.username
+                    |> --if user is found, get its user data
+                       Maybe.andThen getUserData
+                    |> --if the userdata is valid, replace the chatMessages's userdata with the user's userdata
+                       Maybe.map (\ud -> { userData | isOnline = ud.isOnline })
+                    |> -- then update the chat message's userdata with the updated userdata
+                       Maybe.andThen (\ud -> Just { chatMessage | userData = ud })
+                    |> --otherwise just return the original chatmessage
+                       Maybe.withDefault chatMessage
             )
 
 
