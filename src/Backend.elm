@@ -522,10 +522,6 @@ updateFromFrontend sessionId clientId msg model =
                                     getSessionId u
                                         |> Maybe.map
                                             (\cid ->
-                                                let
-                                                    _ =
-                                                        Debug.log "match?" (cid == sessionId)
-                                                in
                                                 cid == sessionId
                                             )
                                         |> Maybe.withDefault False
@@ -542,7 +538,6 @@ updateFromFrontend sessionId clientId msg model =
                                             FullUser { userData | sessionId = Nothing, isOnline = False }
                                 )
                                 model.users
-                                |> Debug.log "updated users after a log out"
                     }
             in
             ( newModel
