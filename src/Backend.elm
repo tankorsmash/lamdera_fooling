@@ -242,7 +242,7 @@ updateFromFrontend sessionId clientId msg model =
                                         (\oldUser ->
                                             mapUserData oldUser
                                                 (\ud ->
-                                                    { ud | userClicks = modifyClicks ud.userClicks }
+                                                    { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 }
                                                 )
                                                 |> Maybe.map FullUser
                                                 |> Maybe.withDefault oldUser
@@ -262,6 +262,9 @@ updateFromFrontend sessionId clientId msg model =
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                            , getUserBySessionId newModel.users sessionId
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                                |> Maybe.withDefault Cmd.none
                             ]
                         )
                     )

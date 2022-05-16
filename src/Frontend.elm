@@ -249,8 +249,8 @@ view model =
                 PreppingUser clientId personalityType ->
                     viewPrepping model personalityType
 
-                FullUser { personalityType } ->
-                    viewPlaying model personalityType
+                FullUser userData ->
+                    viewPlaying model userData
         ]
     }
 
@@ -454,10 +454,10 @@ viewAnon model maybePersonalityType =
         ]
 
 
-actionArea : Element FrontendMsg
-actionArea =
+actionArea : Int -> Element FrontendMsg
+actionArea xp =
     column [ centerX, width fill, spacing 10 ]
-        [ el [ centerX, Font.underline ] <| text "Take action"
+        [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
@@ -557,15 +557,15 @@ viewPlayers model =
         ]
 
 
-viewPlaying : Model -> PersonalityType -> Element FrontendMsg
-viewPlaying model personalityType =
+viewPlaying : Model -> Types.UserData -> Element FrontendMsg
+viewPlaying model {personalityType, xp} =
     column [ width fill, height fill, spacing 10 ]
         [ scoreboard model personalityType
         , column
             [ width fill
             , Element.behindContent <| viewPlayers model
             ]
-            [ actionArea
+            [ actionArea xp
             ]
         , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
         ]
