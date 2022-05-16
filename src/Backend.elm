@@ -76,7 +76,7 @@ update msg model =
                         Cmd.none
                 , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                 , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType newModel.teams)
-                , Lamdera.sendToFrontend clientId (NewAllChatMessages newModel.allChatMessages)
+                , Lamdera.sendToFrontend clientId (NewAllChatMessages <| processChatMessages newModel.users newModel.allChatMessages)
                 ]
             )
 
@@ -567,13 +567,43 @@ updateFromFrontend sessionId clientId msg model =
                                 newMessage :: model.allChatMessages
                         in
                         ( { model | allChatMessages = newAllChatMessages }
-                        , Lamdera.broadcast <| NewAllChatMessages newAllChatMessages
+                        , Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
                         )
                     )
                 |> Maybe.withDefault noop
 
         UserWantsToBuyUpgrade upgradeType ->
             ( model, Cmd.none )
+
+
+{-| Only send 5 messages to client, and update the messages' user datas' isOnline
+with the live data
+-}
+processChatMessages : List User -> List ChatMessage -> List ChatMessage
+processChatMessages users allChatMessages =
+    allChatMessages
+        |> List.take 5
+        |> List.map
+            (\({ userData } as chatMessage) ->
+                let
+                    matchingUser =
+                        getUserByUsername users userData.username
+
+                    newUserData =
+                        matchingUser
+                            |> Maybe.andThen getUserData
+                            |> Maybe.map
+                                (\ud ->
+                                    { userData | isOnline = ud.isOnline }
+                                )
+                in
+                case newUserData of
+                    Just ud ->
+                        { chatMessage | userData = ud }
+
+                    Nothing ->
+                        chatMessage
+            )
 
 
 {-| Basically setTimeout that'll make a Msg come through `millis` milliseconds
