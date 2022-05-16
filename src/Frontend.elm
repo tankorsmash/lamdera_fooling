@@ -482,7 +482,7 @@ actionArea xp =
                     , UI.scaled_font 2
                     ]
                 , onPressMsg = SendBuyUpgrade (Types.SelfImprovement 1)
-                , textLabel = "Self-improvement +1 (5xp)"
+                , textLabel = "Self-improvement +1 (5xp) (doesnt do anything yet)"
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
