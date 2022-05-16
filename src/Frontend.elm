@@ -166,6 +166,9 @@ update msg model =
         FocusError err ->
             ( model, Cmd.none )
 
+        SendBuyUpgrade upgradeType ->
+            ( model, Lamdera.sendToBackend (Types.UserWantsToBuyUpgrade upgradeType))
+
 
 
 -- end of update
@@ -470,6 +473,18 @@ actionArea xp =
                 , textLabel = "Contribute +1"
                 , colorTheme = UI.BrightTheme
                 }
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Outline
+                , customAttrs =
+                    [ centerX
+                    , width Element.shrink
+                    , UI.scaled_font 2
+                    ]
+                , onPressMsg = SendBuyUpgrade (Types.SelfImprovement 1)
+                , textLabel = "Self-improvement +1 (5xp)"
+                , colorTheme = UI.BrightTheme
+                }
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
         , UI.button <|
             UI.TextParams
@@ -565,8 +580,7 @@ viewPlaying model {personalityType, xp} =
             [ width fill
             , Element.behindContent <| viewPlayers model
             ]
-            [ actionArea xp
-            ]
+            [ actionArea xp ]
         , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
         ]
 

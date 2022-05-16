@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (UpgradeType(..), Upgrade(..), BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -227,6 +227,13 @@ type alias BackendModel =
     }
 
 
+type Upgrade
+    = Upgrade UpgradeType Int
+
+type UpgradeType
+    = SelfImprovement Int
+
+
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
@@ -241,6 +248,7 @@ type FrontendMsg
     | LogUserOut
     | SendClickToBackend
     | SendWantsToSpendToBackend
+    | SendBuyUpgrade UpgradeType
       -- chat messages
     | ChatInputChanged (Maybe String)
     | ChatInputSent
@@ -255,6 +263,7 @@ type ToBackend
     | UserFinalizedUser String
     | UserLoggedOut
     | UserSentMessage String
+    | UserWantsToBuyUpgrade UpgradeType
 
 
 type BackendMsg

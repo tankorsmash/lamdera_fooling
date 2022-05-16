@@ -572,6 +572,9 @@ updateFromFrontend sessionId clientId msg model =
                     )
                 |> Maybe.withDefault noop
 
+        UserWantsToBuyUpgrade upgradeType ->
+            ( model, Cmd.none )
+
 
 {-| Basically setTimeout that'll make a Msg come through `millis` milliseconds
 later
