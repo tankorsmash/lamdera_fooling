@@ -26,6 +26,7 @@ subscriptions : Model -> Sub BackendMsg
 subscriptions model =
     Sub.batch
         [ Lamdera.onConnect OnClientConnect
+        , Lamdera.onDisconnect OnClientDisconnect
         ]
 
 
@@ -43,22 +44,65 @@ update msg model =
             ( model, Cmd.none )
 
         OnClientConnect sessionId clientId ->
-            ( model
+            let
+                newUsers =
+                    model.users
+                        |> List.Extra.updateIf
+                            (\u ->
+                                getSessionId u
+                                    |> Maybe.map ((==) sessionId)
+                                    |> Maybe.withDefault False
+                            )
+                            (\oldUser ->
+                                mapFullUser
+                                    (\ud ->
+                                        FullUser { ud | isOnline = True }
+                                    )
+                                    oldUser
+                            )
+
+                newModel =
+                    { model | users = newUsers }
+            in
+            ( newModel
             , Cmd.batch
-                [ Lamdera.sendToFrontend clientId (NewTotalClicks model.totalClicks)
-                , Lamdera.sendToFrontend clientId (NewTotalUsers <| List.length model.users)
-                , case getUserBySessionId model.users sessionId of
+                [ Lamdera.sendToFrontend clientId (NewTotalClicks newModel.totalClicks)
+                , Lamdera.sendToFrontend clientId (NewTotalUsers <| List.length newModel.users)
+                , case getUserBySessionId newModel.users sessionId of
                     Just user ->
                         Lamdera.sendToFrontend sessionId (NewUser user)
 
                     Nothing ->
                         Cmd.none
-
-                -- , Lamdera.sendToFrontend clientId
-                , Lamdera.sendToFrontend clientId (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
-                , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType model.teams)
-                , Lamdera.sendToFrontend clientId (NewAllChatMessages model.allChatMessages)
+                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType newModel.teams)
+                , Lamdera.sendToFrontend clientId (NewAllChatMessages newModel.allChatMessages)
                 ]
+            )
+
+        OnClientDisconnect sessionId clientId ->
+            let
+                newUsers =
+                    model.users
+                        |> List.Extra.updateIf
+                            (\u ->
+                                getSessionId u
+                                    |> Maybe.map ((==) sessionId)
+                                    |> Maybe.withDefault False
+                            )
+                            (\oldUser ->
+                                mapFullUser
+                                    (\ud ->
+                                        FullUser { ud | isOnline = False }
+                                    )
+                                    oldUser
+                            )
+
+                newModel =
+                    { model | users = newUsers }
+            in
+            ( newModel
+            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
             )
 
         UpdateTick time ->
@@ -75,8 +119,8 @@ update msg model =
             )
 
 
-usernamesDataByPersonalityTypes : List User -> Types.TeamsUserClicks
-usernamesDataByPersonalityTypes users =
+convertUsersToTeamsUserClicks : List User -> Types.TeamsUserClicks
+convertUsersToTeamsUserClicks users =
     List.foldl
         (\user acc ->
             case user of
@@ -89,7 +133,7 @@ usernamesDataByPersonalityTypes users =
                 FullUser userData ->
                     let
                         toAdd =
-                            ( userData.username, userData.userClicks )
+                            { username = userData.username, clicks = userData.userClicks, isOnline = userData.isOnline }
                     in
                     case userData.personalityType of
                         Idealistic ->
@@ -216,7 +260,7 @@ updateFromFrontend sessionId clientId msg model =
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             ]
                         )
@@ -301,7 +345,7 @@ updateFromFrontend sessionId clientId msg model =
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifySelfClicks userData.userClicks)
                             ]
                         )
@@ -347,7 +391,7 @@ updateFromFrontend sessionId clientId msg model =
             ( newModel
             , Cmd.batch
                 [ Lamdera.sendToFrontend sessionId (NewUser toCreate)
-                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes model.users))
+                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks model.users))
                 ]
             )
 
@@ -379,6 +423,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         , username = username
                                                         , personalityType = personalityType
                                                         , userClicks = 0
+                                                        , isOnline = True
                                                         }
 
                                                 FullUser userData ->
@@ -388,6 +433,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         , username = username
                                                         , personalityType = userData.personalityType
                                                         , userClicks = userData.userClicks
+                                                        , isOnline = True
                                                         }
                                         )
                                         model.users
@@ -413,6 +459,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                     , username = username
                                                                     , personalityType = personalityType
                                                                     , userClicks = 0
+                                                                    , isOnline = True
                                                                     }
 
                                                             FullUser userData ->
@@ -422,6 +469,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                     , username = username
                                                                     , personalityType = userData.personalityType
                                                                     , userClicks = userData.userClicks
+                                                                    , isOnline = True
                                                                     }
                                                     )
                                                     model.users
@@ -452,7 +500,7 @@ updateFromFrontend sessionId clientId msg model =
                     (\u ->
                         Cmd.batch
                             [ Lamdera.sendToFrontend clientId <| NewUser u
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (usernamesDataByPersonalityTypes newModel.users))
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             ]
                     )
                 |> Maybe.withDefault Cmd.none
@@ -472,7 +520,14 @@ updateFromFrontend sessionId clientId msg model =
                             List.Extra.updateIf
                                 (\u ->
                                     getSessionId u
-                                        |> Maybe.map (\cid -> cid == sessionId)
+                                        |> Maybe.map
+                                            (\cid ->
+                                                let
+                                                    _ =
+                                                        Debug.log "match?" (cid == sessionId)
+                                                in
+                                                cid == sessionId
+                                            )
                                         |> Maybe.withDefault False
                                 )
                                 (\u ->
@@ -484,13 +539,17 @@ updateFromFrontend sessionId clientId msg model =
                                             toCreate
 
                                         FullUser userData ->
-                                            FullUser { userData | sessionId = Nothing }
+                                            FullUser { userData | sessionId = Nothing, isOnline = False }
                                 )
                                 model.users
+                                |> Debug.log "updated users after a log out"
                     }
             in
             ( newModel
-            , Lamdera.sendToFrontend sessionId <| NewUser toCreate
+            , Cmd.batch
+                [ Lamdera.sendToFrontend sessionId <| NewUser toCreate
+                , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                ]
             )
 
         UserSentMessage chatContent ->

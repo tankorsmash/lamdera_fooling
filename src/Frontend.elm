@@ -3,6 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
+import Color
 import Dict
 import Element
     exposing
@@ -121,10 +122,10 @@ update msg model =
             ( { model | user = AnonymousUser Nothing }, Cmd.none )
 
         ConfirmedPersonalityType personalityType ->
-            ( model, Lamdera.sendToBackend (UserChoseToBe personalityType) )
+            ( model, Cmd.batch [ focusElement "set-username" , Lamdera.sendToBackend (UserChoseToBe personalityType)] )
 
         ChangedUsername newUsername ->
-            ( { model | newUsername = newUsername }, Cmd.none )
+            ( { model | newUsername = newUsername }, Cmd.none)
 
         FinalizeUser ->
             let
@@ -274,7 +275,7 @@ viewPrepping model personalityType =
                     Realistic ->
                         "realistic, and trying to make due with what you have."
         , text "What would they call you?"
-        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, Input.focusedOnLoad ]
+        , Input.username [ width fill, centerX, UI.onEnter finalizeMsg, UI.defineHtmlId "set-username" ]
             { onChange = ChangedUsername
             , text = model.newUsername
             , placeholder =
@@ -529,11 +530,17 @@ viewPlayers model =
                         column [ alignTop ] <|
                             (header
                                 :: (names
-                                        |> List.sortBy Tuple.second
+                                        |> List.sortBy .clicks
                                         |> List.reverse
                                         |> List.map
-                                            (\( name, count ) ->
-                                                text <| name ++ " x" ++ String.fromInt count
+                                            (\{ username, clicks, isOnline } ->
+                                                if isOnline then
+                                                    el [ Font.color <| UI.convertColor Color.lightGreen ] <|
+                                                        text <|
+                                                            (username ++ " x" ++ String.fromInt clicks)
+
+                                                else
+                                                    text <| username ++ " x" ++ String.fromInt clicks
                                             )
                                    )
                             )

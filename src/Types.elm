@@ -19,6 +19,7 @@ type alias UserData =
     , sessionId : Maybe SessionId
     , username : String
     , userClicks : Int
+    , isOnline : Bool
     }
 
 
@@ -144,8 +145,12 @@ type alias ChatMessage =
     }
 
 
+type alias UserClickData =
+    { username : String, clicks : Int, isOnline : Bool }
+
+
 type alias TeamsUserClicks =
-    { realists : List ( String, Int ), idealists : List ( String, Int ) }
+    { realists : List UserClickData, idealists : List UserClickData }
 
 
 type alias FrontendModel =
@@ -257,6 +262,7 @@ type ToBackend
 type BackendMsg
     = NoOpBackendMsg
     | OnClientConnect SessionId ClientId
+    | OnClientDisconnect SessionId ClientId
     | UpdateTick Time.Posix
 
 
