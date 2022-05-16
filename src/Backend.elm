@@ -173,6 +173,19 @@ updateFromFrontend sessionId clientId msg model =
                                     model.teams
                                     userData.personalityType
                                     (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
+                                       (\teams ->
+                                            updateTeamByPersonalityType
+                                                teams
+                                                userData.personalityType
+                                                (\t ->
+                                                    if t.totalTeamClicks >= 100 then
+                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+
+                                                    else
+                                                        t
+                                                )
+                                       )
 
                             newUsers =
                                 model.users

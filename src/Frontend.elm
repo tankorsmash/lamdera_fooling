@@ -519,10 +519,10 @@ viewPlayers model =
                                         "The "
                                             ++ (case alliedPersonalityType of
                                                     Realistic ->
-                                                        "Realists"
+                                                        "Realists (" ++ String.fromInt model.teamsFromBackend.realists.totalTeamPoints ++ " pts)"
 
                                                     Idealistic ->
-                                                        "Idealists"
+                                                        "Idealists (" ++ String.fromInt model.teamsFromBackend.idealists.totalTeamPoints ++ " pts)"
                                                )
                                     )
                         in
