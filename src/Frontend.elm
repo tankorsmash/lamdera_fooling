@@ -482,7 +482,7 @@ actionArea =
                 , textLabel = "Spend -3 to reduce theirs by -1"
                 , colorTheme = UI.BrightTheme
                 }
-        , el [ centerX, Font.underline ] <| text "Spend your team's clicks"
+        , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
