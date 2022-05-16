@@ -517,8 +517,13 @@ viewPlayers model =
                                 el [ Font.underline, paddingXY 0 5 ] <|
                                     (text <|
                                         "The "
-                                            ++ Types.personalityTypeToDataId alliedPersonalityType
-                                            ++ "s"
+                                            ++ (case alliedPersonalityType of
+                                                    Realistic ->
+                                                        "Realists"
+
+                                                    Idealistic ->
+                                                        "Idealists"
+                                               )
                                     )
                         in
                         column [ alignTop ] <|
