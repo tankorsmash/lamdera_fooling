@@ -168,7 +168,7 @@ updateFromFrontend sessionId clientId msg model =
                             modifyClicks clicks =
                                 clicks + 1
 
-                            updatedClicksTracker =
+                            newTeams =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
@@ -195,7 +195,7 @@ updateFromFrontend sessionId clientId msg model =
                             newModel =
                                 { model
                                     | totalClicks = modifyClicks model.totalClicks
-                                    , teams = updatedClicksTracker
+                                    , teams = newTeams
                                     , users = newUsers
                                 }
                         in
@@ -235,8 +235,8 @@ updateFromFrontend sessionId clientId msg model =
                             modifyEnemyClicks clicks =
                                 clicks - 1
 
-                            updatedClicksTracker : Teams
-                            updatedClicksTracker =
+                            newTeams : Teams
+                            newTeams =
                                 model.teams
                                     |> --remove enemy teams clicks
                                        (\teams ->
@@ -280,7 +280,7 @@ updateFromFrontend sessionId clientId msg model =
                             newModel =
                                 { model
                                     | totalClicks = modifySelfClicks model.totalClicks
-                                    , teams = updatedClicksTracker
+                                    , teams = newTeams
                                     , users = newUsers
                                 }
                         in
