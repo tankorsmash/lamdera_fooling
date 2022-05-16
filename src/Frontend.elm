@@ -642,6 +642,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                 , customAttrs =
                     [ width Element.shrink
                     , Font.size 24
+                    , centerX
                     ]
                 , onPressMsg = LogUserOut
                 , textLabel = "Log me the heck out"
