@@ -21,7 +21,7 @@ frontendModel old =
             , newUsername = old.newUsername
             , user = convertUser old.user
             , totalUsers = old.totalUsers
-            , teamsUserClicks = { realists = [], idealists = []}
+            , teamsUserClicks = { realists = [], idealists = [] }
             , allChatMessages = []
             , userChatMessage = Nothing
             }
@@ -84,10 +84,12 @@ frontendMsg old =
 
             Old.SendWantsToSpendToBackend ->
                 ( New.SendWantsToSpendToBackend, Cmd.none )
+
             Old.ChatInputChanged maybeStr ->
                 ( New.ChatInputChanged maybeStr, Cmd.none )
+
             Old.ChatInputSent ->
-                ( New.ChatInputSent , Cmd.none )
+                ( New.ChatInputSent, Cmd.none )
 
 
 toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
@@ -145,12 +147,11 @@ toFrontend old =
                 New.NewAllChatMessages <| List.map convertChatMessages allChatMessages
         , Cmd.none
         )
-        
 
 
 convertChatMessages : Old.ChatMessage -> New.ChatMessage
 convertChatMessages old =
-    {userData = convertUserData old.userData, message = old.message, date = old.date}
+    { userData = convertUserData old.userData, message = old.message, date = old.date }
 
 
 convertPersonalityType : Old.PersonalityType -> New.PersonalityType
