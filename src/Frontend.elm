@@ -517,10 +517,10 @@ actionArea xp =
 viewPlayers : Model -> Element FrontendMsg
 viewPlayers model =
     let
-        viewUsersInPersonalityType alliedPersonalityType =
+        viewUsersInPersonalityType personalityType =
             model.teamsUserClicks
                 |> (\tuc ->
-                        case alliedPersonalityType of
+                        case personalityType of
                             Realistic ->
                                 tuc.realists
 
@@ -529,11 +529,11 @@ viewPlayers model =
                    )
                 |> (\names ->
                         let
-                            header =
+                            teamHeader =
                                 el [ Font.underline, paddingXY 0 5 ] <|
                                     (text <|
                                         "The "
-                                            ++ (case alliedPersonalityType of
+                                            ++ (case personalityType of
                                                     Realistic ->
                                                         "Realists (" ++ String.fromInt model.teamsFromBackend.realists.totalTeamPoints ++ " pts)"
 
@@ -541,6 +541,16 @@ viewPlayers model =
                                                         "Idealists (" ++ String.fromInt model.teamsFromBackend.idealists.totalTeamPoints ++ " pts)"
                                                )
                                     )
+
+                            groupHeader : Types.Group -> Element FrontendMsg
+                            groupHeader group =
+                                column [ UI.scaled_font 1, paddingXY 0 5 ]
+                                    [ el [ Font.italic ] <|
+                                        (text <|
+                                            group.name
+                                        )
+                                    , text <| String.fromInt (List.length group.members) ++ " members"
+                                    ]
                         in
                         column
                             [ alignTop
@@ -548,8 +558,15 @@ viewPlayers model =
                               UI.allowUserSelect
                             ]
                         <|
-                            (header
-                                :: (names
+                            teamHeader
+                                :: [ column [ paddingXY 0 10 ] <|
+                                        text "Groups"
+                                            :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
+                                                    |> .groups
+                                                    |> List.map (\group -> groupHeader group)
+                                               )
+                                   ]
+                                ++ (names
                                         |> List.sortBy .clicks
                                         |> List.reverse
                                         |> List.map
@@ -563,7 +580,6 @@ viewPlayers model =
                                                     text <| username ++ " x" ++ String.fromInt clicks
                                             )
                                    )
-                            )
                    )
     in
     row [ width fill, centerX, Element.spaceEvenly ]

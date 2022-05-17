@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (Group, BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, getSessionId, getTeamByPersonality, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -25,7 +25,9 @@ type alias UserData =
     }
 
 
-type alias GroupId = String
+type alias GroupId =
+    String
+
 
 type User
     = --user on home screen
@@ -200,10 +202,7 @@ initBackendModel : BackendModel
 initBackendModel =
     { message = "Hello!"
     , totalClicks = 0
-    , teams =
-        { realists = { totalTeamClicks = 0, totalTeamPoints = 0 }
-        , idealists = { totalTeamClicks = 0, totalTeamPoints = 0 }
-        }
+    , teams = initTeams
     , users = []
     , allChatMessages = []
     , userGroups = []
@@ -213,13 +212,38 @@ initBackendModel =
 type alias Team =
     { totalTeamClicks : Int
     , totalTeamPoints : Int
+    , groups : List Group
     }
 
 
+createGroup : String -> Group
+createGroup groupName =
+    { name = groupName, members = [] }
+
+
+initTeams : Teams
 initTeams =
-    { realists = { totalTeamPoints = 0, totalTeamClicks = 0 }
-    , idealists = { totalTeamPoints = 0, totalTeamClicks = 0 }
+    { realists =
+        { totalTeamPoints = 0
+        , totalTeamClicks = 0
+        , groups = [ createGroup "The Straight Shooters", createGroup "Glasses Half Full" ]
+        }
+    , idealists =
+        { totalTeamPoints = 0
+        , totalTeamClicks = 0
+        , groups = [ createGroup "With Eyes Wide Open", createGroup "Excited For The Future" ]
+        }
     }
+
+
+getTeamByPersonality : Teams -> PersonalityType -> Team
+getTeamByPersonality teams personalityType =
+    case personalityType of
+        Realistic ->
+            teams.realists
+
+        Idealistic ->
+            teams.idealists
 
 
 type alias BackendModel =
