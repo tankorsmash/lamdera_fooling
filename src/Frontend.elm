@@ -170,7 +170,7 @@ update msg model =
             ( model, Lamdera.sendToBackend (Types.UserWantsToBuyUpgrade upgradeType) )
 
         TryToJoinGroup groupUuid ->
-            ( model, Lamdera.sendToBackend (Types.UserWantsToJoinGroup groupUuid))
+            ( model, Lamdera.sendToBackend (Types.UserWantsToJoinGroup groupUuid) )
 
 
 
@@ -517,10 +517,10 @@ actionArea xp =
         ]
 
 
-viewPlayers : Model -> Element FrontendMsg
-viewPlayers model =
+viewPlayers : Model -> PersonalityType -> Element FrontendMsg
+viewPlayers model personalityType =
     let
-        viewUsersInPersonalityType personalityType =
+        viewUsersInPersonalityType =
             model.teamsUserClicks
                 |> (\tuc ->
                         case personalityType of
@@ -555,8 +555,7 @@ viewPlayers model =
                         in
                         column
                             [ alignTop
-                            , --- this does not work because the overlay is behind the content, so its not allowing clicks though to this element
-                              UI.allowUserSelect
+                            , UI.allowUserSelect
                             ]
                         <|
                             [ teamHeader
@@ -583,21 +582,20 @@ viewPlayers model =
                                    )
                    )
     in
-    row [ width fill, centerX, Element.spaceEvenly ]
-        [ viewUsersInPersonalityType Realistic
-        , viewUsersInPersonalityType Idealistic
-        ]
+    viewUsersInPersonalityType
 
 
 viewPlaying : Model -> Types.UserData -> Element FrontendMsg
 viewPlaying model { personalityType, xp } =
     column [ width fill, height fill, spacing 10 ]
         [ scoreboard model personalityType
-        , column
-            [ width fill
-            , Element.behindContent <| viewPlayers model
+        , column [ width fill ]
+            [ row [ width fill ]
+                [ viewPlayers model Realistic
+                , el [ centerX ] <| actionArea xp
+                , viewPlayers model Idealistic
+                ]
             ]
-            [ actionArea xp ]
         , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
         ]
 
