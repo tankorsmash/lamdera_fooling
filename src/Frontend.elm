@@ -546,9 +546,7 @@ viewPlayers model =
                             groupHeader group =
                                 column [ UI.scaled_font 1, paddingXY 0 5 ]
                                     [ el [ Font.italic ] <|
-                                        (text <|
-                                            group.name
-                                        )
+                                        (text <| group.name)
                                     , text <| String.fromInt (List.length group.members) ++ " members"
                                     ]
                         in
@@ -558,14 +556,14 @@ viewPlayers model =
                               UI.allowUserSelect
                             ]
                         <|
-                            teamHeader
-                                :: [ column [ paddingXY 0 10 ] <|
-                                        text "Groups"
-                                            :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
-                                                    |> .groups
-                                                    |> List.map (\group -> groupHeader group)
-                                               )
-                                   ]
+                            [ teamHeader
+                            , column [ paddingXY 0 10 ] <|
+                                text "Groups"
+                                    :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
+                                            |> .groups
+                                            |> List.map (\group -> groupHeader group)
+                                       )
+                            ]
                                 ++ (names
                                         |> List.sortBy .clicks
                                         |> List.reverse
