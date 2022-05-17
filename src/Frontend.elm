@@ -191,6 +191,9 @@ update msg model =
         TryToJoinGroup groupUuid ->
             ( model, Lamdera.sendToBackend (Types.UserWantsToJoinGroup groupUuid) )
 
+        TryToLeaveGroup ->
+            ( model, Lamdera.sendToBackend (Types.UserWantsToLeaveGroup ) )
+
 
 
 -- end of update
@@ -588,7 +591,7 @@ viewPlayers model userData personalityType =
                                             |> Maybe.map
                                                 (\userGroupId ->
                                                     if userGroupId == group.groupId then
-                                                        ( Font.color <| UI.convertColor <| Color.lightBlue, NoOpFrontendMsg )
+                                                        ( Font.color <| UI.convertColor <| Color.lightBlue, TryToLeaveGroup )
 
                                                     else
                                                         ( UI.noopAttr, TryToJoinGroup group.groupId )

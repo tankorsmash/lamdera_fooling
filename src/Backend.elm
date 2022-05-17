@@ -639,6 +639,58 @@ updateFromFrontend sessionId clientId msg model =
                               Lamdera.broadcast <| NewClicksByPersonalityType newTeams
                             )
 
+        UserWantsToLeaveGroup ->
+            let
+                maybeUserData =
+                    getUserBySessionId model.users sessionId |> Maybe.andThen getUserData
+            in
+            case maybeUserData of
+                Nothing ->
+                    noop
+
+                Just userData ->
+                    let
+                        --  update user's groupid to Nothing
+                        newUsers =
+                            updateFullUserByUsername
+                                model.users
+                                (\ud -> { ud | groupId = Nothing })
+                                userData.username
+
+                        --  remove user from all groups
+                        newUserGroups : List Group -> List Group
+                        newUserGroups groups =
+                            groups
+                                |> --remove user from all groups
+                                   List.Extra.updateIf
+                                    (.members >> List.member userData.userId)
+                                    (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
+
+                        newRealistTeams : Team
+                        newRealistTeams =
+                            model.teams.realists
+                                |> .groups
+                                |> newUserGroups
+                                |> setTeamGroups model.teams.realists
+
+                        newIdealistTeams : Team
+                        newIdealistTeams =
+                            model.teams.idealists
+                                |> .groups
+                                |> newUserGroups
+                                |> setTeamGroups model.teams.idealists
+
+                        newTeams : Teams
+                        newTeams =
+                            model.teams
+                                |> (\teams -> setRealistTeam teams newRealistTeams)
+                                |> (\teams -> setIdealistTeam teams newIdealistTeams)
+                    in
+                    ( { model | users = newUsers, teams = newTeams }
+                    , -- broadcast user joining a new group
+                      Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                    )
+
 
 setTeamGroups : Team -> List Group -> Team
 setTeamGroups team newUserGroups =

@@ -305,6 +305,7 @@ type FrontendMsg
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
+    | TryToLeaveGroup
       -- chat messages
     | ChatInputChanged (Maybe String)
     | ChatInputSent
@@ -321,6 +322,7 @@ type ToBackend
     | UserSentMessage String
     | UserWantsToBuyUpgrade UpgradeType
     | UserWantsToJoinGroup UUID.UUID
+    | UserWantsToLeaveGroup
 
 
 type BackendMsg
