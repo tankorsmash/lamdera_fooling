@@ -484,7 +484,7 @@ actionArea xp numGroupMembers =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
-            UI.TextParams
+            UI.CustomParams
                 { buttonType = UI.Outline
                 , customAttrs =
                     [ centerX
@@ -492,14 +492,18 @@ actionArea xp numGroupMembers =
                     , Font.size 24
                     ]
                 , onPressMsg = SendClickToBackend
-                , textLabel =
-                    "Contribute +1"
-                        ++ (if groupMemberClickBonus numGroupMembers > 0 then
-                                " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
+                , customLabel =
+                    row []
+                        [ paragraph [ centerY, height fill ]
+                            [ text "Contribute +1" ]
+                        , el [ UI.scaled_font 2, Font.color <| UI.convertColor <| Color.lightBlue ] <|
+                            text <|
+                                if groupMemberClickBonus numGroupMembers > 0 then
+                                    " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
 
-                            else
-                                ""
-                           )
+                                else
+                                    ""
+                        ]
                 , colorTheme = UI.BrightTheme
                 }
         , UI.button <|
