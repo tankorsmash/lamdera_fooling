@@ -407,6 +407,42 @@ updateFromFrontend sessionId clientId msg model =
                     getUserByUsername model.users username
 
                 newModel =
+                    let
+                        promoteUser sessionId_ personalityType =
+                            --promote to full user
+                            FullUser
+                                { sessionId = Just sessionId_
+                                , username = username
+                                , personalityType = personalityType
+                                , userClicks = 0
+                                , isOnline = True
+                                , xp = 0
+                                , groupId = Nothing
+                                }
+
+                        replaceUser existingUserData =
+                            FullUser
+                                { sessionId = Just sessionId
+                                , username = username
+                                , personalityType = existingUserData.personalityType
+                                , userClicks = existingUserData.userClicks
+                                , isOnline = True
+                                , xp = existingUserData.xp
+                                , groupId = existingUserData.groupId
+                                }
+
+                        updateExistingUser newUser =
+                            case newUser of
+                                AnonymousUser _ ->
+                                    newUser
+
+                                PreppingUser sessionId_ personalityType ->
+                                    promoteUser sessionId_ personalityType
+
+                                FullUser userData ->
+                                    -- just replace session id, dont reset
+                                    replaceUser userData
+                    in
                     case ( existingUserBySession, existingUserByUsername ) of
                         -- if user with session id exists, replace it with a reset one
                         ( Just sessionUser, Nothing ) ->
@@ -414,33 +450,7 @@ updateFromFrontend sessionId clientId msg model =
                                 | users =
                                     List.Extra.updateIf
                                         (userMatchesSessionId sessionId)
-                                        (\u ->
-                                            case u of
-                                                AnonymousUser _ ->
-                                                    u
-
-                                                PreppingUser sessionId_ personalityType ->
-                                                    --promote to full user
-                                                    FullUser
-                                                        { sessionId = Just sessionId_
-                                                        , username = username
-                                                        , personalityType = personalityType
-                                                        , userClicks = 0
-                                                        , isOnline = True
-                                                        , xp = 0
-                                                        }
-
-                                                FullUser userData ->
-                                                    -- just replace session id, dont reset
-                                                    FullUser
-                                                        { sessionId = Just sessionId
-                                                        , username = username
-                                                        , personalityType = userData.personalityType
-                                                        , userClicks = userData.userClicks
-                                                        , isOnline = True
-                                                        , xp = userData.xp
-                                                        }
-                                        )
+                                        updateExistingUser
                                         model.users
                             }
 
@@ -452,33 +462,7 @@ updateFromFrontend sessionId clientId msg model =
                                             | users =
                                                 List.Extra.updateIf
                                                     (userMatchesUsername username)
-                                                    (\u ->
-                                                        case u of
-                                                            AnonymousUser _ ->
-                                                                u
-
-                                                            PreppingUser _ personalityType ->
-                                                                --promote to full user
-                                                                FullUser
-                                                                    { sessionId = Just sessionId
-                                                                    , username = username
-                                                                    , personalityType = personalityType
-                                                                    , userClicks = 0
-                                                                    , isOnline = True
-                                                                    , xp = 0
-                                                                    }
-
-                                                            FullUser userData ->
-                                                                -- override session id
-                                                                FullUser
-                                                                    { sessionId = Just sessionId
-                                                                    , username = username
-                                                                    , personalityType = userData.personalityType
-                                                                    , userClicks = userData.userClicks
-                                                                    , isOnline = True
-                                                                    , xp = userData.xp
-                                                                    }
-                                                    )
+                                                    updateExistingUser
                                                     model.users
                                         }
                                    )
