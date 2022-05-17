@@ -1,4 +1,4 @@
-module Types exposing (Group, BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, getSessionId, getTeamByPersonality, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, generateUuid, getSessionId, getTeamByPersonality, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -6,6 +6,7 @@ import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Time
+import UUID
 import Url exposing (Url)
 
 
@@ -22,11 +23,12 @@ type alias UserData =
     , isOnline : Bool
     , xp : Int
     , groupId : Maybe GroupId
+    , userId : UUID.UUID
     }
 
 
 type alias GroupId =
-    String
+    UUID.UUID
 
 
 type User
@@ -205,7 +207,6 @@ initBackendModel =
     , teams = initTeams
     , users = []
     , allChatMessages = []
-    , userGroups = []
     }
 
 
@@ -216,9 +217,16 @@ type alias Team =
     }
 
 
+{-| NOTE: uuid is based on name, so dont create two groups with the same name
+-}
 createGroup : String -> Group
 createGroup groupName =
-    { name = groupName, members = [] }
+    { name = groupName, members = [], groupId = generateUuid groupName }
+
+
+generateUuid : String -> UUID.UUID
+generateUuid str =
+    UUID.forName str UUID.dnsNamespace
 
 
 initTeams : Teams
@@ -252,7 +260,6 @@ type alias BackendModel =
     , teams : Teams
     , users : List User
     , allChatMessages : List ChatMessage
-    , userGroups : List Group
     }
 
 
@@ -279,6 +286,7 @@ type FrontendMsg
     | SendClickToBackend
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
+    | TryToJoinGroup UUID.UUID
       -- chat messages
     | ChatInputChanged (Maybe String)
     | ChatInputSent
@@ -294,6 +302,7 @@ type ToBackend
     | UserLoggedOut
     | UserSentMessage String
     | UserWantsToBuyUpgrade UpgradeType
+    | UserWantsToJoinGroup UUID.UUID
 
 
 type BackendMsg
@@ -311,8 +320,12 @@ type alias Teams =
     { realists : Team, idealists : Team }
 
 
+type alias UserId =
+    UUID.UUID
+
+
 type alias Group =
-    { members : List User, name : String }
+    { members : List UserId, name : String, groupId : UUID.UUID }
 
 
 type ToFrontend

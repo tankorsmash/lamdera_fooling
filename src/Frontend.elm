@@ -169,6 +169,9 @@ update msg model =
         SendBuyUpgrade upgradeType ->
             ( model, Lamdera.sendToBackend (Types.UserWantsToBuyUpgrade upgradeType) )
 
+        TryToJoinGroup groupUuid ->
+            ( model, Lamdera.sendToBackend (Types.UserWantsToJoinGroup groupUuid))
+
 
 
 -- end of update
@@ -545,7 +548,7 @@ viewPlayers model =
                             groupHeader : Types.Group -> Element FrontendMsg
                             groupHeader group =
                                 column [ UI.scaled_font 1, paddingXY 0 5 ]
-                                    [ el [ Font.italic ] <|
+                                    [ el [ Font.italic, Element.pointer, Events.onClick <| TryToJoinGroup group.groupId ] <|
                                         (text <| group.name)
                                     , text <| String.fromInt (List.length group.members) ++ " members"
                                     ]

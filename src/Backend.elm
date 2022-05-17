@@ -418,6 +418,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , isOnline = True
                                 , xp = 0
                                 , groupId = Nothing
+                                , userId = generateUuid (username ++ sessionId_)
                                 }
 
                         replaceUser existingUserData =
@@ -429,6 +430,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , isOnline = True
                                 , xp = existingUserData.xp
                                 , groupId = existingUserData.groupId
+                                , userId = existingUserData.userId
                                 }
 
                         updateExistingUser newUser =
@@ -559,6 +561,90 @@ updateFromFrontend sessionId clientId msg model =
         UserWantsToBuyUpgrade upgradeType ->
             ( model, Cmd.none )
 
+        UserWantsToJoinGroup groupUuid ->
+            let
+                maybeUserData =
+                    getUserBySessionId model.users sessionId |> Maybe.andThen getUserData
+            in
+            case maybeUserData of
+                Nothing ->
+                    noop
+
+                Just userData ->
+                    let
+                        team : Team
+                        team =
+                            Types.getTeamByPersonality model.teams userData.personalityType
+
+                        maybeGroup =
+                            List.Extra.find (.groupId >> (==) groupUuid) team.groups
+                    in
+                    case maybeGroup of
+                        Nothing ->
+                            noop
+
+                        Just validGroup ->
+                            let
+                                --  update user's groupid
+                                newUsers =
+                                    updateFullUserByUsername
+                                        model.users
+                                        (\ud -> { ud | groupId = Just validGroup.groupId })
+                                        userData.username
+
+                                --  update group to contain user
+                                newUserGroups : List Group -> List Group
+                                newUserGroups groups =
+                                    List.Extra.updateIf
+                                        (.groupId >> (==) validGroup.groupId)
+                                        (\group -> { group | members = userData.userId :: group.members })
+                                        groups
+
+                                newRealistTeams : Team
+                                newRealistTeams =
+                                    model.teams.realists
+                                        |> .groups
+                                        |> newUserGroups
+                                        |> setTeamGroups model.teams.realists
+
+                                newIdealistTeams : Team
+                                newIdealistTeams =
+                                    model.teams.idealists
+                                        |> .groups
+                                        |> newUserGroups
+                                        |> setTeamGroups model.teams.idealists
+
+                                newTeams : Teams
+                                newTeams =
+                                    model.teams
+                                        |> (\teams -> setRealistTeam teams newRealistTeams)
+                                        |> (\teams -> setIdealistTeam teams newIdealistTeams)
+                            in
+                            ( { model | users = newUsers, teams = newTeams }
+                            , -- broadcast user joining a new group
+                              Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                            )
+
+
+setTeamGroups : Team -> List Group -> Team
+setTeamGroups team newUserGroups =
+    { team | groups = newUserGroups }
+
+
+setTeams : Model -> Teams -> Model
+setTeams model newTeams =
+    { model | teams = newTeams }
+
+
+setRealistTeam : Teams -> Team -> Teams
+setRealistTeam teams newRealistTeam =
+    { teams | realists = newRealistTeam }
+
+
+setIdealistTeam : Teams -> Team -> Teams
+setIdealistTeam teams newIdealistTeam =
+    { teams | idealists = newIdealistTeam }
+
 
 {-| Only send 5 messages to client, and update the messages' user datas' isOnline
 with the live data
@@ -611,3 +697,20 @@ getUserByUsername users username =
                     |> Maybe.withDefault False
             )
         |> List.head
+
+
+updateFullUserByUsername : List User -> (UserData -> UserData) -> String -> List User
+updateFullUserByUsername users updater username =
+    users
+        |> List.Extra.updateIf
+            (\u ->
+                getUsername u
+                    |> Maybe.map ((==) username)
+                    |> Maybe.withDefault False
+            )
+            (\oldUser ->
+                mapUserData oldUser
+                    updater
+                    |> Maybe.map FullUser
+                    |> Maybe.withDefault oldUser
+            )
