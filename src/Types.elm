@@ -1,4 +1,4 @@
-module Types exposing (UpgradeType(..), Upgrade(..), BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, getSessionId, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -21,8 +21,11 @@ type alias UserData =
     , userClicks : Int
     , isOnline : Bool
     , xp : Int
+    , groupId : Maybe GroupId
     }
 
+
+type alias GroupId = String
 
 type User
     = --user on home screen
@@ -203,6 +206,7 @@ initBackendModel =
         }
     , users = []
     , allChatMessages = []
+    , userGroups = []
     }
 
 
@@ -224,11 +228,13 @@ type alias BackendModel =
     , teams : Teams
     , users : List User
     , allChatMessages : List ChatMessage
+    , userGroups : List Group
     }
 
 
 type Upgrade
     = Upgrade UpgradeType Int
+
 
 type UpgradeType
     = SelfImprovement Int
@@ -279,6 +285,10 @@ type alias PersonalityTypeDict a =
 
 type alias Teams =
     { realists : Team, idealists : Team }
+
+
+type alias Group =
+    { members : List User, name : String }
 
 
 type ToFrontend
