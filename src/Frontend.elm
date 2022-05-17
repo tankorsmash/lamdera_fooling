@@ -547,9 +547,14 @@ actionArea xp numGroupMembers =
         ]
 
 
-viewPlayers : Model -> PersonalityType -> Element FrontendMsg
-viewPlayers model personalityType =
+viewPlayers : Model -> UserData -> PersonalityType -> Element FrontendMsg
+viewPlayers model userData personalityType =
     let
+        maybeUserGroupId : Maybe Types.GroupId
+        maybeUserGroupId =
+            Maybe.map .groupId
+                (Types.getUserGroup model.teamsFromBackend userData)
+
         viewUsersInPersonalityType =
             model.teamsUserClicks
                 |> (\tuc ->
@@ -575,10 +580,29 @@ viewPlayers model personalityType =
                                                )
                                     )
 
-                            groupHeader : Types.Group -> Element FrontendMsg
-                            groupHeader group =
+                            viewGroup : Types.Group -> Element FrontendMsg
+                            viewGroup group =
+                                let
+                                    ( headerColor, onClickMsg ) =
+                                        maybeUserGroupId
+                                            |> Maybe.map
+                                                (\userGroupId ->
+                                                    if userGroupId == group.groupId then
+                                                        ( Font.color <| UI.convertColor <| Color.lightBlue, NoOpFrontendMsg )
+
+                                                    else
+                                                        ( UI.noopAttr, TryToJoinGroup group.groupId )
+                                                )
+                                            |> Maybe.withDefault ( UI.noopAttr, TryToJoinGroup group.groupId )
+                                in
                                 column [ UI.scaled_font 1, paddingXY 0 5 ]
-                                    [ el [ Font.italic, Element.pointer, Events.onClick <| TryToJoinGroup group.groupId ] <|
+                                    [ el
+                                        [ Font.italic
+                                        , Element.pointer
+                                        , Events.onClick onClickMsg
+                                        , headerColor
+                                        ]
+                                      <|
                                         (text <| group.name)
                                     , text <| String.fromInt (List.length group.members) ++ " members"
                                     ]
@@ -593,7 +617,7 @@ viewPlayers model personalityType =
                                 text "Groups"
                                     :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
                                             |> .groups
-                                            |> List.map (\group -> groupHeader group)
+                                            |> List.map (\group -> viewGroup group)
                                        )
                             ]
                                 ++ (names
@@ -626,9 +650,9 @@ viewPlaying model ({ personalityType, xp } as userData) =
         [ scoreboard model personalityType
         , column [ width fill ]
             [ row [ width fill ]
-                [ viewPlayers model Realistic
+                [ viewPlayers model userData Realistic
                 , el [ centerX ] <| actionArea xp numGroupMembers
-                , viewPlayers model Idealistic
+                , viewPlayers model userData Idealistic
                 ]
             ]
         , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
