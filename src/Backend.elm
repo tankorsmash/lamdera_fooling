@@ -1,5 +1,6 @@
 module Backend exposing (..)
 
+import ClickPricing
 import Dict
 import Lamdera exposing (SessionId)
 import List.Extra
@@ -210,7 +211,15 @@ updateFromFrontend sessionId clientId msg model =
                     (\userData ->
                         let
                             modifyClicks clicks =
-                                clicks + 1
+                                let
+                                    numGroupMembers =
+                                        Types.getGroupNumGroupMembers model.teams userData
+                                            |> Maybe.withDefault 0
+
+                                    extraClicks =
+                                        ClickPricing.groupMemberClickBonus numGroupMembers
+                                in
+                                clicks + 1 + extraClicks
 
                             newTeams =
                                 updateTeamByPersonalityType

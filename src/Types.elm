@@ -1,10 +1,11 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, generateUuid, getSessionId, getTeamByPersonality, getUserData, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
+import List.Extra
 import Time
 import UUID
 import Url exposing (Url)
@@ -38,6 +39,23 @@ type User
     | PreppingUser SessionId PersonalityType
       -- chosen side and logged in
     | FullUser UserData
+
+
+getUserGroup : Teams -> UserData -> Maybe Group
+getUserGroup teams userData =
+    let
+        team =
+            getTeamByPersonality
+                teams
+                userData.personalityType
+
+        getGroup : UUID.UUID -> Maybe Group
+        getGroup groupId =
+            List.Extra.find
+                (.groupId >> (==) groupId)
+                team.groups
+    in
+    Maybe.andThen getGroup userData.groupId
 
 
 {-| get username from user, if possible
@@ -326,6 +344,12 @@ type alias UserId =
 
 type alias Group =
     { members : List UserId, name : String, groupId : UUID.UUID }
+
+
+getGroupNumGroupMembers : Teams -> UserData -> Maybe Int
+getGroupNumGroupMembers teams userData =
+    getUserGroup teams userData
+        |> Maybe.map (.members >> List.length)
 
 
 type ToFrontend

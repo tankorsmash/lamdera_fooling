@@ -3,6 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
+import ClickPricing exposing (groupMemberClickBonus)
 import Color
 import Dict
 import Element
@@ -44,9 +45,27 @@ import Html.Attributes as Attr
 import Html.Events
 import Interface as UI
 import Lamdera
+import List.Extra
 import Process
 import Task
-import Types exposing (ChatMessage, FrontendModel, FrontendMsg(..), PersonalityType(..), ToBackend(..), ToFrontend(..), User(..), getUsername, initFrontendModel, stringToPersonalityType)
+import Types
+    exposing
+        ( ChatMessage
+        , FrontendModel
+        , FrontendMsg(..)
+        , Group
+        , PersonalityType(..)
+        , Team
+        , Teams
+        , ToBackend(..)
+        , ToFrontend(..)
+        , User(..)
+        , UserData
+        , getUsername
+        , initFrontendModel
+        , stringToPersonalityType
+        )
+import UUID
 import Url
 
 
@@ -460,8 +479,8 @@ viewAnon model maybePersonalityType =
         ]
 
 
-actionArea : Int -> Element FrontendMsg
-actionArea xp =
+actionArea : Int -> Int -> Element FrontendMsg
+actionArea xp numGroupMembers =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -473,7 +492,14 @@ actionArea xp =
                     , Font.size 24
                     ]
                 , onPressMsg = SendClickToBackend
-                , textLabel = "Contribute +1"
+                , textLabel =
+                    "Contribute +1"
+                        ++ (if groupMemberClickBonus numGroupMembers > 0 then
+                                " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
+
+                            else
+                                ""
+                           )
                 , colorTheme = UI.BrightTheme
                 }
         , UI.button <|
@@ -586,13 +612,18 @@ viewPlayers model personalityType =
 
 
 viewPlaying : Model -> Types.UserData -> Element FrontendMsg
-viewPlaying model { personalityType, xp } =
+viewPlaying model ({ personalityType, xp } as userData) =
+    let
+        numGroupMembers =
+            Types.getGroupNumGroupMembers model.teamsFromBackend userData
+                |> Maybe.withDefault 0
+    in
     column [ width fill, height fill, spacing 10 ]
         [ scoreboard model personalityType
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model Realistic
-                , el [ centerX ] <| actionArea xp
+                , el [ centerX ] <| actionArea xp numGroupMembers
                 , viewPlayers model Idealistic
                 ]
             ]
