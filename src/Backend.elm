@@ -595,10 +595,15 @@ updateFromFrontend sessionId clientId msg model =
                                 --  update group to contain user
                                 newUserGroups : List Group -> List Group
                                 newUserGroups groups =
-                                    List.Extra.updateIf
-                                        (.groupId >> (==) validGroup.groupId)
-                                        (\group -> { group | members = userData.userId :: group.members })
-                                        groups
+                                    groups
+                                        |> --remove user from all groups
+                                           List.Extra.updateIf
+                                            (.members >> List.member userData.userId)
+                                            (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
+                                        |> --add the new user
+                                           List.Extra.updateIf
+                                            (.groupId >> (==) validGroup.groupId)
+                                            (\group -> { group | members = userData.userId :: group.members })
 
                                 newRealistTeams : Team
                                 newRealistTeams =
