@@ -192,7 +192,7 @@ update msg model =
             ( model, Lamdera.sendToBackend (Types.UserWantsToJoinGroup groupUuid) )
 
         TryToLeaveGroup ->
-            ( model, Lamdera.sendToBackend (Types.UserWantsToLeaveGroup ) )
+            ( model, Lamdera.sendToBackend Types.UserWantsToLeaveGroup )
 
 
 
@@ -600,11 +600,18 @@ viewPlayers model userData personalityType =
                                 in
                                 column [ UI.scaled_font 1, paddingXY 0 5 ]
                                     [ el
-                                        [ Font.italic
-                                        , Element.pointer
-                                        , Events.onClick onClickMsg
-                                        , headerColor
-                                        ]
+                                        ([ Font.italic
+                                         , headerColor
+                                         ]
+                                            ++ (if personalityType == userData.personalityType then
+                                                    [ Element.pointer
+                                                    , Events.onClick onClickMsg
+                                                    ]
+
+                                                else
+                                                    []
+                                               )
+                                        )
                                       <|
                                         (text <| group.name)
                                     , text <| String.fromInt (List.length group.members) ++ " members"
