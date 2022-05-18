@@ -636,7 +636,12 @@ updateFromFrontend sessionId clientId msg model =
                             in
                             ( { model | users = newUsers, teams = newTeams }
                             , -- broadcast user joining a new group
-                              Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                              Cmd.batch
+                                [ Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                                , getUserByUsername newUsers userData.username
+                                    |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                                    |> Maybe.withDefault Cmd.none
+                                ]
                             )
 
         UserWantsToLeaveGroup ->
@@ -688,7 +693,12 @@ updateFromFrontend sessionId clientId msg model =
                     in
                     ( { model | users = newUsers, teams = newTeams }
                     , -- broadcast user joining a new group
-                      Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                      Cmd.batch
+                        [ Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                        , getUserByUsername newUsers userData.username
+                            |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        ]
                     )
 
 
