@@ -28,13 +28,13 @@ subscriptions model =
     Sub.batch
         [ Lamdera.onConnect OnClientConnect
         , Lamdera.onDisconnect OnClientDisconnect
+        -- , Time.every 1000 UpdateTick
         ]
 
 
 init : ( Model, Cmd BackendMsg )
 init =
     ( initBackendModel
-      -- , Task.perform UpdateTick Time.now
     , Cmd.none
     )
 

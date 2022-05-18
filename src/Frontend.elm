@@ -48,6 +48,7 @@ import Lamdera
 import List.Extra
 import Process
 import Task
+import Time
 import Types
     exposing
         ( ChatMessage
@@ -80,9 +81,14 @@ app =
         , onUrlChange = UrlChanged
         , update = update
         , updateFromBackend = updateFromBackend
-        , subscriptions = \m -> Sub.none
+        , subscriptions = subscriptions
         , view = view
         }
+
+
+subscriptions : Model -> Sub FrontendMsg
+subscriptions model =
+    Time.every (1000 / 50) LocalTick
 
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
@@ -128,8 +134,14 @@ update msg model =
         NoOpFrontendMsg ->
             ( model, Cmd.none )
 
+        LocalTick time ->
+            ( { model | progress = model.progress + 1 |> min 100 }, Cmd.none )
+
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
+
+        ResetProgress ->
+            ( { model | progress = 0 }, Cmd.none )
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -482,8 +494,19 @@ viewAnon model maybePersonalityType =
         ]
 
 
-actionArea : Int -> Int -> Element FrontendMsg
-actionArea xp numGroupMembers =
+{-| Only show an element if the bool is true
+-}
+showIf : Bool -> Element msg -> Element msg
+showIf condition element =
+    if condition then
+        element
+
+    else
+        Element.none
+
+
+actionArea : Int -> Int -> Int -> Element FrontendMsg
+actionArea xp numGroupMembers progress =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -509,6 +532,39 @@ actionArea xp numGroupMembers =
                         ]
                 , colorTheme = UI.BrightTheme
                 }
+        , showIf (xp >= 10) <|
+            let
+                _ =
+                    123
+            in
+            row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
+                [ if progress < 100 then
+                    text "Super Contribute"
+
+                  else
+                    UI.button <|
+                        UI.TextParams
+                            { buttonType = UI.Outline
+                            , customAttrs =
+                                [ centerX
+                                , width Element.shrink
+                                , UI.scaled_font 2
+                                ]
+                            , onPressMsg = ResetProgress
+                            , textLabel = "Super Contribute"
+                            , colorTheme = UI.BrightTheme
+                            }
+                , row [ width fill ]
+                    (if progress < 100 then
+                        [ el [ width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
+                        , el [ width (Element.fillPortion <| 100 - progress), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                        ]
+
+                     else
+                        [ el [ width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
+                        ]
+                    )
+                ]
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
@@ -661,7 +717,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers
+                , el [ centerX ] <| actionArea xp numGroupMembers model.progress
                 , viewPlayers model userData Idealistic
                 ]
             ]

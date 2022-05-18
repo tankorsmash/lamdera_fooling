@@ -158,6 +158,8 @@ initFrontendModel key =
     , teamsUserClicks = { realists = [], idealists = [] }
     , userChatMessage = Nothing
     , allChatMessages = []
+    , lastTick = Time.millisToPosix 0
+    , progress = 0
     }
 
 
@@ -188,6 +190,8 @@ type alias FrontendModel =
     , teamsUserClicks : TeamsUserClicks
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
+    , lastTick : Time.Posix
+    , progress : Int
     }
 
 
@@ -293,6 +297,7 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | NoOpFrontendMsg
+    | LocalTick Time.Posix
       -- onboarding
     | TryingOutPersonalityType (Maybe PersonalityType)
     | ResetPersonalityType
@@ -302,6 +307,7 @@ type FrontendMsg
       -- playing messages
     | LogUserOut
     | SendClickToBackend
+    | ResetProgress
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
