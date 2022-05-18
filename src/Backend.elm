@@ -34,7 +34,8 @@ subscriptions model =
 init : ( Model, Cmd BackendMsg )
 init =
     ( initBackendModel
-    , Task.perform UpdateTick Time.now
+      -- , Task.perform UpdateTick Time.now
+    , Cmd.none
     )
 
 
@@ -107,17 +108,7 @@ update msg model =
             )
 
         UpdateTick time ->
-            ( model
-            , Cmd.batch
-                [ Process.sleep 1000
-                    -- |> Task.andThen (\_ -> Task.succeed UpdateTick )
-                    -- |> Task.perform Time.now
-                    |> Task.andThen (\_ -> Time.now)
-                    |> Task.perform UpdateTick
-                , Lamdera.broadcast (NewTotalClicks model.totalClicks)
-                , Lamdera.broadcast (NewTick time)
-                ]
-            )
+            ( model, Cmd.none )
 
 
 convertUsersToTeamsUserClicks : List User -> Types.TeamsUserClicks
