@@ -140,8 +140,8 @@ update msg model =
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
-        ResetProgress ->
-            ( { model | progress = 0 }, Cmd.none )
+        SuperContribute ->
+            ( { model | progress = 0 }, Lamdera.sendToBackend UserSuperContibuted )
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -550,7 +550,7 @@ actionArea xp numGroupMembers progress =
                                 , width Element.shrink
                                 , UI.scaled_font 2
                                 ]
-                            , onPressMsg = ResetProgress
+                            , onPressMsg = SuperContribute
                             , textLabel = "Super Contribute"
                             , colorTheme = UI.BrightTheme
                             }

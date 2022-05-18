@@ -307,7 +307,7 @@ type FrontendMsg
       -- playing messages
     | LogUserOut
     | SendClickToBackend
-    | ResetProgress
+    | SuperContribute
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
@@ -321,6 +321,7 @@ type FrontendMsg
 type ToBackend
     = NoOpToBackend
     | UserGainedAClick
+    | UserSuperContibuted
     | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String

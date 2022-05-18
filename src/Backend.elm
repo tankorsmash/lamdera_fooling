@@ -1,6 +1,6 @@
 module Backend exposing (..)
 
-import ClickPricing
+import ClickPricing exposing (..)
 import Dict
 import Lamdera exposing (SessionId)
 import List.Extra
@@ -28,6 +28,7 @@ subscriptions model =
     Sub.batch
         [ Lamdera.onConnect OnClientConnect
         , Lamdera.onDisconnect OnClientDisconnect
+
         -- , Time.every 1000 UpdateTick
         ]
 
@@ -211,6 +212,73 @@ updateFromFrontend sessionId clientId msg model =
                                         ClickPricing.groupMemberClickBonus numGroupMembers
                                 in
                                 clicks + 1 + extraClicks
+
+                            newTeams =
+                                updateTeamByPersonalityType
+                                    model.teams
+                                    userData.personalityType
+                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
+                                       (\teams ->
+                                            updateTeamByPersonalityType
+                                                teams
+                                                userData.personalityType
+                                                (\t ->
+                                                    if t.totalTeamClicks >= 100 then
+                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+
+                                                    else
+                                                        t
+                                                )
+                                       )
+
+                            newUsers =
+                                model.users
+                                    |> List.Extra.updateIf
+                                        (\u ->
+                                            getUsername u
+                                                |> Maybe.map ((==) userData.username)
+                                                |> Maybe.withDefault False
+                                        )
+                                        (\oldUser ->
+                                            mapUserData oldUser
+                                                (\ud ->
+                                                    { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 }
+                                                )
+                                                |> Maybe.map FullUser
+                                                |> Maybe.withDefault oldUser
+                                        )
+
+                            newModel : Model
+                            newModel =
+                                { model
+                                    | totalClicks = modifyClicks model.totalClicks
+                                    , teams = newTeams
+                                    , users = newUsers
+                                }
+                        in
+                        ( newModel
+                        , Cmd.batch
+                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                            , Lamdera.broadcast (NewTeams newModel.teams)
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                            , getUserBySessionId newModel.users sessionId
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                                |> Maybe.withDefault Cmd.none
+                            ]
+                        )
+                    )
+                |> Maybe.withDefault noop
+
+        UserSuperContibuted ->
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+                |> Maybe.map
+                    (\userData ->
+                        let
+                            modifyClicks clicks =
+                                clicks + ClickPricing.superContributeClickBonus (Level 1)
 
                             newTeams =
                                 updateTeamByPersonalityType
