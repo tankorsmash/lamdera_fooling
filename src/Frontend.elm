@@ -208,7 +208,7 @@ updateFromBackend msg model =
         NewTotalClicks totalClicks ->
             ( { model | totalClicksFromBackend = totalClicks }, Cmd.none )
 
-        NewClicksByPersonalityType teams ->
+        NewTeams teams ->
             ( { model | teamsFromBackend = teams }, Cmd.none )
 
         NewUser user ->

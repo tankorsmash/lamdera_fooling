@@ -357,7 +357,7 @@ getGroupNumGroupMembers teams userData =
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
-    | NewClicksByPersonalityType Teams
+    | NewTeams Teams
     | NewUser User
     | NewTotalUsers Int
     | NewClicksByUser Int

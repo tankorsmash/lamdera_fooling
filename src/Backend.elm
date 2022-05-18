@@ -76,7 +76,7 @@ update msg model =
                     Nothing ->
                         Cmd.none
                 , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                , Lamdera.sendToFrontend clientId (NewClicksByPersonalityType newModel.teams)
+                , Lamdera.sendToFrontend clientId (NewTeams newModel.teams)
                 , Lamdera.sendToFrontend clientId (NewAllChatMessages <| processChatMessages newModel.users newModel.allChatMessages)
                 ]
             )
@@ -268,7 +268,7 @@ updateFromFrontend sessionId clientId msg model =
                         ( newModel
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
+                            , Lamdera.broadcast (NewTeams newModel.teams)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             , getUserBySessionId newModel.users sessionId
@@ -356,7 +356,7 @@ updateFromFrontend sessionId clientId msg model =
                         ( newModel
                         , Cmd.batch
                             [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewClicksByPersonalityType newModel.teams)
+                            , Lamdera.broadcast (NewTeams newModel.teams)
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifySelfClicks userData.userClicks)
                             ]
@@ -637,7 +637,7 @@ updateFromFrontend sessionId clientId msg model =
                             ( { model | users = newUsers, teams = newTeams }
                             , -- broadcast user joining a new group
                               Cmd.batch
-                                [ Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                                [ Lamdera.broadcast <| NewTeams newTeams
                                 , getUserByUsername newUsers userData.username
                                     |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
                                     |> Maybe.withDefault Cmd.none
@@ -694,7 +694,7 @@ updateFromFrontend sessionId clientId msg model =
                     ( { model | users = newUsers, teams = newTeams }
                     , -- broadcast user joining a new group
                       Cmd.batch
-                        [ Lamdera.broadcast <| NewClicksByPersonalityType newTeams
+                        [ Lamdera.broadcast <| NewTeams newTeams
                         , getUserByUsername newUsers userData.username
                             |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
                             |> Maybe.withDefault Cmd.none
