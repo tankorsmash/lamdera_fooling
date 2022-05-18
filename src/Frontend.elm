@@ -3,7 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (groupMemberClickBonus)
+import ClickPricing exposing (Level(..), groupMemberClickBonus)
 import Color
 import Dict
 import Element
@@ -56,6 +56,7 @@ import Types
         , FrontendMsg(..)
         , Group
         , PersonalityType(..)
+        , Progress(..)
         , Team
         , Teams
         , ToBackend(..)
@@ -135,13 +136,13 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | progress = model.progress + 1 |> min 100 }, Cmd.none )
+            ( { model | progress = Types.addToProgress model.progress  1 }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
         SuperContribute ->
-            ( { model | progress = 0 }, Lamdera.sendToBackend UserSuperContibuted )
+            ( { model | progress = Progress 0 }, Lamdera.sendToBackend UserSuperContibuted )
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -505,7 +506,65 @@ showIf condition element =
         Element.none
 
 
-actionArea : Int -> Int -> Int -> Element FrontendMsg
+viewSuperContributionButton : Progress -> Element FrontendMsg
+viewSuperContributionButton (Progress progress) =
+    let
+        readyToClick =
+            progress >= 100
+    in
+    row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
+        [ if not readyToClick then
+            text "Super Contribute"
+
+          else
+            UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , UI.scaled_font 2
+                        ]
+                    , onPressMsg = SuperContribute
+                    , textLabel = "Super Contribute"
+                    , colorTheme = UI.BrightTheme
+                    }
+        , row
+            [ width fill
+            , height (fill |> Element.minimum 40)
+            , padding 3
+            , Element.inFront <|
+                el
+                    [ centerX
+                    , centerY
+                    , Background.color <|
+                        UI.convertColor <|
+                            if readyToClick then
+                                Color.darkGreen
+
+                            else
+                                Color.lightBlue
+                    , Border.rounded 3
+                    , padding 2
+                    ]
+                <|
+                    text <|
+                        "+"
+                            ++ (String.fromInt <| ClickPricing.superContributeClickBonus (ClickPricing.Level 1))
+            ]
+            (if not readyToClick then
+                [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
+                , el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100 - progress), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                ]
+
+             else
+                [ el [ Border.rounded 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
+                ]
+            )
+        ]
+
+
+actionArea : Int -> Int -> Progress -> Element FrontendMsg
 actionArea xp numGroupMembers progress =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -533,38 +592,7 @@ actionArea xp numGroupMembers progress =
                 , colorTheme = UI.BrightTheme
                 }
         , showIf (xp >= 10) <|
-            let
-                _ =
-                    123
-            in
-            row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
-                [ if progress < 100 then
-                    text "Super Contribute"
-
-                  else
-                    UI.button <|
-                        UI.TextParams
-                            { buttonType = UI.Outline
-                            , customAttrs =
-                                [ centerX
-                                , width Element.shrink
-                                , UI.scaled_font 2
-                                ]
-                            , onPressMsg = SuperContribute
-                            , textLabel = "Super Contribute"
-                            , colorTheme = UI.BrightTheme
-                            }
-                , row [ width fill ]
-                    (if progress < 100 then
-                        [ el [ width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
-                        , el [ width (Element.fillPortion <| 100 - progress), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
-                        ]
-
-                     else
-                        [ el [ width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
-                        ]
-                    )
-                ]
+            viewSuperContributionButton progress
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline

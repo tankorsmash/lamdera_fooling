@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Progress(..), Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, addToProgress, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -159,7 +159,7 @@ initFrontendModel key =
     , userChatMessage = Nothing
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
-    , progress = 0
+    , progress = Progress 0
     }
 
 
@@ -191,7 +191,7 @@ type alias FrontendModel =
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
-    , progress : Int
+    , progress : Progress
     }
 
 
@@ -349,6 +349,17 @@ type alias Teams =
 
 type alias UserId =
     UUID.UUID
+
+
+{-| 0 to 100, for the sake of animations
+-}
+type Progress
+    = Progress Int
+
+
+addToProgress : Progress -> Int -> Progress
+addToProgress (Progress progress) toAdd =
+    Progress (progress + toAdd |> min 100 |> max 0)
 
 
 type alias Group =
