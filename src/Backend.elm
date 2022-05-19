@@ -632,9 +632,6 @@ updateFromFrontend sessionId clientId msg model =
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
-                                        _ =
-                                            Debug.log "can afford" 123
-
                                         newUsers =
                                             updateFullUserBySessionId
                                                 model.users
@@ -655,10 +652,6 @@ updateFromFrontend sessionId clientId msg model =
                                     )
 
                                 else
-                                    let
-                                        _ =
-                                            Debug.log "cant afford" 123
-                                    in
                                     noop
                     )
                 |> Maybe.withDefault noop
