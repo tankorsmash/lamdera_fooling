@@ -15,6 +15,21 @@ addToLevel (Level level) toAdd =
     Level (level + toAdd)
 
 
+getLevel : Level -> Int
+getLevel (Level level) =
+    level
+
+
+nextLevel : Level -> Level
+nextLevel (Level level) =
+    Level <| level + 1
+
+
+getNextLevel : Level -> Int
+getNextLevel (Level level) =
+    level + 1
+
+
 groupMemberClickBonus : Int -> Int
 groupMemberClickBonus members =
     members

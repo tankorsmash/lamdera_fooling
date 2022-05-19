@@ -478,8 +478,8 @@ updateFromFrontend sessionId clientId msg model =
                     let
                         promoteUser sessionId_ personalityType =
                             --promote to full user
-                            FullUser
-                                <| createUserData sessionId username personalityType
+                            FullUser <|
+                                createUserData sessionId username personalityType
 
                         replaceUser existingUserData =
                             FullUser
@@ -620,10 +620,48 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserWantsToBuyUpgrade upgradeType ->
-            case upgradeType of
-                Types.SelfImprovement level ->
-                    -- reduce XP by 5
-                    ( model, Cmd.none )
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+                |> Maybe.map
+                    (\userData ->
+                        case upgradeType of
+                            Types.SelfImprovement level ->
+                                let
+                                    upgradeCost =
+                                        ClickPricing.selfImprovementXpCost level
+                                in
+                                if userData.xp >= upgradeCost then
+                                    let
+                                        _ =
+                                            Debug.log "can afford" 123
+
+                                        newUsers =
+                                            updateFullUserBySessionId
+                                                model.users
+                                                sessionId
+                                                (\ud ->
+                                                    { ud
+                                                        | xp = ud.xp - upgradeCost
+                                                        , selfImprovementLevel = ClickPricing.nextLevel ud.selfImprovementLevel
+                                                    }
+                                                )
+                                    in
+                                    -- check can afford upgrade
+                                    -- reduce XP by 5
+                                    ( setUsers model newUsers
+                                    , getUserBySessionId newUsers sessionId
+                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                                        |> Maybe.withDefault Cmd.none
+                                    )
+
+                                else
+                                    let
+                                        _ =
+                                            Debug.log "cant afford" 123
+                                    in
+                                    noop
+                    )
+                |> Maybe.withDefault noop
 
         UserWantsToJoinGroup groupUuid ->
             let
@@ -798,6 +836,11 @@ processChatMessages users allChatMessages =
             )
 
 
+setUsers : Model -> List User -> Model
+setUsers model users =
+    { model | users = users }
+
+
 {-| Basically setTimeout that'll make a Msg come through `millis` milliseconds
 later
 -}
@@ -837,6 +880,23 @@ updateFullUserByUsername users updater username =
             (\u ->
                 getUsername u
                     |> Maybe.map ((==) username)
+                    |> Maybe.withDefault False
+            )
+            (\oldUser ->
+                mapUserData oldUser
+                    updater
+                    |> Maybe.map FullUser
+                    |> Maybe.withDefault oldUser
+            )
+
+
+updateFullUserBySessionId : List User -> SessionId -> (UserData -> UserData) -> List User
+updateFullUserBySessionId users sessionId updater =
+    users
+        |> List.Extra.updateIf
+            (\u ->
+                getSessionId u
+                    |> Maybe.map ((==) sessionId)
                     |> Maybe.withDefault False
             )
             (\oldUser ->

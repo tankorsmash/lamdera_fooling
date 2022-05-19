@@ -506,8 +506,8 @@ showIf condition element =
         Element.none
 
 
-viewSuperContributionButton : Progress -> Element FrontendMsg
-viewSuperContributionButton (Progress progress) =
+viewSuperContributionButton : Progress -> Level -> Int -> Element FrontendMsg
+viewSuperContributionButton (Progress progress) selfImprovementLevel xp =
     let
         readyToClick =
             progress >= 100
@@ -550,7 +550,7 @@ viewSuperContributionButton (Progress progress) =
                 <|
                     text <|
                         "+"
-                            ++ (String.fromInt <| ClickPricing.superContributeClickBonus (ClickPricing.Level 1))
+                            ++ (String.fromInt <| ClickPricing.superContributeClickBonus selfImprovementLevel)
             ]
             (if not readyToClick then
                 [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
@@ -564,8 +564,8 @@ viewSuperContributionButton (Progress progress) =
         ]
 
 
-actionArea : Int -> Int -> Progress -> Element FrontendMsg
-actionArea xp numGroupMembers progress =
+actionArea : Int -> Int -> Progress -> ClickPricing.Level -> Element FrontendMsg
+actionArea xp numGroupMembers progress selfImprovementLevel =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -591,24 +591,28 @@ actionArea xp numGroupMembers progress =
                         ]
                 , colorTheme = UI.BrightTheme
                 }
-        , showIf (xp >= 10) <|
-            viewSuperContributionButton progress
-        , UI.button <|
-            let
-                selfImprovementLevel =
-                    Level 1
-            in
-            UI.TextParams
-                { buttonType = UI.Outline
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , UI.scaled_font 2
-                    ]
-                , onPressMsg = SendBuyUpgrade (Types.SelfImprovement selfImprovementLevel)
-                , textLabel = "Self-improvement +1 (" ++ String.fromInt (ClickPricing.selfImprovementXpCost selfImprovementLevel) ++ "xp) (doesnt do anything yet)"
-                , colorTheme = UI.BrightTheme
-                }
+        , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
+            column [ centerX, width fill, spacing 10 ]
+                [ viewSuperContributionButton progress selfImprovementLevel xp
+                , UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            , Element.alpha <|
+                                if xp >= ClickPricing.selfImprovementXpCost (ClickPricing.nextLevel selfImprovementLevel) then
+                                    1.0
+
+                                else
+                                    0.25
+                            ]
+                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| ClickPricing.nextLevel selfImprovementLevel)
+                        , textLabel = "Self-improvement +1 (" ++ String.fromInt (ClickPricing.selfImprovementXpCost (ClickPricing.addToLevel selfImprovementLevel 1)) ++ "xp)"
+                        , colorTheme = UI.BrightTheme
+                        }
+                ]
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
         , UI.button <|
             UI.TextParams
@@ -749,7 +753,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.progress
+                , el [ centerX ] <| actionArea xp numGroupMembers model.progress userData.selfImprovementLevel
                 , viewPlayers model userData Idealistic
                 ]
             ]
