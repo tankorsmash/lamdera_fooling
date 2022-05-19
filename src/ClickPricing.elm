@@ -29,3 +29,8 @@ contributeClickBonus (Level level) =
 superContributeClickBonus : Level -> Int
 superContributeClickBonus (Level level) =
     level + 5
+
+
+selfImprovementXpCost : Level -> Int
+selfImprovementXpCost (Level level) =
+    level * 5

@@ -136,7 +136,7 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | progress = Types.addToProgress model.progress  1 }, Cmd.none )
+            ( { model | progress = Types.addToProgress model.progress 1 }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
@@ -594,6 +594,10 @@ actionArea xp numGroupMembers progress =
         , showIf (xp >= 10) <|
             viewSuperContributionButton progress
         , UI.button <|
+            let
+                selfImprovementLevel =
+                    Level 1
+            in
             UI.TextParams
                 { buttonType = UI.Outline
                 , customAttrs =
@@ -601,8 +605,8 @@ actionArea xp numGroupMembers progress =
                     , width Element.shrink
                     , UI.scaled_font 2
                     ]
-                , onPressMsg = SendBuyUpgrade (Types.SelfImprovement 1)
-                , textLabel = "Self-improvement +1 (5xp) (doesnt do anything yet)"
+                , onPressMsg = SendBuyUpgrade (Types.SelfImprovement selfImprovementLevel)
+                , textLabel = "Self-improvement +1 (" ++ String.fromInt (ClickPricing.selfImprovementXpCost selfImprovementLevel) ++ "xp) (doesnt do anything yet)"
                 , colorTheme = UI.BrightTheme
                 }
         , el [ centerX, Font.underline ] <| text "Spend your clicks"

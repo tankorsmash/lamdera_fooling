@@ -479,15 +479,7 @@ updateFromFrontend sessionId clientId msg model =
                         promoteUser sessionId_ personalityType =
                             --promote to full user
                             FullUser
-                                { sessionId = Just sessionId_
-                                , username = username
-                                , personalityType = personalityType
-                                , userClicks = 0
-                                , isOnline = True
-                                , xp = 0
-                                , groupId = Nothing
-                                , userId = generateUuid (username ++ sessionId_)
-                                }
+                                <| createUserData sessionId username personalityType
 
                         replaceUser existingUserData =
                             FullUser
@@ -499,6 +491,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , xp = existingUserData.xp
                                 , groupId = existingUserData.groupId
                                 , userId = existingUserData.userId
+                                , selfImprovementLevel = existingUserData.selfImprovementLevel
                                 }
 
                         updateExistingUser newUser =
@@ -627,7 +620,10 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserWantsToBuyUpgrade upgradeType ->
-            ( model, Cmd.none )
+            case upgradeType of
+                Types.SelfImprovement level ->
+                    -- reduce XP by 5
+                    ( model, Cmd.none )
 
         UserWantsToJoinGroup groupUuid ->
             let

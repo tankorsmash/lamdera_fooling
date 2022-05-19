@@ -1,8 +1,9 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Progress(..), Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, addToProgress, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Progress(..), Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, addToProgress, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
 import Browser.Navigation exposing (Key)
+import ClickPricing exposing (..)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
@@ -25,6 +26,21 @@ type alias UserData =
     , xp : Int
     , groupId : Maybe GroupId
     , userId : UUID.UUID
+    , selfImprovementLevel : Level
+    }
+
+
+createUserData : SessionId -> String -> PersonalityType -> UserData
+createUserData sessionId username personalityType =
+    { sessionId = Just sessionId
+    , username = username
+    , personalityType = personalityType
+    , userClicks = 0
+    , isOnline = True
+    , xp = 0
+    , groupId = Nothing
+    , userId = generateUuid (username ++ sessionId)
+    , selfImprovementLevel = Level 0
     }
 
 
@@ -160,6 +176,7 @@ initFrontendModel key =
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
     , progress = Progress 0
+    , selfImprovementLevel = Level 0
     }
 
 
@@ -192,6 +209,7 @@ type alias FrontendModel =
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
     , progress : Progress
+    , selfImprovementLevel : Level
     }
 
 
@@ -290,7 +308,7 @@ type Upgrade
 
 
 type UpgradeType
-    = SelfImprovement Int
+    = SelfImprovement Level
 
 
 type FrontendMsg
