@@ -491,7 +491,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , xp = existingUserData.xp
                                 , groupId = existingUserData.groupId
                                 , userId = existingUserData.userId
-                                , discussLevel = existingUserData.discussLevel
+                                , currentLevels = existingUserData.currentLevels
                                 }
 
                         updateExistingUser newUser =
@@ -637,9 +637,27 @@ updateFromFrontend sessionId clientId msg model =
                                                 model.users
                                                 sessionId
                                                 (\ud ->
+                                                    let
+                                                        newDiscussLevel : CurrentLevel -> CurrentLevel
+                                                        newDiscussLevel (CurrentLevel discussLevel progress) =
+                                                            -- ClickPricing.mapCurrentLevel
+                                                            --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel discussLevel)
+                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) progress
+
+                                                        newCurrentLevels =
+                                                            ClickPricing.mapCurrentLevels
+                                                                ud.currentLevels
+                                                                .discuss
+                                                                (\currentLevels discussCurrentLevel ->
+                                                                    { currentLevels
+                                                                        | discuss =
+                                                                            newDiscussLevel discussCurrentLevel
+                                                                    }
+                                                                )
+                                                    in
                                                     { ud
                                                         | xp = ud.xp - upgradeCost
-                                                        , discussLevel = ClickPricing.nextLevel ud.discussLevel
+                                                        , currentLevels = newCurrentLevels
                                                     }
                                                 )
                                     in

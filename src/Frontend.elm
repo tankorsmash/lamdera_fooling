@@ -3,7 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getLevel, groupMemberClickBonus, nextLevel, xpCost)
+import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, nextLevel, xpCost)
 import Color
 import Dict
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
@@ -535,8 +535,12 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-actionArea : Int -> Int -> Progress -> Level -> Element FrontendMsg
-actionArea xp numGroupMembers superContributeProgress discussionLevel =
+actionArea : Int -> Int -> Progress -> CurrentLevels -> Element FrontendMsg
+actionArea xp numGroupMembers superContributeProgress ({ discuss } as currentLevels) =
+    let
+        discussionLevel =
+            currentLevels.discuss |> getCurrentLevelLevel
+    in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -563,14 +567,7 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                 , colorTheme = UI.BrightTheme
                 }
         , -- discuss
-          let
-            foo =
-                ClickPricing.getLevel
-
-            bool =
-                foo discussionLevel > 0
-          in
-          showIf (xp >= 10 || bool) <|
+          showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
@@ -755,7 +752,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.discussLevel
+                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.currentLevels
                 , viewPlayers model userData Idealistic
                 ]
             ]

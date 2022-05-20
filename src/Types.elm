@@ -26,7 +26,7 @@ type alias UserData =
     , xp : Int
     , groupId : Maybe GroupId
     , userId : UUID.UUID
-    , discussLevel : Level
+    , currentLevels : CurrentLevels
     }
 
 
@@ -40,7 +40,7 @@ createUserData sessionId username personalityType =
     , xp = 0
     , groupId = Nothing
     , userId = generateUuid (username ++ sessionId)
-    , discussLevel = Level 0
+    , currentLevels = { discuss = CurrentLevel (Level 0) (Progress 0) }
     }
 
 

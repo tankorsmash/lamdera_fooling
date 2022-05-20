@@ -1,4 +1,4 @@
-module ClickPricing exposing (Bonus(..), Bonuses, CurrentLevel(..), CurrentLevels, Level(..), Progress(..), addLevel, addToLevel, addToProgress, basicBonuses, clickBonus, contributeClickBonus, getLevel, getNextLevel, groupMemberClickBonus, nextLevel, xpCost)
+module ClickPricing exposing (..)
 
 {-| 0 to 100, for the sake of animations
 -}
@@ -92,3 +92,37 @@ type CurrentLevel
 type alias CurrentLevels =
     { discuss : CurrentLevel
     }
+
+
+mapCurrentLevels : CurrentLevels -> (CurrentLevels -> CurrentLevel) -> (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels
+mapCurrentLevels currentLevels getter setter =
+    let
+        currentLevel =
+            getter currentLevels
+    in
+    setter currentLevels currentLevel
+
+
+mapCurrentLevel : CurrentLevel -> (Level -> Progress -> CurrentLevel) -> CurrentLevel
+mapCurrentLevel (CurrentLevel level progress) mapper =
+    mapper level progress
+
+
+getCurrentLevelLevel : CurrentLevel -> Level
+getCurrentLevelLevel (CurrentLevel level progress) =
+    level
+
+
+getCurrentLevelProgress : CurrentLevel -> Progress
+getCurrentLevelProgress (CurrentLevel level progress) =
+    progress
+
+
+setCurrentLevelLevel : CurrentLevel -> Level -> CurrentLevel
+setCurrentLevelLevel (CurrentLevel level progress) newLevel =
+    CurrentLevel newLevel progress
+
+
+setCurrentLevelProgress : CurrentLevel -> Progress -> CurrentLevel
+setCurrentLevelProgress (CurrentLevel level progress) newProgress =
+    CurrentLevel level newProgress
