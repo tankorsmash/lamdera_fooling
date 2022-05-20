@@ -3,38 +3,10 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (Level(..), addToLevel, basicBonuses, clickBonus, groupMemberClickBonus, nextLevel, xpCost)
+import ClickPricing exposing (Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getLevel, groupMemberClickBonus, nextLevel, xpCost)
 import Color
 import Dict
-import Element
-    exposing
-        ( Color
-        , Element
-        , alignBottom
-        , alignLeft
-        , alignRight
-        , alignTop
-        , centerX
-        , centerY
-        , column
-        , el
-        , explain
-        , fill
-        , fillPortion
-        , height
-        , modular
-        , padding
-        , paddingXY
-        , paragraph
-        , rgb
-        , rgb255
-        , row
-        , scrollbars
-        , spacing
-        , spacingXY
-        , text
-        , width
-        )
+import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -56,7 +28,6 @@ import Types
         , FrontendMsg(..)
         , Group
         , PersonalityType(..)
-        , Progress(..)
         , Team
         , Teams
         , ToBackend(..)
@@ -136,7 +107,7 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | discussProgress = Types.addToProgress model.discussProgress 1 }, Cmd.none )
+            ( { model | discussProgress = ClickPricing.addToProgress model.discussProgress 1 }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
@@ -564,7 +535,7 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-actionArea : Int -> Int -> Progress -> ClickPricing.Level -> Element FrontendMsg
+actionArea : Int -> Int -> Progress -> Level -> Element FrontendMsg
 actionArea xp numGroupMembers superContributeProgress discussionLevel =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -591,7 +562,31 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                         ]
                 , colorTheme = UI.BrightTheme
                 }
-        , showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
+        , -- discuss
+          showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
+            column [ centerX, width fill, spacing 10 ]
+                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
+                , UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            , Element.alpha <|
+                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
+                                    1.0
+
+                                else
+                                    0.25
+                            ]
+                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel discussionLevel)
+                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
+                        , colorTheme = UI.BrightTheme
+                        }
+                ]
+        , -- argue
+          showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|

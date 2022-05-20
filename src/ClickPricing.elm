@@ -1,5 +1,15 @@
 module ClickPricing exposing (..)
 
+{-| 0 to 100, for the sake of animations
+-}
+type Progress
+    = Progress Int
+
+
+addToProgress : Progress -> Int -> Progress
+addToProgress (Progress progress) toAdd =
+    Progress (progress + toAdd |> min 100 |> max 0)
+
 
 type Level
     = Level Int
@@ -71,3 +81,10 @@ clickBonus (Bonus bonus) level =
 xpCost : Bonus -> Level -> Int
 xpCost (Bonus bonus) level =
     bonus.xpCost level
+
+
+type CurrentLevel =
+    CurrentLevel Level Progress
+
+type alias CurrentLevels =
+    {}
