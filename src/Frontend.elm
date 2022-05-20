@@ -506,8 +506,8 @@ showIf condition element =
         Element.none
 
 
-viewProgressButton : Progress -> Int -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
-viewProgressButton (Progress progress) clicksOutput xp ( actionText, actionMsg ) =
+viewProgressButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
+viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
     let
         readyToClick =
             progress >= 100
@@ -593,7 +593,7 @@ actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
                 }
         , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (ClickPricing.superContributeClickBonus selfImprovementLevel) xp ( "Super Contribute", SuperContribute )
+                [ viewProgressButton superContributeProgress (ClickPricing.superContributeClickBonus selfImprovementLevel) ( "Super Contribute", SuperContribute )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
