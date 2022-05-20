@@ -506,15 +506,15 @@ showIf condition element =
         Element.none
 
 
-viewSuperContributionButton : Progress -> Level -> Int -> Element FrontendMsg
-viewSuperContributionButton (Progress progress) selfImprovementLevel xp =
+viewProgressButton : Progress -> Int -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
+viewProgressButton (Progress progress) clicksOutput xp ( actionText, actionMsg ) =
     let
         readyToClick =
             progress >= 100
     in
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
         [ if not readyToClick then
-            text "Super Contribute"
+            text actionText
 
           else
             UI.button <|
@@ -525,8 +525,8 @@ viewSuperContributionButton (Progress progress) selfImprovementLevel xp =
                         , width Element.shrink
                         , UI.scaled_font 2
                         ]
-                    , onPressMsg = SuperContribute
-                    , textLabel = "Super Contribute"
+                    , onPressMsg = actionMsg
+                    , textLabel = actionText
                     , colorTheme = UI.BrightTheme
                     }
         , row
@@ -550,7 +550,7 @@ viewSuperContributionButton (Progress progress) selfImprovementLevel xp =
                 <|
                     text <|
                         "+"
-                            ++ (String.fromInt <| ClickPricing.superContributeClickBonus selfImprovementLevel)
+                            ++ (String.fromInt <| clicksOutput)
             ]
             (if not readyToClick then
                 [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
@@ -593,7 +593,7 @@ actionArea xp numGroupMembers progress selfImprovementLevel =
                 }
         , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewSuperContributionButton progress selfImprovementLevel xp
+                [ viewProgressButton progress (ClickPricing.superContributeClickBonus selfImprovementLevel) xp ( "Super Contribute", SuperContribute )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
