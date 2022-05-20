@@ -3,7 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (Level(..), groupMemberClickBonus)
+import ClickPricing exposing (Level(..), addToLevel, basicBonuses, clickBonus, groupMemberClickBonus, nextLevel, xpCost)
 import Color
 import Dict
 import Element
@@ -593,7 +593,7 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                 }
         , showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (ClickPricing.discussClickBonus discussionLevel) ( "Discuss", Discuss )
+                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -602,14 +602,14 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                             , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
-                                if xp >= ClickPricing.discussUpgradeXpCost (ClickPricing.nextLevel discussionLevel) then
+                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
                                     1.0
 
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| ClickPricing.nextLevel discussionLevel)
-                        , textLabel = "Argumentation +1 (" ++ String.fromInt (ClickPricing.discussUpgradeXpCost (ClickPricing.addToLevel discussionLevel 1)) ++ "xp)"
+                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel discussionLevel)
+                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]

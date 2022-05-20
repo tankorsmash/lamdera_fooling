@@ -41,11 +41,33 @@ contributeClickBonus (Level level) =
     level
 
 
-discussClickBonus : Level -> Int
-discussClickBonus (Level level) =
-    level + 5
+type Bonus
+    = Bonus
+        { clickBonus : Level -> Int
+        , xpCost : Level -> Int
+        }
 
 
-discussUpgradeXpCost : Level -> Int
-discussUpgradeXpCost (Level level) =
-    level * 5
+type alias Bonuses =
+    { discuss : Bonus
+    }
+
+
+basicBonuses : Bonuses
+basicBonuses =
+    { discuss =
+        Bonus
+            { clickBonus = \(Level level) -> level + 5
+            , xpCost = \(Level level) -> level * 5
+            }
+    }
+
+
+clickBonus : Bonus -> Level -> Int
+clickBonus (Bonus bonus) level =
+    bonus.clickBonus level
+
+
+xpCost : Bonus -> Level -> Int
+xpCost (Bonus bonus) level =
+    bonus.xpCost level

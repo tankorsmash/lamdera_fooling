@@ -278,7 +278,7 @@ updateFromFrontend sessionId clientId msg model =
                     (\userData ->
                         let
                             modifyClicks clicks =
-                                clicks + ClickPricing.discussClickBonus (Level 1)
+                                clicks + ClickPricing.clickBonus ClickPricing.basicBonuses.discuss (Level 1)
 
                             newTeams =
                                 updateTeamByPersonalityType
@@ -628,7 +628,7 @@ updateFromFrontend sessionId clientId msg model =
                             Types.SelfImprovement level ->
                                 let
                                     upgradeCost =
-                                        ClickPricing.discussUpgradeXpCost level
+                                        ClickPricing.xpCost ClickPricing.basicBonuses.discuss level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
