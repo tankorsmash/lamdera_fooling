@@ -46,6 +46,6 @@ discussClickBonus (Level level) =
     level + 5
 
 
-selfImprovementXpCost : Level -> Int
-selfImprovementXpCost (Level level) =
+discussUpgradeXpCost : Level -> Int
+discussUpgradeXpCost (Level level) =
     level * 5

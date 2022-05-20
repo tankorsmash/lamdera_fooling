@@ -628,7 +628,7 @@ updateFromFrontend sessionId clientId msg model =
                             Types.SelfImprovement level ->
                                 let
                                     upgradeCost =
-                                        ClickPricing.selfImprovementXpCost level
+                                        ClickPricing.discussUpgradeXpCost level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let

@@ -565,7 +565,7 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
 
 
 actionArea : Int -> Int -> Progress -> ClickPricing.Level -> Element FrontendMsg
-actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
+actionArea xp numGroupMembers superContributeProgress discussionLevel =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -591,9 +591,9 @@ actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
                         ]
                 , colorTheme = UI.BrightTheme
                 }
-        , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
+        , showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (ClickPricing.discussClickBonus selfImprovementLevel) ( "Super Contribute", Discuss )
+                [ viewProgressButton superContributeProgress (ClickPricing.discussClickBonus discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -602,14 +602,14 @@ actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
                             , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
-                                if xp >= ClickPricing.selfImprovementXpCost (ClickPricing.nextLevel selfImprovementLevel) then
+                                if xp >= ClickPricing.discussUpgradeXpCost (ClickPricing.nextLevel discussionLevel) then
                                     1.0
 
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| ClickPricing.nextLevel selfImprovementLevel)
-                        , textLabel = "Self-improvement +1 (" ++ String.fromInt (ClickPricing.selfImprovementXpCost (ClickPricing.addToLevel selfImprovementLevel 1)) ++ "xp)"
+                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| ClickPricing.nextLevel discussionLevel)
+                        , textLabel = "Argumentation +1 (" ++ String.fromInt (ClickPricing.discussUpgradeXpCost (ClickPricing.addToLevel discussionLevel 1)) ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]
