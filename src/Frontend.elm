@@ -136,13 +136,13 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | progress = Types.addToProgress model.progress 1 }, Cmd.none )
+            ( { model | superContributeProgress = Types.addToProgress model.superContributeProgress 1 }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
         SuperContribute ->
-            ( { model | progress = Progress 0 }, Lamdera.sendToBackend UserSuperContibuted )
+            ( { model | superContributeProgress = Progress 0 }, Lamdera.sendToBackend UserSuperContibuted )
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -565,7 +565,7 @@ viewProgressButton (Progress progress) clicksOutput xp ( actionText, actionMsg )
 
 
 actionArea : Int -> Int -> Progress -> ClickPricing.Level -> Element FrontendMsg
-actionArea xp numGroupMembers progress selfImprovementLevel =
+actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
         , UI.button <|
@@ -593,7 +593,7 @@ actionArea xp numGroupMembers progress selfImprovementLevel =
                 }
         , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton progress (ClickPricing.superContributeClickBonus selfImprovementLevel) xp ( "Super Contribute", SuperContribute )
+                [ viewProgressButton superContributeProgress (ClickPricing.superContributeClickBonus selfImprovementLevel) xp ( "Super Contribute", SuperContribute )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -753,7 +753,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.progress userData.selfImprovementLevel
+                , el [ centerX ] <| actionArea xp numGroupMembers model.superContributeProgress userData.selfImprovementLevel
                 , viewPlayers model userData Idealistic
                 ]
             ]

@@ -175,7 +175,7 @@ initFrontendModel key =
     , userChatMessage = Nothing
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
-    , progress = Progress 0
+    , superContributeProgress = Progress 0
     , selfImprovementLevel = Level 0
     }
 
@@ -208,7 +208,7 @@ type alias FrontendModel =
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
-    , progress : Progress
+    , superContributeProgress : Progress
     , selfImprovementLevel : Level
     }
 
