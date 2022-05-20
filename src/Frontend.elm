@@ -563,7 +563,14 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                 , colorTheme = UI.BrightTheme
                 }
         , -- discuss
-          showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
+          let
+            foo =
+                ClickPricing.getLevel
+
+            bool =
+                foo discussionLevel > 0
+          in
+          showIf (xp >= 10 || bool) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
@@ -586,7 +593,7 @@ actionArea xp numGroupMembers superContributeProgress discussionLevel =
                         }
                 ]
         , -- argue
-          showIf (xp >= 10 || ClickPricing.getLevel discussionLevel > 0) <|
+          showIf (xp >= 10 || (ClickPricing.getLevel discussionLevel > 0)) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
@@ -748,7 +755,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.selfImprovementLevel
+                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.discussLevel
                 , viewPlayers model userData Idealistic
                 ]
             ]

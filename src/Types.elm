@@ -26,7 +26,7 @@ type alias UserData =
     , xp : Int
     , groupId : Maybe GroupId
     , userId : UUID.UUID
-    , selfImprovementLevel : Level
+    , discussLevel : Level
     }
 
 
@@ -40,7 +40,7 @@ createUserData sessionId username personalityType =
     , xp = 0
     , groupId = Nothing
     , userId = generateUuid (username ++ sessionId)
-    , selfImprovementLevel = Level 0
+    , discussLevel = Level 0
     }
 
 
@@ -176,7 +176,7 @@ initFrontendModel key =
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
     , discussProgress = Progress 0
-    , selfImprovementLevel = Level 0
+    , discussLevel = Level 0
     }
 
 
@@ -209,7 +209,7 @@ type alias FrontendModel =
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
     , discussProgress : Progress
-    , selfImprovementLevel : Level
+    , discussLevel : Level
     }
 
 

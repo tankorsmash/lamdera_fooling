@@ -1,7 +1,9 @@
-module ClickPricing exposing (..)
+module ClickPricing exposing (Bonus(..), Bonuses, CurrentLevel(..), CurrentLevels, Level(..), Progress(..), addLevel, addToLevel, addToProgress, basicBonuses, clickBonus, contributeClickBonus, getLevel, getNextLevel, groupMemberClickBonus, nextLevel, xpCost)
 
 {-| 0 to 100, for the sake of animations
 -}
+
+
 type Progress
     = Progress Int
 
@@ -83,8 +85,10 @@ xpCost (Bonus bonus) level =
     bonus.xpCost level
 
 
-type CurrentLevel =
-    CurrentLevel Level Progress
+type CurrentLevel
+    = CurrentLevel Level Progress
+
 
 type alias CurrentLevels =
-    {}
+    { discuss : CurrentLevel
+    }

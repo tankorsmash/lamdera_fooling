@@ -491,7 +491,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , xp = existingUserData.xp
                                 , groupId = existingUserData.groupId
                                 , userId = existingUserData.userId
-                                , selfImprovementLevel = existingUserData.selfImprovementLevel
+                                , discussLevel = existingUserData.discussLevel
                                 }
 
                         updateExistingUser newUser =
@@ -639,7 +639,7 @@ updateFromFrontend sessionId clientId msg model =
                                                 (\ud ->
                                                     { ud
                                                         | xp = ud.xp - upgradeCost
-                                                        , selfImprovementLevel = ClickPricing.nextLevel ud.selfImprovementLevel
+                                                        , discussLevel = ClickPricing.nextLevel ud.discussLevel
                                                     }
                                                 )
                                     in
