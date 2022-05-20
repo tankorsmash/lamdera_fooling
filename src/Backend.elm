@@ -271,14 +271,14 @@ updateFromFrontend sessionId clientId msg model =
                     )
                 |> Maybe.withDefault noop
 
-        UserSuperContibuted ->
+        UserDiscussed ->
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
                     (\userData ->
                         let
                             modifyClicks clicks =
-                                clicks + ClickPricing.superContributeClickBonus (Level 1)
+                                clicks + ClickPricing.discussClickBonus (Level 1)
 
                             newTeams =
                                 updateTeamByPersonalityType

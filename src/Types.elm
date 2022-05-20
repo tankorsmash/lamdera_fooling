@@ -175,7 +175,7 @@ initFrontendModel key =
     , userChatMessage = Nothing
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
-    , superContributeProgress = Progress 0
+    , discussProgress = Progress 0
     , selfImprovementLevel = Level 0
     }
 
@@ -208,7 +208,7 @@ type alias FrontendModel =
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
-    , superContributeProgress : Progress
+    , discussProgress : Progress
     , selfImprovementLevel : Level
     }
 
@@ -325,7 +325,7 @@ type FrontendMsg
       -- playing messages
     | LogUserOut
     | SendClickToBackend
-    | SuperContribute
+    | Discuss
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
@@ -339,7 +339,7 @@ type FrontendMsg
 type ToBackend
     = NoOpToBackend
     | UserGainedAClick
-    | UserSuperContibuted
+    | UserDiscussed
     | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String

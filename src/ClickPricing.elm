@@ -41,8 +41,8 @@ contributeClickBonus (Level level) =
     level
 
 
-superContributeClickBonus : Level -> Int
-superContributeClickBonus (Level level) =
+discussClickBonus : Level -> Int
+discussClickBonus (Level level) =
     level + 5
 
 

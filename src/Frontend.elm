@@ -136,13 +136,13 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | superContributeProgress = Types.addToProgress model.superContributeProgress 1 }, Cmd.none )
+            ( { model | discussProgress = Types.addToProgress model.discussProgress 1 }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
-        SuperContribute ->
-            ( { model | superContributeProgress = Progress 0 }, Lamdera.sendToBackend UserSuperContibuted )
+        Discuss ->
+            ( { model | discussProgress = Progress 0 }, Lamdera.sendToBackend UserDiscussed )
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -593,7 +593,7 @@ actionArea xp numGroupMembers superContributeProgress selfImprovementLevel =
                 }
         , showIf (xp >= 10 || ClickPricing.getLevel selfImprovementLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (ClickPricing.superContributeClickBonus selfImprovementLevel) ( "Super Contribute", SuperContribute )
+                [ viewProgressButton superContributeProgress (ClickPricing.discussClickBonus selfImprovementLevel) ( "Super Contribute", Discuss )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -753,7 +753,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.superContributeProgress userData.selfImprovementLevel
+                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.selfImprovementLevel
                 , viewPlayers model userData Idealistic
                 ]
             ]
