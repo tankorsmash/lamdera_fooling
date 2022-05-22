@@ -706,14 +706,14 @@ updateFromFrontend sessionId clientId msg model =
                                                 (\ud ->
                                                     let
                                                         newDiscussLevel : CurrentLevel -> CurrentLevel
-                                                        newDiscussLevel (CurrentLevel discussLevel progress) =
+                                                        newDiscussLevel (CurrentLevel discussLevel maybeStartTime durationMs) =
                                                             -- ClickPricing.mapCurrentLevel
                                                             --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel discussLevel)
-                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) progress
+                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) maybeStartTime durationMs
 
+                                                        newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
-                                                                ud.currentLevels
                                                                 .discuss
                                                                 (\currentLevels discussCurrentLevel ->
                                                                     { currentLevels
@@ -721,6 +721,11 @@ updateFromFrontend sessionId clientId msg model =
                                                                             newDiscussLevel discussCurrentLevel
                                                                     }
                                                                 )
+                                                                ud.currentLevels
+
+                                                        asd : UserData
+                                                        asd =
+                                                            ud
                                                     in
                                                     { ud
                                                         | xp = ud.xp - upgradeCost

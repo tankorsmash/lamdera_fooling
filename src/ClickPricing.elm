@@ -1,9 +1,10 @@
 module ClickPricing exposing (..)
 
+import Time
+
+
 {-| 0 to 100, for the sake of animations
 -}
-
-
 type Progress
     = Progress Int
 
@@ -92,7 +93,7 @@ xpCost (Bonus bonus) level =
 
 
 type CurrentLevel
-    = CurrentLevel Level Progress
+    = CurrentLevel Level (Maybe Time.Posix) Int
 
 
 type alias CurrentLevels =
@@ -101,8 +102,8 @@ type alias CurrentLevels =
     }
 
 
-mapCurrentLevels : CurrentLevels -> (CurrentLevels -> CurrentLevel) -> (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels
-mapCurrentLevels currentLevels getter setter =
+mapCurrentLevels : (CurrentLevels -> CurrentLevel) -> (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels -> CurrentLevels
+mapCurrentLevels getter setter currentLevels =
     let
         currentLevel =
             getter currentLevels
@@ -110,26 +111,61 @@ mapCurrentLevels currentLevels getter setter =
     setter currentLevels currentLevel
 
 
-mapCurrentLevel : CurrentLevel -> (Level -> Progress -> CurrentLevel) -> CurrentLevel
-mapCurrentLevel (CurrentLevel level progress) mapper =
-    mapper level progress
+mapCurrentLevel : CurrentLevel -> (Level -> Maybe Time.Posix -> Int -> CurrentLevel) -> CurrentLevel
+mapCurrentLevel (CurrentLevel level maybeStartTime durationMs) mapper =
+    mapper level maybeStartTime durationMs
 
 
 getCurrentLevelLevel : CurrentLevel -> Level
-getCurrentLevelLevel (CurrentLevel level progress) =
+getCurrentLevelLevel (CurrentLevel level progress durationMs) =
     level
 
 
-getCurrentLevelProgress : CurrentLevel -> Progress
-getCurrentLevelProgress (CurrentLevel level progress) =
-    progress
+getCurrentLevelProgress : CurrentLevel -> Time.Posix -> Progress
+getCurrentLevelProgress (CurrentLevel level maybeStartTime durationMs) now =
+    case maybeStartTime of
+        Just startTime ->
+            let
+                startTimeMs = Time.posixToMillis startTime
+                endTimeMs = startTimeMs + durationMs
+                nowMs= Time.posixToMillis now
+            in
+            normalizeFloat (toFloat startTimeMs) (toFloat endTimeMs) (toFloat nowMs)
+            |> round
+            |> Progress
+        Nothing ->
+            Progress 0
+
+normalizeInt : Int -> Int -> Int -> Int
+normalizeInt min max val =
+    let
+        range =
+            max - min
+
+        diff =
+            val - min
+    in
+    diff // range
+
+normalizeFloat : Float -> Float -> Float -> Float
+normalizeFloat min max val =
+    let
+        range =
+            max - min
+
+        diff =
+            val - min
+    in
+    diff / range
+
 
 
 setCurrentLevelLevel : CurrentLevel -> Level -> CurrentLevel
-setCurrentLevelLevel (CurrentLevel level progress) newLevel =
-    CurrentLevel newLevel progress
+setCurrentLevelLevel (CurrentLevel level progress durationMs) newLevel =
+    CurrentLevel newLevel progress durationMs
 
 
-setCurrentLevelProgress : CurrentLevel -> Progress -> CurrentLevel
-setCurrentLevelProgress (CurrentLevel level progress) newProgress =
-    CurrentLevel level newProgress
+-- doesnt make sense to have anymore, since we're now using times
+-- setCurrentLevelProgress : CurrentLevel -> Progress -> CurrentLevel
+-- setCurrentLevelProgress (CurrentLevel level progress durationMs) newProgress =
+--     CurrentLevel level newProgress durationMs

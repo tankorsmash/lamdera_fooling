@@ -41,8 +41,8 @@ createUserData sessionId username personalityType =
     , groupId = Nothing
     , userId = generateUuid (username ++ sessionId)
     , currentLevels =
-        { discuss = CurrentLevel (Level 0) (Progress 0)
-        , argue = CurrentLevel (Level 0) (Progress 0)
+        { discuss = CurrentLevel (Level 0) Nothing 0
+        , argue = CurrentLevel (Level 0) Nothing 0
         }
     }
 
@@ -178,10 +178,6 @@ initFrontendModel key =
     , userChatMessage = Nothing
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
-    , discussProgress = Progress 0
-    , discussLevel = Level 0
-    , argueProgress = Progress 0
-    , argueLevel = Level 0
     }
 
 
@@ -213,10 +209,6 @@ type alias FrontendModel =
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
-    , discussProgress : Progress
-    , discussLevel : Level
-    , argueProgress : Progress
-    , argueLevel : Level
     }
 
 

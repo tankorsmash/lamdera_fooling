@@ -3,7 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, nextLevel, xpCost)
+import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
 import Color
 import Dict
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
@@ -87,6 +87,10 @@ focusElement htmlId =
 
 update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg )
 update msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
     case msg of
         UrlClicked urlRequest ->
             case urlRequest of
@@ -107,16 +111,38 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | discussProgress = ClickPricing.addToProgress model.discussProgress 1 }, Cmd.none )
+            ( { model | lastTick = time }, Cmd.none )
 
         SendClickToBackend ->
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
         Discuss ->
-            ( { model | discussProgress = Progress 0 }, Lamdera.sendToBackend UserDiscussed )
+            -- let
+            --     currentLevels =
+            --         model.currentLevels
+            --             |> (\cl ->
+            --                     { cl
+            --                         | discuss =
+            --                             ClickPricing.mapCurrentLevel cl.discuss (\level progress -> ClickPricing.CurrentLevel level (Progress 0))
+            --                     }
+            --                )
+            -- in
+            -- ( { model | currentLevels = currentLevels }, Lamdera.sendToBackend UserDiscussed )
+            noop
 
         Argue ->
-            ( { model | argueProgress = Progress 0 }, Lamdera.sendToBackend UserArgued )
+            -- let
+            --     currentLevels =
+            --         model.currentLevels
+            --             |> (\cl ->
+            --                     { cl
+            --                         | discuss =
+            --                             ClickPricing.mapCurrentLevel cl.argue (\level progress -> ClickPricing.CurrentLevel level (Progress 0))
+            --                     }
+            --                )
+            -- in
+            -- ( { model | currentLevels = currentLevels }, Lamdera.sendToBackend UserArgued )
+            noop
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -538,8 +564,8 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-actionArea : Int -> Int -> Progress -> CurrentLevels -> Element FrontendMsg
-actionArea xp numGroupMembers superContributeProgress (currentLevels) =
+actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Element FrontendMsg
+actionArea lastTick xp numGroupMembers currentLevels =
     let
         discussionLevel =
             currentLevels.discuss |> getCurrentLevelLevel
@@ -575,7 +601,7 @@ actionArea xp numGroupMembers superContributeProgress (currentLevels) =
         , -- discuss
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -598,7 +624,7 @@ actionArea xp numGroupMembers superContributeProgress (currentLevels) =
         , -- argue
           showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -758,7 +784,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea xp numGroupMembers model.discussProgress userData.currentLevels
+                , el [ centerX ] <| actionArea model.lastTick xp numGroupMembers userData.currentLevels
                 , viewPlayers model userData Idealistic
                 ]
             ]
