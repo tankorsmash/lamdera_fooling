@@ -6,6 +6,7 @@ import Browser.Navigation as Nav
 import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
 import Color
 import Dict
+import Duration
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
@@ -34,6 +35,7 @@ import Types
         , ToFrontend(..)
         , User(..)
         , UserData
+        , getUserData
         , getUsername
         , initFrontendModel
         , stringToPersonalityType
@@ -117,19 +119,30 @@ update msg model =
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
         Discuss ->
-            -- let
-            --     currentLevels =
-            --         model.currentLevels
-            --             |> (\cl ->
-            --                     { cl
-            --                         | discuss =
-            --                             ClickPricing.mapCurrentLevel cl.discuss (\level progress -> ClickPricing.CurrentLevel level (Progress 0))
-            --                     }
-            --                )
-            -- in
-            -- ( { model | currentLevels = currentLevels }, Lamdera.sendToBackend UserDiscussed )
-            noop
+            let
+                maybeCurrentLevels =
+                    model.user
+                        |> getUserData
+                        |> Maybe.map .currentLevels
+            in
+            case maybeCurrentLevels of
+                Just currentLevels ->
+                    let
+                        prog =
+                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.discuss model.lastTick
+                    in
+                    if prog == Completed || prog == NotStarted then
+                        ( model, Lamdera.sendToBackend UserDiscussed )
 
+                    else
+                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                        Debug.log "unclickable " noop
+
+                Nothing ->
+                    -- TODO this should never happen, since the user is only able to do this if they're logged in
+                    Debug.log "impossible" noop
+
+        -- noop
         Argue ->
             -- let
             --     currentLevels =
@@ -507,28 +520,45 @@ showIf condition element =
 
 
 viewProgressButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
-viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
+viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
     let
-        readyToClick =
-            progress >= 100
+        _ =
+                Debug.toString <|
+                    Duration.inSeconds <|
+                        ClickPricing.bonusDuration ClickPricing.basicBonuses.discuss (Level 1)
     in
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
-        [ if not readyToClick then
-            text actionText
+        [ case progress of
+            Completed ->
+                UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            ]
+                        , onPressMsg = actionMsg
+                        , textLabel = actionText
+                        , colorTheme = UI.BrightTheme
+                        }
 
-          else
-            UI.button <|
-                UI.TextParams
-                    { buttonType = UI.Outline
-                    , customAttrs =
-                        [ centerX
-                        , width Element.shrink
-                        , UI.scaled_font 2
-                        ]
-                    , onPressMsg = actionMsg
-                    , textLabel = actionText
-                    , colorTheme = UI.BrightTheme
-                    }
+            NotStarted ->
+                UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            ]
+                        , onPressMsg = actionMsg
+                        , textLabel = actionText
+                        , colorTheme = UI.BrightTheme
+                        }
+
+            _ ->
+                text actionText
         , row
             [ width fill
             , height (fill |> Element.minimum 40)
@@ -539,11 +569,12 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
                     , centerY
                     , Background.color <|
                         UI.convertColor <|
-                            if readyToClick then
-                                Color.darkGreen
+                            case progress of
+                                Completed ->
+                                    Color.darkGreen
 
-                            else
-                                Color.lightBlue
+                                _ ->
+                                    Color.lightBlue
                     , Border.rounded 3
                     , padding 2
                     ]
@@ -552,14 +583,19 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
                         "+"
                             ++ (String.fromInt <| clicksOutput)
             ]
-            (if not readyToClick then
-                [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
-                , el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100 - progress), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
-                ]
+            (case progress of
+                NotStarted ->
+                    [ el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                    ]
 
-             else
-                [ el [ Border.rounded 3, centerY, height fill, width (Element.fillPortion progress), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
-                ]
+                Progress p ->
+                    [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion p), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
+                    , el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100 - p), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                    ]
+
+                Completed ->
+                    [ el [ Border.rounded 3, centerY, height fill, width (Element.fillPortion 100), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
+                    ]
             )
         ]
 

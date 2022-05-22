@@ -246,6 +246,7 @@ initBackendModel =
     , teams = initTeams
     , users = []
     , allChatMessages = []
+    , lastTick = Time.millisToPosix 0
     }
 
 
@@ -299,6 +300,7 @@ type alias BackendModel =
     , teams : Teams
     , users : List User
     , allChatMessages : List ChatMessage
+    , lastTick : Time.Posix
     }
 
 

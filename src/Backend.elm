@@ -28,8 +28,7 @@ subscriptions model =
     Sub.batch
         [ Lamdera.onConnect OnClientConnect
         , Lamdera.onDisconnect OnClientDisconnect
-
-        -- , Time.every 1000 UpdateTick
+        , Time.every (1000 / 50) UpdateTick
         ]
 
 
@@ -109,7 +108,7 @@ update msg model =
             )
 
         UpdateTick time ->
-            ( model, Cmd.none )
+            ( { model | lastTick = time }, Cmd.none )
 
 
 convertUsersToTeamsUserClicks : List User -> Types.TeamsUserClicks
@@ -310,7 +309,26 @@ updateFromFrontend sessionId clientId msg model =
                                         (\oldUser ->
                                             mapUserData oldUser
                                                 (\ud ->
-                                                    { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 }
+                                                    { ud
+                                                        | userClicks = modifyClicks ud.userClicks
+                                                        , xp = ud.xp + 1
+                                                        , currentLevels =
+                                                            mapCurrentLevels
+                                                                .discuss
+                                                                (\cl newDiscuss ->
+                                                                    { cl
+                                                                        | discuss =
+                                                                            Debug.log "updated discuss" <|
+                                                                                ClickPricing.restartCurrentLevel
+                                                                                    newDiscuss
+                                                                                    model.lastTick
+                                                                                    (ClickPricing.bonusDuration basicBonuses.discuss <|
+                                                                                        ClickPricing.getCurrentLevelLevel newDiscuss
+                                                                                    )
+                                                                    }
+                                                                )
+                                                                ud.currentLevels
+                                                    }
                                                 )
                                                 |> Maybe.map FullUser
                                                 |> Maybe.withDefault oldUser
@@ -331,7 +349,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             , getUserBySessionId newModel.users sessionId
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
                                 |> Maybe.withDefault Cmd.none
                             ]
                         )
