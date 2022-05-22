@@ -115,6 +115,9 @@ update msg model =
         Discuss ->
             ( { model | discussProgress = Progress 0 }, Lamdera.sendToBackend UserDiscussed )
 
+        Argue ->
+            ( { model | argueProgress = Progress 0 }, Lamdera.sendToBackend UserArgued )
+
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
 
@@ -536,10 +539,13 @@ viewProgressButton (Progress progress) clicksOutput ( actionText, actionMsg ) =
 
 
 actionArea : Int -> Int -> Progress -> CurrentLevels -> Element FrontendMsg
-actionArea xp numGroupMembers superContributeProgress ({ discuss } as currentLevels) =
+actionArea xp numGroupMembers superContributeProgress (currentLevels) =
     let
         discussionLevel =
             currentLevels.discuss |> getCurrentLevelLevel
+
+        argueLevel =
+            currentLevels.argue |> getCurrentLevelLevel
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -590,9 +596,9 @@ actionArea xp numGroupMembers superContributeProgress ({ discuss } as currentLev
                         }
                 ]
         , -- argue
-          showIf (xp >= 10 || (ClickPricing.getLevel discussionLevel > 0)) <|
+          showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
+                [ viewProgressButton superContributeProgress (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -601,14 +607,14 @@ actionArea xp numGroupMembers superContributeProgress ({ discuss } as currentLev
                             , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
-                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
+                                if xp >= xpCost basicBonuses.argue (nextLevel argueLevel) then
                                     1.0
 
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel discussionLevel)
-                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
+                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel argueLevel)
+                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]

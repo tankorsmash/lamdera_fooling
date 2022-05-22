@@ -40,7 +40,10 @@ createUserData sessionId username personalityType =
     , xp = 0
     , groupId = Nothing
     , userId = generateUuid (username ++ sessionId)
-    , currentLevels = { discuss = CurrentLevel (Level 0) (Progress 0) }
+    , currentLevels =
+        { discuss = CurrentLevel (Level 0) (Progress 0)
+        , argue = CurrentLevel (Level 0) (Progress 0)
+        }
     }
 
 
@@ -177,6 +180,8 @@ initFrontendModel key =
     , lastTick = Time.millisToPosix 0
     , discussProgress = Progress 0
     , discussLevel = Level 0
+    , argueProgress = Progress 0
+    , argueLevel = Level 0
     }
 
 
@@ -210,6 +215,8 @@ type alias FrontendModel =
     , lastTick : Time.Posix
     , discussProgress : Progress
     , discussLevel : Level
+    , argueProgress : Progress
+    , argueLevel : Level
     }
 
 
@@ -326,6 +333,7 @@ type FrontendMsg
     | LogUserOut
     | SendClickToBackend
     | Discuss
+    | Argue
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
@@ -340,6 +348,7 @@ type ToBackend
     = NoOpToBackend
     | UserGainedAClick
     | UserDiscussed
+    | UserArgued
     | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String

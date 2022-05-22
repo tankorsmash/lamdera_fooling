@@ -62,6 +62,7 @@ type Bonus
 
 type alias Bonuses =
     { discuss : Bonus
+    , argue : Bonus
     }
 
 
@@ -71,6 +72,11 @@ basicBonuses =
         Bonus
             { clickBonus = \(Level level) -> level + 5
             , xpCost = \(Level level) -> level * 5
+            }
+    , argue =
+        Bonus
+            { clickBonus = \(Level level) -> level * 5
+            , xpCost = \(Level level) -> level * 45
             }
     }
 
@@ -91,6 +97,7 @@ type CurrentLevel
 
 type alias CurrentLevels =
     { discuss : CurrentLevel
+    , argue : CurrentLevel
     }
 
 
