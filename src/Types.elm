@@ -41,8 +41,8 @@ createUserData sessionId username personalityType =
     , groupId = Nothing
     , userId = generateUuid (username ++ sessionId)
     , currentLevels =
-        { discuss = CurrentLevel (Level 0) Nothing 0
-        , argue = CurrentLevel (Level 0) Nothing 0
+        { discuss = CurrentLevel (Level 0) Nothing
+        , argue = CurrentLevel (Level 0) Nothing
         }
     }
 

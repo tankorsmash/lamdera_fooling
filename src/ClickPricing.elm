@@ -93,7 +93,7 @@ xpCost (Bonus bonus) level =
 
 
 type CurrentLevel
-    = CurrentLevel Level (Maybe Time.Posix) Int
+    = CurrentLevel Level (Maybe (Time.Posix, Time.Posix))
 
 
 type alias CurrentLevels =
@@ -111,30 +111,30 @@ mapCurrentLevels getter setter currentLevels =
     setter currentLevels currentLevel
 
 
-mapCurrentLevel : CurrentLevel -> (Level -> Maybe Time.Posix -> Int -> CurrentLevel) -> CurrentLevel
-mapCurrentLevel (CurrentLevel level maybeStartTime durationMs) mapper =
-    mapper level maybeStartTime durationMs
+mapCurrentLevel : CurrentLevel -> (Level -> Maybe (Time.Posix, Time.Posix) -> CurrentLevel) -> CurrentLevel
+mapCurrentLevel (CurrentLevel level maybeTimes) mapper =
+    mapper level maybeTimes
 
 
 getCurrentLevelLevel : CurrentLevel -> Level
-getCurrentLevelLevel (CurrentLevel level progress durationMs) =
+getCurrentLevelLevel (CurrentLevel level _) =
     level
 
 
 getCurrentLevelProgress : CurrentLevel -> Time.Posix -> Progress
-getCurrentLevelProgress (CurrentLevel level maybeStartTime durationMs) now =
-    case maybeStartTime of
-        Just startTime ->
+getCurrentLevelProgress (CurrentLevel level maybeTimes ) now =
+    case maybeTimes of
+        Just (startTime, endTime) ->
             let
                 startTimeMs = Time.posixToMillis startTime
-                endTimeMs = startTimeMs + durationMs
+                endTimeMs = Time.posixToMillis endTime
                 nowMs= Time.posixToMillis now
             in
             normalizeFloat (toFloat startTimeMs) (toFloat endTimeMs) (toFloat nowMs)
             |> round
             |> Progress
         Nothing ->
-            Progress 0
+            Progress 100
 
 normalizeInt : Int -> Int -> Int -> Int
 normalizeInt min max val =
@@ -161,8 +161,8 @@ normalizeFloat min max val =
 
 
 setCurrentLevelLevel : CurrentLevel -> Level -> CurrentLevel
-setCurrentLevelLevel (CurrentLevel level progress durationMs) newLevel =
-    CurrentLevel newLevel progress durationMs
+setCurrentLevelLevel (CurrentLevel level maybeTimes) newLevel =
+    CurrentLevel newLevel maybeTimes
 
 
 -- doesnt make sense to have anymore, since we're now using times

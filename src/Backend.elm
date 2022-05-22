@@ -706,10 +706,10 @@ updateFromFrontend sessionId clientId msg model =
                                                 (\ud ->
                                                     let
                                                         newDiscussLevel : CurrentLevel -> CurrentLevel
-                                                        newDiscussLevel (CurrentLevel discussLevel maybeStartTime durationMs) =
+                                                        newDiscussLevel (CurrentLevel discussLevel maybeTimes) =
                                                             -- ClickPricing.mapCurrentLevel
                                                             --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel discussLevel)
-                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) maybeStartTime durationMs
+                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) maybeTimes
 
                                                         newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =

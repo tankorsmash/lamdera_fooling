@@ -784,7 +784,8 @@ viewPlaying model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <| actionArea model.lastTick xp numGroupMembers userData.currentLevels
+                , el [ centerX ] <|
+                    actionArea model.lastTick xp numGroupMembers userData.currentLevels
                 , viewPlayers model userData Idealistic
                 ]
             ]
