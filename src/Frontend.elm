@@ -166,7 +166,6 @@ update msg model =
                     -- TODO this should never happen, since the user is only able to do this if they're logged in
                     Debug.log "impossible" noop
 
-
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
 
@@ -532,14 +531,18 @@ showIf condition element =
 viewProgressButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
 viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
-        [ case progress of
+        [ let
+            buttonWidth =
+                width (Element.px 90)
+          in
+          case progress of
             Completed ->
                 UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
                         , customAttrs =
                             [ centerX
-                            , width Element.shrink
+                            , buttonWidth
                             , UI.scaled_font 2
                             ]
                         , onPressMsg = actionMsg
@@ -553,7 +556,7 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                         { buttonType = UI.Outline
                         , customAttrs =
                             [ centerX
-                            , width Element.shrink
+                            , buttonWidth
                             , UI.scaled_font 2
                             ]
                         , onPressMsg = actionMsg
@@ -562,7 +565,8 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                         }
 
             _ ->
-                text actionText
+                el [ buttonWidth, centerX, Font.center, UI.scaled_font 2 ] <|
+                    text actionText
         , row
             [ width fill
             , height (fill |> Element.minimum 40)
