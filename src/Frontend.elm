@@ -176,10 +176,25 @@ update msg model =
             case maybeCurrentLevels of
                 Just currentLevels ->
                     let
+                        energizeLevel =
+                            currentLevels.energize |> getCurrentLevelLevel
+
+                        progress : Progress
+                        progress =
+                            ClickPricing.getCurrentLevelCycleProgress
+                                currentLevels.energize
+                                model.lastTick
+                                (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+
                         prog =
-                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.energize model.lastTick
+                            Debug.log "prog" <|
+                                (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                                    model.lastTick
+                                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                                    |> Maybe.withDefault -123
+                                )
                     in
-                    if prog == Completed || prog == NotStarted then
+                    if prog > 0 || progress == NotStarted then
                         ( model, Lamdera.sendToBackend UserEnergized )
 
                     else
@@ -652,6 +667,91 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
         ]
 
 
+viewCycleButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
+viewCycleButton progress clicksOutput ( actionText, actionMsg ) =
+    row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
+        [ let
+            buttonWidth =
+                width (Element.px 90)
+          in
+          if clicksOutput > 0 || progress == NotStarted then
+            UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , buttonWidth
+                        , UI.scaled_font 2
+                        ]
+                    , onPressMsg = actionMsg
+                    , textLabel = actionText
+                    , colorTheme = UI.BrightTheme
+                    }
+
+          else
+            el [ buttonWidth, centerX, Font.center, UI.scaled_font 2 ] <|
+                text actionText
+        , row
+            [ width fill
+            , height (fill |> Element.minimum 40)
+            , padding 3
+            , Element.inFront <|
+                el
+                    [ centerX
+                    , centerY
+                    , Background.color <|
+                        UI.convertColor <|
+                            case progress of
+                                Completed ->
+                                    Color.darkGreen
+
+                                _ ->
+                                    Color.lightBlue
+                    , Border.rounded 3
+                    , padding 2
+                    ]
+                <|
+                    text <|
+                        "+"
+                            ++ (String.fromInt <| clicksOutput)
+            ]
+            (let
+                sharedAttrs =
+                    [ centerY, height fill ]
+
+                emptyColor =
+                    Background.color <| UI.convertColor <| Color.lightBlue
+
+                filledColor =
+                    Background.color <| UI.convertColor <| Color.darkBlue
+
+                completedColor =
+                    Background.color <| UI.convertColor <| Color.darkGreen
+             in
+             case progress of
+                NotStarted ->
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, emptyColor ]) <| Element.none
+                    ]
+
+                Progress p ->
+                    let
+                        filledIn =
+                            10000 * ClickPricing.getProgress progress
+
+                        empty =
+                            10000 - filledIn
+                    in
+                    [ el (sharedAttrs ++ [ UI.borderRoundedLeft 3, width (Element.fillPortion <| round filledIn), filledColor ]) <| Element.none
+                    , el (sharedAttrs ++ [ UI.borderRoundedRight 3, width (Element.fillPortion <| round empty), emptyColor ]) <| Element.none
+                    ]
+
+                Completed ->
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, completedColor ]) <| Element.none
+                    ]
+            )
+        ]
+
+
 actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Element FrontendMsg
 actionArea lastTick xp numGroupMembers currentLevels =
     let
@@ -696,7 +796,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 currentLevels.energize |> getCurrentLevelLevel
           in
           column [ centerX, width fill, spacing 10 ]
-            [ viewProgressButton
+            [ viewCycleButton
                 (ClickPricing.getCurrentLevelCycleProgress
                     currentLevels.energize
                     lastTick
@@ -707,7 +807,8 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
                     lastTick
                     (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
-                |> Maybe.withDefault -123)
+                    |> Maybe.withDefault -123
+                )
                 ( "Energize", CollectEnergize )
             , UI.button <|
                 UI.TextParams
