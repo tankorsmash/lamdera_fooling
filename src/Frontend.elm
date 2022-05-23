@@ -165,6 +165,29 @@ update msg model =
                 Nothing ->
                     -- TODO this should never happen, since the user is only able to do this if they're logged in
                     Debug.log "impossible" noop
+        ToggleEnergize ->
+            let
+                maybeCurrentLevels =
+                    model.user
+                        |> getUserData
+                        |> Maybe.map .currentLevels
+            in
+            case maybeCurrentLevels of
+                Just currentLevels ->
+                    let
+                        prog =
+                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.energize model.lastTick
+                    in
+                    if prog == Completed || prog == NotStarted then
+                        ( model, Lamdera.sendToBackend UserToggledEnergize )
+
+                    else
+                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                        Debug.log "unclickable " noop
+
+                Nothing ->
+                    -- TODO this should never happen, since the user is only able to do this if they're logged in
+                    Debug.log "impossible" noop
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
@@ -666,6 +689,32 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 , colorTheme = UI.BrightTheme
                 }
         , spacer
+        , -- convert Xp to clicks
+          let
+            energizeLevel =
+                currentLevels.energize |> getCurrentLevelLevel
+          in
+          column [ centerX, width fill, spacing 10 ]
+            [ viewProgressButton (getCurrentLevelProgress currentLevels.energize lastTick) (clickBonus basicBonuses.energize energizeLevel) ( "Energize", ToggleEnergize )
+            , UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , UI.scaled_font 2
+                        , Element.alpha <|
+                            if xp >= xpCost basicBonuses.energize (nextLevel energizeLevel) then
+                                1.0
+
+                            else
+                                0.25
+                        ]
+                    , onPressMsg = SendBuyUpgrade (Types.Energization <| nextLevel energizeLevel)
+                    , textLabel = "Energize +1 (" ++ String.fromInt (xpCost basicBonuses.energize (addToLevel energizeLevel 1)) ++ "xp)"
+                    , colorTheme = UI.BrightTheme
+                    }
+            ]
         , -- discuss
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]

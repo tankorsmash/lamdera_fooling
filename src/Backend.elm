@@ -422,6 +422,56 @@ updateFromFrontend sessionId clientId msg model =
                     )
                 |> Maybe.withDefault noop
 
+        UserToggledEnergize ->
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+                |> Maybe.map
+                    (\userData ->
+                        let
+                            newUsers =
+                                updateFullUserByUsername
+                                    model.users
+                                    (\ud ->
+                                        { ud
+                                            | currentLevels =
+                                                mapCurrentLevels
+                                                    .energize
+                                                    (\cl newEnergize ->
+                                                        { cl
+                                                            | energize =
+                                                                case getCurrentLevelProgress newEnergize model.lastTick of
+                                                                    NotStarted ->
+                                                                        ClickPricing.restartCurrentLevel
+                                                                            newEnergize
+                                                                            model.lastTick
+                                                                            (ClickPricing.bonusDuration basicBonuses.energize <|
+                                                                                ClickPricing.getCurrentLevelLevel newEnergize
+                                                                            )
+
+                                                                    _ ->
+                                                                        ClickPricing.stopCurrentLevel
+                                                                            newEnergize
+                                                        }
+                                                    )
+                                                    ud.currentLevels
+                                        }
+                                    )
+                                    userData.username
+
+                            newModel : Model
+                            newModel =
+                                { model | users = newUsers }
+                        in
+                        ( newModel
+                        , Cmd.batch
+                            [ getUserBySessionId newModel.users sessionId
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
+                                |> Maybe.withDefault Cmd.none
+                            ]
+                        )
+                    )
+                |> Maybe.withDefault noop
+
         UserWantsToSpend ->
             let
                 clickCost =
@@ -760,6 +810,7 @@ updateFromFrontend sessionId clientId msg model =
 
                                 else
                                     noop
+
                             Types.Argumentation level ->
                                 let
                                     upgradeCost =
@@ -775,8 +826,6 @@ updateFromFrontend sessionId clientId msg model =
                                                     let
                                                         newArgueLevel : CurrentLevel -> CurrentLevel
                                                         newArgueLevel (CurrentLevel argueLevel maybeTimes) =
-                                                            -- ClickPricing.mapCurrentLevel
-                                                            --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel argueLevel)
                                                             CurrentLevel (ClickPricing.nextLevel argueLevel) maybeTimes
 
                                                         newCurrentLevels : CurrentLevels
@@ -787,6 +836,55 @@ updateFromFrontend sessionId clientId msg model =
                                                                     { currentLevels
                                                                         | argue =
                                                                             newArgueLevel argueCurrentLevel
+                                                                    }
+                                                                )
+                                                                ud.currentLevels
+
+                                                        asd : UserData
+                                                        asd =
+                                                            ud
+                                                    in
+                                                    { ud
+                                                        | xp = ud.xp - upgradeCost
+                                                        , currentLevels = newCurrentLevels
+                                                    }
+                                                )
+                                    in
+                                    -- check can afford upgrade
+                                    -- reduce XP by 5
+                                    ( setUsers model newUsers
+                                    , getUserBySessionId newUsers sessionId
+                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                                        |> Maybe.withDefault Cmd.none
+                                    )
+
+                                else
+                                    noop
+                            Types.Energization level ->
+                                let
+                                    upgradeCost =
+                                        ClickPricing.xpCost ClickPricing.basicBonuses.energize level
+                                in
+                                if userData.xp >= upgradeCost then
+                                    let
+                                        newUsers =
+                                            updateFullUserBySessionId
+                                                model.users
+                                                sessionId
+                                                (\ud ->
+                                                    let
+                                                        newEnergizeLevel : CurrentLevel -> CurrentLevel
+                                                        newEnergizeLevel (CurrentLevel energizeLevel maybeTimes) =
+                                                            CurrentLevel (ClickPricing.nextLevel energizeLevel) maybeTimes
+
+                                                        newCurrentLevels : CurrentLevels
+                                                        newCurrentLevels =
+                                                            ClickPricing.mapCurrentLevels
+                                                                .energize
+                                                                (\currentLevels energizeCurrentLevel ->
+                                                                    { currentLevels
+                                                                        | energize =
+                                                                            newEnergizeLevel energizeCurrentLevel
                                                                     }
                                                                 )
                                                                 ud.currentLevels

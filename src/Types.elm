@@ -43,6 +43,7 @@ createUserData sessionId username personalityType =
     , currentLevels =
         { discuss = CurrentLevel (Level 0) Nothing
         , argue = CurrentLevel (Level 0) Nothing
+        , energize = CurrentLevel (Level 0) Nothing
         }
     }
 
@@ -311,6 +312,8 @@ type Upgrade
 type UpgradeType
     = Discussion Level
     | Argumentation Level
+    | Energization Level
+
 
 
 type FrontendMsg
@@ -329,6 +332,7 @@ type FrontendMsg
     | SendClickToBackend
     | Discuss
     | Argue
+    | ToggleEnergize
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
@@ -344,6 +348,7 @@ type ToBackend
     | UserGainedAClick
     | UserDiscussed
     | UserArgued
+    | UserToggledEnergize
     | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String

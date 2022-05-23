@@ -60,12 +60,10 @@ getProgress progress =
 --             originalProgress
 
 
+{-| only creates a started or completed one, if you want to make a non started one, use the ctor -}
 createProgress : Float -> Progress
 createProgress value =
-    if value == 0 then
-        NotStarted
-
-    else if (value |> min 1.0 |> max 0) >= 1.0 then
+    if (value |> min 1.0 |> max 0) >= 1.0 then
         Completed
 
     else
@@ -123,6 +121,7 @@ type Bonus
 type alias Bonuses =
     { discuss : Bonus
     , argue : Bonus
+    , energize : Bonus
     }
 
 
@@ -140,6 +139,12 @@ basicBonuses =
         Bonus
             { clickBonus = \(Level level) -> (level * 5) + 30
             , xpCost = \(Level level) -> level * 45
+            , durationMs = \(Level level) -> Duration.seconds 30
+            }
+    , energize =
+        Bonus
+            { clickBonus = \(Level level) -> (level ) 
+            , xpCost = \(Level level) -> level * 25
             , durationMs = \(Level level) -> Duration.seconds 30
             }
     }
@@ -167,6 +172,7 @@ type CurrentLevel
 type alias CurrentLevels =
     { discuss : CurrentLevel
     , argue : CurrentLevel
+    , energize : CurrentLevel
     }
 
 
@@ -187,6 +193,10 @@ mapCurrentLevel (CurrentLevel level maybeTimes) mapper =
 restartCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> CurrentLevel
 restartCurrentLevel (CurrentLevel level _) now duration =
     CurrentLevel level (Just ( now, Duration.addTo now duration ))
+
+stopCurrentLevel : CurrentLevel ->  CurrentLevel
+stopCurrentLevel (CurrentLevel level _) =
+    CurrentLevel level (Nothing)
 
 
 getCurrentLevelLevel : CurrentLevel -> Level
