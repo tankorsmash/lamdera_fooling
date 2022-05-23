@@ -577,18 +577,38 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                         "+"
                             ++ (String.fromInt <| clicksOutput)
             ]
-            (case progress of
+            (let
+                sharedAttrs =
+                    [ centerY, height fill ]
+
+                emptyColor =
+                    Background.color <| UI.convertColor <| Color.lightBlue
+
+                filledColor =
+                    Background.color <| UI.convertColor <| Color.darkBlue
+
+                completedColor =
+                    Background.color <| UI.convertColor <| Color.darkGreen
+             in
+             case progress of
                 NotStarted ->
-                    [ el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, emptyColor ]) <| Element.none
                     ]
 
                 Progress p ->
-                    [ el [ UI.borderRoundedLeft 3, centerY, height fill, width (Element.fillPortion p), Background.color <| UI.convertColor <| Color.darkBlue ] <| text " "
-                    , el [ UI.borderRoundedRight 3, centerY, height fill, width (Element.fillPortion <| 100 - p), Background.color <| UI.convertColor <| Color.lightBlue ] <| text " "
+                    let
+                        filledIn =
+                            10000 * ClickPricing.getProgress progress
+
+                        empty =
+                            10000 - filledIn
+                    in
+                    [ el (sharedAttrs ++ [ UI.borderRoundedLeft 3, width (Element.fillPortion <| round filledIn), filledColor ]) <| Element.none
+                    , el (sharedAttrs ++ [ UI.borderRoundedRight 3, width (Element.fillPortion <| round empty), emptyColor ]) <| Element.none
                     ]
 
                 Completed ->
-                    [ el [ Border.rounded 3, centerY, height fill, width (Element.fillPortion 100), Background.color <| UI.convertColor <| Color.darkGreen ] <| text " "
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, completedColor ]) <| Element.none
                     ]
             )
         ]

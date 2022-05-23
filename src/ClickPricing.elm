@@ -4,45 +4,70 @@ import Duration
 import Time
 
 
-{-| 0 to 100, for the sake of animations
+{-| 0.0 to 1.0. A 0 to 100 helper is available
 -}
 type Progress
     = NotStarted
-    | Progress Int
+    | Progress Float
     | Completed
 
 
-addToProgress : Progress -> Int -> Progress
-addToProgress originalProgress toAdd =
-    case originalProgress of
+getProgressInt : Progress -> Int
+getProgressInt progress =
+    case progress of
         NotStarted ->
-            if toAdd >= 100 then
-                Completed
+            0
 
-            else
-                Progress toAdd
-
-        Progress progress ->
-            if (progress + toAdd |> min 100 |> max 0) >= 100 then
-                Completed
-
-            else
-                Progress (progress + toAdd |> min 100 |> max 0)
+        Progress raw ->
+            raw * 100 |> round
 
         Completed ->
-            originalProgress
+            100
+
+getProgress : Progress -> Float
+getProgress progress =
+    case progress of
+        NotStarted ->
+            0
+
+        Progress raw ->
+            raw
+
+        Completed ->
+            1.0
 
 
-createProgress : Int -> Progress
+-- addToProgress : Progress -> Int -> Progress
+-- addToProgress originalProgress toAdd =
+--     case originalProgress of
+--         NotStarted ->
+--             if toAdd >= 100 then
+--                 Completed
+--
+--             else
+--                 Progress toAdd
+--
+--         Progress progress ->
+--             if (progress + toAdd |> min 100 |> max 0) >= 100 then
+--                 Completed
+--
+--             else
+--                 Progress (progress + toAdd |> min 100 |> max 0)
+--
+--         Completed ->
+--             originalProgress
+
+
+createProgress : Float -> Progress
 createProgress value =
     if value == 0 then
         NotStarted
 
-    else if (value |> min 100 |> max 0) >= 100 then
+    else if (value |> min 1.0 |> max 0) >= 1.0 then
         Completed
 
     else
-        Progress (value |> min 100 |> max 0)
+        Progress (value |> min 1.0 |> max 0)
 
 
 type Level
@@ -180,8 +205,6 @@ getCurrentLevelProgress (CurrentLevel level maybeTimes) now =
                     Time.posixToMillis now
             in
             normalizeFloat (toFloat startTimeMs) (toFloat endTimeMs) (toFloat nowMs)
-                |> (\v -> v * 100)
-                |> round
                 |> createProgress
 
         Nothing ->
