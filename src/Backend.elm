@@ -299,39 +299,30 @@ updateFromFrontend sessionId clientId msg model =
                                        )
 
                             newUsers =
-                                model.users
-                                    |> List.Extra.updateIf
-                                        (\u ->
-                                            getUsername u
-                                                |> Maybe.map ((==) userData.username)
-                                                |> Maybe.withDefault False
-                                        )
-                                        (\oldUser ->
-                                            mapUserData oldUser
-                                                (\ud ->
-                                                    { ud
-                                                        | userClicks = modifyClicks ud.userClicks
-                                                        , xp = ud.xp + 1
-                                                        , currentLevels =
-                                                            mapCurrentLevels
-                                                                .discuss
-                                                                (\cl newDiscuss ->
-                                                                    { cl
-                                                                        | discuss =
-                                                                            ClickPricing.restartCurrentLevel
-                                                                                newDiscuss
-                                                                                model.lastTick
-                                                                                (ClickPricing.bonusDuration basicBonuses.discuss <|
-                                                                                    ClickPricing.getCurrentLevelLevel newDiscuss
-                                                                                )
-                                                                    }
-                                                                )
-                                                                ud.currentLevels
-                                                    }
-                                                )
-                                                |> Maybe.map FullUser
-                                                |> Maybe.withDefault oldUser
-                                        )
+                                updateFullUserByUsername
+                                    model.users
+                                    (\ud ->
+                                        { ud
+                                            | userClicks = modifyClicks ud.userClicks
+                                            , xp = ud.xp + 1
+                                            , currentLevels =
+                                                mapCurrentLevels
+                                                    .discuss
+                                                    (\cl newDiscuss ->
+                                                        { cl
+                                                            | discuss =
+                                                                ClickPricing.restartCurrentLevel
+                                                                    newDiscuss
+                                                                    model.lastTick
+                                                                    (ClickPricing.bonusDuration basicBonuses.discuss <|
+                                                                        ClickPricing.getCurrentLevelLevel newDiscuss
+                                                                    )
+                                                        }
+                                                    )
+                                                    ud.currentLevels
+                                        }
+                                    )
+                                    userData.username
 
                             newModel : Model
                             newModel =
@@ -384,21 +375,30 @@ updateFromFrontend sessionId clientId msg model =
                                        )
 
                             newUsers =
-                                model.users
-                                    |> List.Extra.updateIf
-                                        (\u ->
-                                            getUsername u
-                                                |> Maybe.map ((==) userData.username)
-                                                |> Maybe.withDefault False
-                                        )
-                                        (\oldUser ->
-                                            mapUserData oldUser
-                                                (\ud ->
-                                                    { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 }
-                                                )
-                                                |> Maybe.map FullUser
-                                                |> Maybe.withDefault oldUser
-                                        )
+                                updateFullUserByUsername
+                                    model.users
+                                    (\ud ->
+                                        { ud
+                                            | userClicks = modifyClicks ud.userClicks
+                                            , xp = ud.xp + 1
+                                            , currentLevels =
+                                                mapCurrentLevels
+                                                    .argue
+                                                    (\cl newArgue ->
+                                                        { cl
+                                                            | argue =
+                                                                ClickPricing.restartCurrentLevel
+                                                                    newArgue
+                                                                    model.lastTick
+                                                                    (ClickPricing.bonusDuration basicBonuses.argue <|
+                                                                        ClickPricing.getCurrentLevelLevel newArgue
+                                                                    )
+                                                        }
+                                                    )
+                                                    ud.currentLevels
+                                        }
+                                    )
+                                    userData.username
 
                             newModel : Model
                             newModel =

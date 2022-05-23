@@ -142,20 +142,30 @@ update msg model =
                     -- TODO this should never happen, since the user is only able to do this if they're logged in
                     Debug.log "impossible" noop
 
-        -- noop
         Argue ->
-            -- let
-            --     currentLevels =
-            --         model.currentLevels
-            --             |> (\cl ->
-            --                     { cl
-            --                         | discuss =
-            --                             ClickPricing.mapCurrentLevel cl.argue (\level progress -> ClickPricing.CurrentLevel level (Progress 0))
-            --                     }
-            --                )
-            -- in
-            -- ( { model | currentLevels = currentLevels }, Lamdera.sendToBackend UserArgued )
-            noop
+            let
+                maybeCurrentLevels =
+                    model.user
+                        |> getUserData
+                        |> Maybe.map .currentLevels
+            in
+            case maybeCurrentLevels of
+                Just currentLevels ->
+                    let
+                        prog =
+                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
+                    in
+                    if prog == Completed || prog == NotStarted then
+                        ( model, Lamdera.sendToBackend UserArgued )
+
+                    else
+                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                        Debug.log "unclickable " noop
+
+                Nothing ->
+                    -- TODO this should never happen, since the user is only able to do this if they're logged in
+                    Debug.log "impossible" noop
+
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
