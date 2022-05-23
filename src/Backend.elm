@@ -108,6 +108,77 @@ update msg model =
             )
 
         UpdateTick time ->
+            -- TODO for each user, figure out if the energize bonus is active, and if it is, add its outputs to the teams output, and total clicks
+                    -- (\userData ->
+                    --     let
+                    --         modifyClicks clicks =
+                    --             clicks + ClickPricing.clickBonus ClickPricing.basicBonuses.discuss (Level 1)
+                    --
+                    --         newTeams =
+                    --             updateTeamByPersonalityType
+                    --                 model.teams
+                    --                 userData.personalityType
+                    --                 (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                    --                 |> --do the same lookup again, only pass through it the second time to check to new team points earned
+                    --                    (\teams ->
+                    --                         updateTeamByPersonalityType
+                    --                             teams
+                    --                             userData.personalityType
+                    --                             (\t ->
+                    --                                 if t.totalTeamClicks >= 100 then
+                    --                                     { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+                    --
+                    --                                 else
+                    --                                     t
+                    --                             )
+                    --                    )
+                    --
+                    --         newUsers =
+                    --             updateFullUserByUsername
+                    --                 model.users
+                    --                 (\ud ->
+                    --                     { ud
+                    --                         | userClicks = modifyClicks ud.userClicks
+                    --                         , xp = ud.xp + 1
+                    --                         , currentLevels =
+                    --                             mapCurrentLevels
+                    --                                 .discuss
+                    --                                 (\cl newDiscuss ->
+                    --                                     { cl
+                    --                                         | discuss =
+                    --                                             ClickPricing.restartCurrentLevel
+                    --                                                 newDiscuss
+                    --                                                 model.lastTick
+                    --                                                 (ClickPricing.bonusDuration basicBonuses.discuss <|
+                    --                                                     ClickPricing.getCurrentLevelLevel newDiscuss
+                    --                                                 )
+                    --                                     }
+                    --                                 )
+                    --                                 ud.currentLevels
+                    --                     }
+                    --                 )
+                    --                 userData.username
+                    --
+                    --         newModel : Model
+                    --         newModel =
+                    --             { model
+                    --                 | totalClicks = modifyClicks model.totalClicks
+                    --                 , teams = newTeams
+                    --                 , users = newUsers
+                    --             }
+                    --     in
+                    --     ( newModel
+                    --     , Cmd.batch
+                    --         [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                    --         , Lamdera.broadcast (NewTeams newModel.teams)
+                    --         , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                    --         , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                    --         , getUserBySessionId newModel.users sessionId
+                    --             |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
+                    --             |> Maybe.withDefault Cmd.none
+                    --         ]
+                    --     )
+                    -- )
             ( { model | lastTick = time }, Cmd.none )
 
 
