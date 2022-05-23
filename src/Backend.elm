@@ -216,20 +216,15 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
-                                       (\teams ->
-                                            updateTeamByPersonalityType
-                                                teams
-                                                userData.personalityType
-                                                (\t ->
-                                                    if t.totalTeamClicks >= 100 then
-                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                        >> (\t ->
+                                                if t.totalTeamClicks >= 100 then
+                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
 
-                                                    else
-                                                        t
-                                                )
-                                       )
+                                                else
+                                                    t
+                                           )
+                                    )
 
                             newUsers =
                                 updateFullUserByUsername
@@ -277,20 +272,19 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
-                                       (\teams ->
-                                            updateTeamByPersonalityType
-                                                teams
-                                                userData.personalityType
-                                                (\t ->
-                                                    if t.totalTeamClicks >= 100 then
-                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                        >> (\t ->
+                                                if t.totalTeamClicks >= 100 then
+                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
 
-                                                    else
-                                                        t
-                                                )
-                                       )
+                                                else
+                                                    t
+                                           )
+                                    )
+
+                            setDiscuss : CurrentLevels -> CurrentLevel -> CurrentLevels
+                            setDiscuss currentLevels newDiscuss =
+                                { currentLevels | discuss = newDiscuss }
 
                             newUsers =
                                 updateFullUserByUsername
@@ -302,16 +296,9 @@ updateFromFrontend sessionId clientId msg model =
                                             , currentLevels =
                                                 mapCurrentLevels
                                                     .discuss
-                                                    (\cl newDiscuss ->
-                                                        { cl
-                                                            | discuss =
-                                                                ClickPricing.restartCurrentLevel
-                                                                    newDiscuss
-                                                                    model.lastTick
-                                                                    (ClickPricing.bonusDuration basicBonuses.discuss <|
-                                                                        ClickPricing.getCurrentLevelLevel newDiscuss
-                                                                    )
-                                                        }
+                                                    (\cls newDiscuss ->
+                                                        setDiscuss cls <|
+                                                            ClickPricing.currentLevelRestarter newDiscuss model.lastTick basicBonuses.discuss
                                                     )
                                                     ud.currentLevels
                                         }
@@ -353,20 +340,23 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
-                                       (\teams ->
-                                            updateTeamByPersonalityType
-                                                teams
-                                                userData.personalityType
-                                                (\t ->
-                                                    if t.totalTeamClicks >= 100 then
-                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                        >> (\t ->
+                                                if t.totalTeamClicks >= 100 then
+                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
 
-                                                    else
-                                                        t
-                                                )
-                                       )
+                                                else
+                                                    t
+                                           )
+                                    )
+
+                            restartArgue : CurrentLevel -> CurrentLevel
+                            restartArgue currentLevel =
+                                ClickPricing.currentLevelRestarter currentLevel model.lastTick basicBonuses.argue
+
+                            setArgue : CurrentLevels -> CurrentLevel -> CurrentLevels
+                            setArgue currentLevels newArgue =
+                                { currentLevels | argue = newArgue }
 
                             newUsers =
                                 updateFullUserByUsername
@@ -378,16 +368,8 @@ updateFromFrontend sessionId clientId msg model =
                                             , currentLevels =
                                                 mapCurrentLevels
                                                     .argue
-                                                    (\cl newArgue ->
-                                                        { cl
-                                                            | argue =
-                                                                ClickPricing.restartCurrentLevel
-                                                                    newArgue
-                                                                    model.lastTick
-                                                                    (ClickPricing.bonusDuration basicBonuses.argue <|
-                                                                        ClickPricing.getCurrentLevelLevel newArgue
-                                                                    )
-                                                        }
+                                                    (\cls newArgue ->
+                                                        setArgue cls (restartArgue newArgue)
                                                     )
                                                     ud.currentLevels
                                         }
@@ -429,12 +411,10 @@ updateFromFrontend sessionId clientId msg model =
                                         case getCurrentLevelProgress newEnergize model.lastTick of
                                             NotStarted ->
                                                 -- start the ticker
-                                                ( ClickPricing.restartCurrentLevel
+                                                ( ClickPricing.currentLevelRestarter
                                                     newEnergize
                                                     model.lastTick
-                                                    (ClickPricing.bonusDuration basicBonuses.energize <|
-                                                        ClickPricing.getCurrentLevelLevel newEnergize
-                                                    )
+                                                    basicBonuses.energize
                                                 , Nothing
                                                 )
 
@@ -467,20 +447,15 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
-                                       (\teams ->
-                                            updateTeamByPersonalityType
-                                                teams
-                                                userData.personalityType
-                                                (\t ->
-                                                    if t.totalTeamClicks >= 100 then
-                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                        >> (\t ->
+                                                if t.totalTeamClicks >= 100 then
+                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
 
-                                                    else
-                                                        t
-                                                )
-                                       )
+                                                else
+                                                    t
+                                           )
+                                    )
 
                             newUsers =
                                 updateFullUserByUsername

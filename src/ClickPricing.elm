@@ -191,9 +191,19 @@ mapCurrentLevel (CurrentLevel level maybeTimes) mapper =
     mapper level maybeTimes
 
 
-restartCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> CurrentLevel
-restartCurrentLevel (CurrentLevel level _) now duration =
+restartCurrentLevelHelper : CurrentLevel -> Time.Posix -> Duration.Duration -> CurrentLevel
+restartCurrentLevelHelper (CurrentLevel level _) now duration =
     CurrentLevel level (Just ( now, Duration.addTo now duration ))
+
+
+currentLevelRestarter : CurrentLevel -> Time.Posix -> Bonus -> CurrentLevel
+currentLevelRestarter currentLevel tick bonus =
+    restartCurrentLevelHelper
+        currentLevel
+        tick
+        (bonusDuration bonus <|
+            getCurrentLevelLevel currentLevel
+        )
 
 
 stopCurrentLevel : CurrentLevel -> CurrentLevel
