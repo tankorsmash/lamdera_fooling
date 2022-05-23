@@ -303,21 +303,10 @@ updateFromFrontend sessionId clientId msg model =
                                        )
 
                             newUsers =
+                                updateFullUserByUsername
                                 model.users
-                                    |> List.Extra.updateIf
-                                        (\u ->
-                                            getUsername u
-                                                |> Maybe.map ((==) userData.username)
-                                                |> Maybe.withDefault False
-                                        )
-                                        (\oldUser ->
-                                            mapUserData oldUser
-                                                (\ud ->
-                                                    { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 }
-                                                )
-                                                |> Maybe.map FullUser
-                                                |> Maybe.withDefault oldUser
-                                        )
+                                (\ud -> { ud | userClicks = modifyClicks ud.userClicks, xp = ud.xp + 1 })
+                                userData.username
 
                             newModel : Model
                             newModel =
