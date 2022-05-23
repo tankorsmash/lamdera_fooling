@@ -200,6 +200,20 @@ setEnergize currentLevels newEnergize =
     { currentLevels | energize = newEnergize }
 
 
+modifyTeamClicks : (Int -> Int) -> Team -> Team
+modifyTeamClicks modifyClicks team =
+    { team | totalTeamClicks = modifyClicks team.totalTeamClicks }
+
+
+accumulateTeamPoints : Team -> Team
+accumulateTeamPoints team =
+    if team.totalTeamClicks >= 100 then
+        { team | totalTeamClicks = team.totalTeamClicks - 100, totalTeamPoints = team.totalTeamPoints + 1 }
+
+    else
+        team
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -231,15 +245,7 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                        >> (\t ->
-                                                if t.totalTeamClicks >= 100 then
-                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
-
-                                                else
-                                                    t
-                                           )
-                                    )
+                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
                             newUsers =
                                 updateFullUserByUsername
@@ -287,15 +293,7 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                        >> (\t ->
-                                                if t.totalTeamClicks >= 100 then
-                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
-
-                                                else
-                                                    t
-                                           )
-                                    )
+                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
                             newUsers =
                                 updateFullUserByUsername
@@ -351,15 +349,7 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                        >> (\t ->
-                                                if t.totalTeamClicks >= 100 then
-                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
-
-                                                else
-                                                    t
-                                           )
-                                    )
+                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
                             restartArgue : CurrentLevel -> CurrentLevel
                             restartArgue currentLevel =
@@ -454,15 +444,7 @@ updateFromFrontend sessionId clientId msg model =
                                 updateTeamByPersonalityType
                                     model.teams
                                     userData.personalityType
-                                    ((\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
-                                        >> (\t ->
-                                                if t.totalTeamClicks >= 100 then
-                                                    { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
-
-                                                else
-                                                    t
-                                           )
-                                    )
+                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
                             newUsers =
                                 updateFullUserByUsername
