@@ -636,6 +636,9 @@ actionArea lastTick xp numGroupMembers currentLevels =
 
         argueLevel =
             currentLevels.argue |> getCurrentLevelLevel
+
+        spacer =
+            el [ padding 5 ] <| Element.none
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -662,6 +665,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         ]
                 , colorTheme = UI.BrightTheme
                 }
+        , spacer
         , -- discuss
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
@@ -708,6 +712,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         , colorTheme = UI.BrightTheme
                         }
                 ]
+        , spacer
         , el [ centerX, Font.underline ] <| text "Spend your clicks"
         , UI.button <|
             UI.TextParams
@@ -721,6 +726,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 , textLabel = "Spend -3 to reduce theirs by -1"
                 , colorTheme = UI.BrightTheme
                 }
+        , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , UI.button <|
             UI.TextParams
