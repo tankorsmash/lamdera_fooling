@@ -24,6 +24,7 @@ getProgressInt progress =
         Completed ->
             100
 
+
 getProgress : Progress -> Float
 getProgress progress =
     case progress of
@@ -35,6 +36,7 @@ getProgress progress =
 
         Completed ->
             1.0
+
 
 
 -- addToProgress : Progress -> Int -> Progress
@@ -124,6 +126,8 @@ type alias Bonuses =
     }
 
 
+{-| global scaling for these Bonuses. you pass the CurrentLevels data into these
+-}
 basicBonuses : Bonuses
 basicBonuses =
     { discuss =
