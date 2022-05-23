@@ -48,20 +48,11 @@ update msg model =
         OnClientConnect sessionId clientId ->
             let
                 newUsers =
-                    model.users
-                        |> List.Extra.updateIf
-                            (\u ->
-                                getSessionId u
-                                    |> Maybe.map ((==) sessionId)
-                                    |> Maybe.withDefault False
-                            )
-                            (\oldUser ->
-                                mapFullUser
-                                    (\ud ->
-                                        FullUser { ud | isOnline = True }
-                                    )
-                                    oldUser
-                            )
+                    updateFullUserBySessionId model.users
+                        sessionId
+                        (\ud ->
+                            { ud | isOnline = True }
+                        )
 
                 newModel =
                     { model | users = newUsers }
@@ -85,20 +76,11 @@ update msg model =
         OnClientDisconnect sessionId clientId ->
             let
                 newUsers =
-                    model.users
-                        |> List.Extra.updateIf
-                            (\u ->
-                                getSessionId u
-                                    |> Maybe.map ((==) sessionId)
-                                    |> Maybe.withDefault False
-                            )
-                            (\oldUser ->
-                                mapFullUser
-                                    (\ud ->
-                                        FullUser { ud | isOnline = False }
-                                    )
-                                    oldUser
-                            )
+                    updateFullUserBySessionId model.users
+                        sessionId
+                        (\ud ->
+                            { ud | isOnline = False }
+                        )
 
                 newModel =
                     { model | users = newUsers }
@@ -536,22 +518,14 @@ updateFromFrontend sessionId clientId msg model =
                                                 (\team -> { team | totalTeamClicks = modifyEnemyClicks team.totalTeamClicks })
                                        )
 
+                            newUsers : List User
                             newUsers =
-                                model.users
-                                    |> List.Extra.updateIf
-                                        (\u ->
-                                            getUsername u
-                                                |> Maybe.map ((==) userData.username)
-                                                |> Maybe.withDefault False
-                                        )
-                                        (\oldUser ->
-                                            mapUserData oldUser
-                                                (\ud ->
-                                                    { ud | userClicks = modifySelfClicks ud.userClicks }
-                                                )
-                                                |> Maybe.map FullUser
-                                                |> Maybe.withDefault oldUser
-                                        )
+                                updateFullUserByUsername
+                                    model.users
+                                    (\ud ->
+                                        { ud | userClicks = modifySelfClicks ud.userClicks }
+                                    )
+                                    userData.username
 
                             newModel : Model
                             newModel =
@@ -592,17 +566,8 @@ updateFromFrontend sessionId clientId msg model =
                     case existingUser of
                         -- if user exists, replace it
                         Just user ->
-                            { model
-                                | users =
-                                    List.Extra.updateIf
-                                        (\u ->
-                                            getSessionId u
-                                                |> Maybe.map ((==) sessionId)
-                                                |> Maybe.withDefault False
-                                        )
-                                        (always toCreate)
-                                        model.users
-                            }
+                            mapUserBySessionId model.users (always toCreate) sessionId
+                                |> setUsers model
 
                         -- otherwise add it
                         Nothing ->
@@ -715,28 +680,20 @@ updateFromFrontend sessionId clientId msg model =
                     AnonymousUser Nothing
 
                 newModel =
-                    { model
-                        | users =
-                            List.Extra.updateIf
-                                (\u ->
-                                    getSessionId u
-                                        |> Maybe.map
-                                            ((==) sessionId)
-                                        |> Maybe.withDefault False
-                                )
-                                (\u ->
-                                    case u of
-                                        AnonymousUser _ ->
-                                            u
+                    mapUserBySessionId model.users
+                        (\u ->
+                            case u of
+                                AnonymousUser _ ->
+                                    u
 
-                                        PreppingUser _ _ ->
-                                            toCreate
+                                PreppingUser _ _ ->
+                                    toCreate
 
-                                        FullUser userData ->
-                                            FullUser { userData | sessionId = Nothing, isOnline = False }
-                                )
-                                model.users
-                    }
+                                FullUser userData ->
+                                    FullUser { userData | sessionId = Nothing, isOnline = False }
+                        )
+                        sessionId
+                        |> setUsers model
             in
             ( newModel
             , Cmd.batch
@@ -1113,6 +1070,30 @@ getUserByUsername users username =
                     |> Maybe.withDefault False
             )
         |> List.head
+
+
+mapUserByUsername : List User -> (User -> User) -> String -> List User
+mapUserByUsername users updater username =
+    users
+        |> List.Extra.updateIf
+            (\u ->
+                getUsername u
+                    |> Maybe.map ((==) username)
+                    |> Maybe.withDefault False
+            )
+            updater
+
+
+mapUserBySessionId : List User -> (User -> User) -> String -> List User
+mapUserBySessionId users updater sessionId =
+    users
+        |> List.Extra.updateIf
+            (\u ->
+                getSessionId u
+                    |> Maybe.map ((==) sessionId)
+                    |> Maybe.withDefault False
+            )
+            updater
 
 
 updateFullUserByUsername : List User -> (UserData -> UserData) -> String -> List User
