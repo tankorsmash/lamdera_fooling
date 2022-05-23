@@ -804,10 +804,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 )
                 -- (clickBonus basicBonuses.energize energizeLevel)
                 -- TODO calculate the number of cycles since the last collection
-                (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
                     lastTick
                     (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
-                    |> Maybe.withDefault -123
+                    |> Maybe.withDefault 0
                 )
                 ( "Energize", CollectEnergize )
             , UI.button <|

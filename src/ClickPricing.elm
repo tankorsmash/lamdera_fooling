@@ -286,6 +286,53 @@ getCurrentLevelCycleCount (CurrentLevel level maybeTimes) now duration =
             Nothing
 
 
+{-| get the cycles available to be collected
+-}
+getAvailableCyclesCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> Maybe Int
+getAvailableCyclesCurrentLevel (CurrentLevel level maybeTimes) now duration =
+    case maybeTimes of
+        Just ( startTime, lastCollectionTime ) ->
+            let
+                nowMs =
+                    Time.posixToMillis now
+
+                elapsedSinceStartMs =
+                    nowMs - Time.posixToMillis startTime
+
+                elapsedSinceLastMs =
+                    Time.posixToMillis lastCollectionTime - Time.posixToMillis startTime
+
+                durationMs =
+                    Duration.inMilliseconds duration
+
+                rawCycles =
+                    floor <| toFloat elapsedSinceStartMs / durationMs
+
+                claimedCycles =
+                    floor <| toFloat elapsedSinceLastMs / durationMs
+            in
+            Just <| rawCycles - claimedCycles
+
+        Nothing ->
+            Nothing
+
+
+{-| update the lastCollectionTime and return the collected clicks
+-}
+collectCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> ( CurrentLevel, Maybe Int )
+collectCurrentLevel ((CurrentLevel level maybeTimes) as currentLevel) now duration =
+    case maybeTimes of
+        Just ( startTime, _ ) ->
+            let
+                toCollect =
+                    getAvailableCyclesCurrentLevel currentLevel now duration
+            in
+            ( CurrentLevel level (Just ( startTime, now )), toCollect )
+
+        Nothing ->
+            ( CurrentLevel level Nothing, Nothing )
+
+
 normalizeInt : Int -> Int -> Int -> Int
 normalizeInt min max val =
     let

@@ -422,32 +422,43 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         let
+                            currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
+                            -- currentLevelUpdater : CurrentLevels -> CurrentLevel -> CurrentLevels
+                            currentLevelUpdater currentLevels newEnergize =
+                                let
+                                    ( newCurrentLevel, gained ) =
+                                        case getCurrentLevelProgress newEnergize model.lastTick of
+                                            NotStarted ->
+                                                ( ClickPricing.restartCurrentLevel
+                                                    newEnergize
+                                                    model.lastTick
+                                                    (ClickPricing.bonusDuration basicBonuses.energize <|
+                                                        ClickPricing.getCurrentLevelLevel newEnergize
+                                                    )
+                                                , Nothing
+                                                )
+
+                                            _ ->
+                                                ClickPricing.collectCurrentLevel
+                                                    newEnergize
+                                                    model.lastTick
+                                                    (ClickPricing.bonusDuration basicBonuses.energize <|
+                                                        ClickPricing.getCurrentLevelLevel newEnergize
+                                                    )
+                                in
+                                ( { currentLevels | energize = newCurrentLevel }, gained )
+
                             newUsers =
                                 updateFullUserByUsername
                                     model.users
                                     (\ud ->
+                                        let
+                                            ( newCurrentLevels, maybeClicksGained ) =
+                                                currentLevelUpdater ud.currentLevels ud.currentLevels.energize
+                                        in
                                         { ud
-                                            | currentLevels =
-                                                mapCurrentLevels
-                                                    .energize
-                                                    (\cl newEnergize ->
-                                                        { cl
-                                                            | energize =
-                                                                case getCurrentLevelProgress newEnergize model.lastTick of
-                                                                    NotStarted ->
-                                                                        ClickPricing.restartCurrentLevel
-                                                                            newEnergize
-                                                                            model.lastTick
-                                                                            (ClickPricing.bonusDuration basicBonuses.energize <|
-                                                                                ClickPricing.getCurrentLevelLevel newEnergize
-                                                                            )
-
-                                                                    _ ->
-                                                                        ClickPricing.stopCurrentLevel
-                                                                            newEnergize
-                                                        }
-                                                    )
-                                                    ud.currentLevels
+                                            | currentLevels = newCurrentLevels
+                                            , userClicks = Maybe.withDefault 0 maybeClicksGained + ud.userClicks
                                         }
                                     )
                                     userData.username
