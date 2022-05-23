@@ -60,7 +60,8 @@ getProgress progress =
 --             originalProgress
 
 
-{-| only creates a started or completed one, if you want to make a non started one, use the ctor -}
+{-| only creates a started or completed one, if you want to make a non started one, use the ctor
+-}
 createProgress : Float -> Progress
 createProgress value =
     if (value |> min 1.0 |> max 0) >= 1.0 then
@@ -143,7 +144,7 @@ basicBonuses =
             }
     , energize =
         Bonus
-            { clickBonus = \(Level level) -> (level ) 
+            { clickBonus = \(Level level) -> level
             , xpCost = \(Level level) -> level * 25
             , durationMs = \(Level level) -> Duration.seconds 30
             }
@@ -194,9 +195,10 @@ restartCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> Current
 restartCurrentLevel (CurrentLevel level _) now duration =
     CurrentLevel level (Just ( now, Duration.addTo now duration ))
 
-stopCurrentLevel : CurrentLevel ->  CurrentLevel
+
+stopCurrentLevel : CurrentLevel -> CurrentLevel
 stopCurrentLevel (CurrentLevel level _) =
-    CurrentLevel level (Nothing)
+    CurrentLevel level Nothing
 
 
 getCurrentLevelLevel : CurrentLevel -> Level
@@ -204,6 +206,8 @@ getCurrentLevelLevel (CurrentLevel level _) =
     level
 
 
+{-| gets the progress between the start time, end time, and now
+-}
 getCurrentLevelProgress : CurrentLevel -> Time.Posix -> Progress
 getCurrentLevelProgress (CurrentLevel level maybeTimes) now =
     case maybeTimes of
@@ -219,6 +223,32 @@ getCurrentLevelProgress (CurrentLevel level maybeTimes) now =
                     Time.posixToMillis now
             in
             normalizeFloat (toFloat startTimeMs) (toFloat endTimeMs) (toFloat nowMs)
+                |> createProgress
+
+        Nothing ->
+            NotStarted
+
+
+{-| assumes the progress cycles in durations worth of loops
+-}
+getCurrentLevelCycleProgress : CurrentLevel -> Time.Posix -> Duration.Duration -> Progress
+getCurrentLevelCycleProgress (CurrentLevel level maybeTimes) now duration =
+    case maybeTimes of
+        Just ( startTime, _ ) ->
+            let
+                startTimeMs =
+                    Time.posixToMillis startTime
+
+                nowMs =
+                    Time.posixToMillis now
+
+                elapsedMs =
+                    nowMs - startTimeMs
+
+                durationMs =
+                    Duration.inMilliseconds duration
+            in
+            normalizeFloat 0 durationMs (toFloat <| modBy (round durationMs) elapsedMs)
                 |> createProgress
 
         Nothing ->

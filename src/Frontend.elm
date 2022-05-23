@@ -165,6 +165,7 @@ update msg model =
                 Nothing ->
                     -- TODO this should never happen, since the user is only able to do this if they're logged in
                     Debug.log "impossible" noop
+
         ToggleEnergize ->
             let
                 maybeCurrentLevels =
@@ -695,7 +696,14 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 currentLevels.energize |> getCurrentLevelLevel
           in
           column [ centerX, width fill, spacing 10 ]
-            [ viewProgressButton (getCurrentLevelProgress currentLevels.energize lastTick) (clickBonus basicBonuses.energize energizeLevel) ( "Energize", ToggleEnergize )
+            [ viewProgressButton
+                (ClickPricing.getCurrentLevelCycleProgress
+                    currentLevels.energize
+                    lastTick
+                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                )
+                (clickBonus basicBonuses.energize energizeLevel)
+                ( "Energize", ToggleEnergize )
             , UI.button <|
                 UI.TextParams
                     { buttonType = UI.Outline
