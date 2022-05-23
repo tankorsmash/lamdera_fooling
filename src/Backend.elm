@@ -416,7 +416,7 @@ updateFromFrontend sessionId clientId msg model =
                     )
                 |> Maybe.withDefault noop
 
-        UserToggledEnergize ->
+        UserEnergized ->
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map

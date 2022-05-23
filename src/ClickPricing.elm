@@ -247,12 +247,43 @@ getCurrentLevelCycleProgress (CurrentLevel level maybeTimes) now duration =
 
                 durationMs =
                     Duration.inMilliseconds duration
+
+                currentLoopMaxMs =
+                    modBy (round durationMs) elapsedMs
             in
-            normalizeFloat 0 durationMs (toFloat <| modBy (round durationMs) elapsedMs)
+            normalizeFloat 0 durationMs (toFloat <| currentLoopMaxMs)
                 |> createProgress
 
         Nothing ->
             NotStarted
+
+
+{-| get the number of cycles since the last collection
+-}
+getCurrentLevelCycleCount : CurrentLevel -> Time.Posix -> Duration.Duration -> Maybe Int
+getCurrentLevelCycleCount (CurrentLevel level maybeTimes) now duration =
+    case maybeTimes of
+        Just ( startTime, lastCollectionTime ) ->
+            let
+                startTimeMs =
+                    Time.posixToMillis startTime
+
+                nowMs =
+                    Time.posixToMillis now
+
+                elapsedMs =
+                    nowMs - startTimeMs
+
+                durationMs =
+                    Duration.inMilliseconds duration
+
+                rawCycles =
+                    floor <| toFloat elapsedMs / durationMs
+            in
+            Just <| rawCycles
+
+        Nothing ->
+            Nothing
 
 
 normalizeInt : Int -> Int -> Int -> Int

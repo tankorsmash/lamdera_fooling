@@ -332,7 +332,7 @@ type FrontendMsg
     | SendClickToBackend
     | Discuss
     | Argue
-    | ToggleEnergize
+    | CollectEnergize
     | SendWantsToSpendToBackend
     | SendBuyUpgrade UpgradeType
     | TryToJoinGroup UUID.UUID
@@ -348,7 +348,7 @@ type ToBackend
     | UserGainedAClick
     | UserDiscussed
     | UserArgued
-    | UserToggledEnergize
+    | UserEnergized
     | UserWantsToSpend
     | UserChoseToBe PersonalityType
     | UserFinalizedUser String

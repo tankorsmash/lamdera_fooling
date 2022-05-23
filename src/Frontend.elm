@@ -166,7 +166,7 @@ update msg model =
                     -- TODO this should never happen, since the user is only able to do this if they're logged in
                     Debug.log "impossible" noop
 
-        ToggleEnergize ->
+        CollectEnergize ->
             let
                 maybeCurrentLevels =
                     model.user
@@ -180,7 +180,7 @@ update msg model =
                             Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.energize model.lastTick
                     in
                     if prog == Completed || prog == NotStarted then
-                        ( model, Lamdera.sendToBackend UserToggledEnergize )
+                        ( model, Lamdera.sendToBackend UserEnergized )
 
                     else
                         -- TODO hopefully dont need to make a ui notification for the button being unclickable
@@ -702,8 +702,13 @@ actionArea lastTick xp numGroupMembers currentLevels =
                     lastTick
                     (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
                 )
-                (clickBonus basicBonuses.energize energizeLevel)
-                ( "Energize", ToggleEnergize )
+                -- (clickBonus basicBonuses.energize energizeLevel)
+                -- TODO calculate the number of cycles since the last collection
+                (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                    lastTick
+                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                |> Maybe.withDefault -123)
+                ( "Energize", CollectEnergize )
             , UI.button <|
                 UI.TextParams
                     { buttonType = UI.Outline
