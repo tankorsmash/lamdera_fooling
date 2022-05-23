@@ -134,7 +134,7 @@ basicBonuses =
             }
     , argue =
         Bonus
-            { clickBonus = \(Level level) -> level * 5
+            { clickBonus = \(Level level) -> (level * 5) + 30
             , xpCost = \(Level level) -> level * 45
             , durationMs = \(Level level) -> Duration.seconds 30
             }

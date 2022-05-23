@@ -309,7 +309,8 @@ type Upgrade
 
 
 type UpgradeType
-    = SelfImprovement Level
+    = Discussion Level
+    | Argumentation Level
 
 
 type FrontendMsg

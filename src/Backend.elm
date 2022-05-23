@@ -709,7 +709,7 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         case upgradeType of
-                            Types.SelfImprovement level ->
+                            Types.Discussion level ->
                                 let
                                     upgradeCost =
                                         ClickPricing.xpCost ClickPricing.basicBonuses.discuss level
@@ -736,6 +736,57 @@ updateFromFrontend sessionId clientId msg model =
                                                                     { currentLevels
                                                                         | discuss =
                                                                             newDiscussLevel discussCurrentLevel
+                                                                    }
+                                                                )
+                                                                ud.currentLevels
+
+                                                        asd : UserData
+                                                        asd =
+                                                            ud
+                                                    in
+                                                    { ud
+                                                        | xp = ud.xp - upgradeCost
+                                                        , currentLevels = newCurrentLevels
+                                                    }
+                                                )
+                                    in
+                                    -- check can afford upgrade
+                                    -- reduce XP by 5
+                                    ( setUsers model newUsers
+                                    , getUserBySessionId newUsers sessionId
+                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                                        |> Maybe.withDefault Cmd.none
+                                    )
+
+                                else
+                                    noop
+                            Types.Argumentation level ->
+                                let
+                                    upgradeCost =
+                                        ClickPricing.xpCost ClickPricing.basicBonuses.argue level
+                                in
+                                if userData.xp >= upgradeCost then
+                                    let
+                                        newUsers =
+                                            updateFullUserBySessionId
+                                                model.users
+                                                sessionId
+                                                (\ud ->
+                                                    let
+                                                        newArgueLevel : CurrentLevel -> CurrentLevel
+                                                        newArgueLevel (CurrentLevel argueLevel maybeTimes) =
+                                                            -- ClickPricing.mapCurrentLevel
+                                                            --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel argueLevel)
+                                                            CurrentLevel (ClickPricing.nextLevel argueLevel) maybeTimes
+
+                                                        newCurrentLevels : CurrentLevels
+                                                        newCurrentLevels =
+                                                            ClickPricing.mapCurrentLevels
+                                                                .argue
+                                                                (\currentLevels argueCurrentLevel ->
+                                                                    { currentLevels
+                                                                        | argue =
+                                                                            newArgueLevel argueCurrentLevel
                                                                     }
                                                                 )
                                                                 ud.currentLevels

@@ -676,8 +676,8 @@ actionArea lastTick xp numGroupMembers currentLevels =
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel discussionLevel)
-                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
+                        , onPressMsg = SendBuyUpgrade (Types.Discussion <| nextLevel discussionLevel)
+                        , textLabel = "Discussion +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]
@@ -699,7 +699,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.SelfImprovement <| nextLevel argueLevel)
+                        , onPressMsg = SendBuyUpgrade (Types.Argumentation <| nextLevel argueLevel)
                         , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
