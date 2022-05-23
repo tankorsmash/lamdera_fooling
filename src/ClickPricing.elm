@@ -180,6 +180,7 @@ getCurrentLevelProgress (CurrentLevel level maybeTimes) now =
                     Time.posixToMillis now
             in
             normalizeFloat (toFloat startTimeMs) (toFloat endTimeMs) (toFloat nowMs)
+                |> (\v -> v * 100)
                 |> round
                 |> createProgress
 

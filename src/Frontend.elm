@@ -521,12 +521,6 @@ showIf condition element =
 
 viewProgressButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
 viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
-    let
-        _ =
-                Debug.toString <|
-                    Duration.inSeconds <|
-                        ClickPricing.bonusDuration ClickPricing.basicBonuses.discuss (Level 1)
-    in
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
         [ case progress of
             Completed ->

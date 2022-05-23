@@ -318,13 +318,12 @@ updateFromFrontend sessionId clientId msg model =
                                                                 (\cl newDiscuss ->
                                                                     { cl
                                                                         | discuss =
-                                                                            Debug.log "updated discuss" <|
-                                                                                ClickPricing.restartCurrentLevel
-                                                                                    newDiscuss
-                                                                                    model.lastTick
-                                                                                    (ClickPricing.bonusDuration basicBonuses.discuss <|
-                                                                                        ClickPricing.getCurrentLevelLevel newDiscuss
-                                                                                    )
+                                                                            ClickPricing.restartCurrentLevel
+                                                                                newDiscuss
+                                                                                model.lastTick
+                                                                                (ClickPricing.bonusDuration basicBonuses.discuss <|
+                                                                                    ClickPricing.getCurrentLevelLevel newDiscuss
+                                                                                )
                                                                     }
                                                                 )
                                                                 ud.currentLevels
