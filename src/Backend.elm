@@ -423,12 +423,12 @@ updateFromFrontend sessionId clientId msg model =
                     (\userData ->
                         let
                             currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
-                            -- currentLevelUpdater : CurrentLevels -> CurrentLevel -> CurrentLevels
                             currentLevelUpdater currentLevels newEnergize =
                                 let
                                     ( newCurrentLevel, gained ) =
                                         case getCurrentLevelProgress newEnergize model.lastTick of
                                             NotStarted ->
+                                                -- start the ticker
                                                 ( ClickPricing.restartCurrentLevel
                                                     newEnergize
                                                     model.lastTick
@@ -439,6 +439,7 @@ updateFromFrontend sessionId clientId msg model =
                                                 )
 
                                             _ ->
+                                                -- otherwise collect it
                                                 ClickPricing.collectCurrentLevel
                                                     newEnergize
                                                     model.lastTick
@@ -447,6 +448,39 @@ updateFromFrontend sessionId clientId msg model =
                                                     )
                                 in
                                 ( { currentLevels | energize = newCurrentLevel }, gained )
+
+                            -- diffs between the new user's userdata and original userData
+                            modifyClicks existingClicks =
+                                let
+                                    newClicks =
+                                        (maybeNewUser
+                                            |> Maybe.andThen getUserData
+                                            |> Maybe.map .userClicks
+                                            |> Maybe.withDefault userData.userClicks
+                                        )
+                                            - userData.userClicks
+                                in
+                                existingClicks
+                                    + newClicks
+
+                            newTeams =
+                                updateTeamByPersonalityType
+                                    model.teams
+                                    userData.personalityType
+                                    (\t -> { t | totalTeamClicks = modifyClicks t.totalTeamClicks })
+                                    |> --do the same lookup again, only pass through it the second time to check to new team points earned
+                                       (\teams ->
+                                            updateTeamByPersonalityType
+                                                teams
+                                                userData.personalityType
+                                                (\t ->
+                                                    if t.totalTeamClicks >= 100 then
+                                                        { t | totalTeamClicks = t.totalTeamClicks - 100, totalTeamPoints = t.totalTeamPoints + 1 }
+
+                                                    else
+                                                        t
+                                                )
+                                       )
 
                             newUsers =
                                 updateFullUserByUsername
@@ -465,13 +499,23 @@ updateFromFrontend sessionId clientId msg model =
 
                             newModel : Model
                             newModel =
-                                { model | users = newUsers }
+                                { model
+                                    | totalClicks = modifyClicks model.totalClicks
+                                    , users = newUsers
+                                    , teams = newTeams
+                                }
+
+                            maybeNewUser =
+                                getUserBySessionId newUsers sessionId
                         in
                         ( newModel
                         , Cmd.batch
-                            [ getUserBySessionId newModel.users sessionId
+                            [ maybeNewUser
                                 |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
                                 |> Maybe.withDefault Cmd.none
+                            , Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                            , Lamdera.broadcast (NewTeams newModel.teams)
+                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             ]
                         )
                     )

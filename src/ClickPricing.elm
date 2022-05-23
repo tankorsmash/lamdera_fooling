@@ -146,7 +146,7 @@ basicBonuses =
         Bonus
             { clickBonus = \(Level level) -> level
             , xpCost = \(Level level) -> level * 25
-            , durationMs = \(Level level) -> Duration.seconds 1
+            , durationMs = \(Level level) -> Duration.seconds 45
             }
     }
 
