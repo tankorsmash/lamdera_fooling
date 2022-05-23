@@ -185,6 +185,21 @@ updateIdealists teams updater =
     { teams | idealists = updater teams.idealists }
 
 
+setDiscuss : CurrentLevels -> CurrentLevel -> CurrentLevels
+setDiscuss currentLevels newDiscuss =
+    { currentLevels | discuss = newDiscuss }
+
+
+setArgue : CurrentLevels -> CurrentLevel -> CurrentLevels
+setArgue currentLevels newArgue =
+    { currentLevels | argue = newArgue }
+
+
+setEnergize : CurrentLevels -> CurrentLevel -> CurrentLevels
+setEnergize currentLevels newEnergize =
+    { currentLevels | energize = newEnergize }
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -282,10 +297,6 @@ updateFromFrontend sessionId clientId msg model =
                                            )
                                     )
 
-                            setDiscuss : CurrentLevels -> CurrentLevel -> CurrentLevels
-                            setDiscuss currentLevels newDiscuss =
-                                { currentLevels | discuss = newDiscuss }
-
                             newUsers =
                                 updateFullUserByUsername
                                     model.users
@@ -353,10 +364,6 @@ updateFromFrontend sessionId clientId msg model =
                             restartArgue : CurrentLevel -> CurrentLevel
                             restartArgue currentLevel =
                                 ClickPricing.currentLevelRestarter currentLevel model.lastTick basicBonuses.argue
-
-                            setArgue : CurrentLevels -> CurrentLevel -> CurrentLevels
-                            setArgue currentLevels newArgue =
-                                { currentLevels | argue = newArgue }
 
                             newUsers =
                                 updateFullUserByUsername
@@ -427,7 +434,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         ClickPricing.getCurrentLevelLevel newEnergize
                                                     )
                                 in
-                                ( { currentLevels | energize = newCurrentLevel }, gained )
+                                ( setEnergize currentLevels newCurrentLevel, gained )
 
                             -- diffs between the new user's userdata and original userData
                             modifyClicks existingClicks =
@@ -463,7 +470,9 @@ updateFromFrontend sessionId clientId msg model =
                                     (\ud ->
                                         let
                                             ( newCurrentLevels, maybeClicksGained ) =
-                                                currentLevelUpdater ud.currentLevels ud.currentLevels.energize
+                                                currentLevelUpdater
+                                                    ud.currentLevels
+                                                    ud.currentLevels.energize
                                         in
                                         { ud
                                             | currentLevels = newCurrentLevels
@@ -588,7 +597,7 @@ updateFromFrontend sessionId clientId msg model =
                         |> List.filter
                             (\user ->
                                 getSessionId user
-                                    |> Maybe.map (\cid -> cid == sessionId)
+                                    |> Maybe.map ((==) sessionId)
                                     |> Maybe.withDefault False
                             )
                         |> List.head
@@ -606,7 +615,7 @@ updateFromFrontend sessionId clientId msg model =
                                     List.Extra.updateIf
                                         (\u ->
                                             getSessionId u
-                                                |> Maybe.map (\cid -> cid == sessionId)
+                                                |> Maybe.map ((==) sessionId)
                                                 |> Maybe.withDefault False
                                         )
                                         (always toCreate)
@@ -720,9 +729,6 @@ updateFromFrontend sessionId clientId msg model =
 
         UserLoggedOut ->
             let
-                existingUser =
-                    getUserBySessionId model.users sessionId
-
                 toCreate =
                     AnonymousUser Nothing
 
@@ -733,9 +739,7 @@ updateFromFrontend sessionId clientId msg model =
                                 (\u ->
                                     getSessionId u
                                         |> Maybe.map
-                                            (\cid ->
-                                                cid == sessionId
-                                            )
+                                            ((==) sessionId)
                                         |> Maybe.withDefault False
                                 )
                                 (\u ->
@@ -743,7 +747,7 @@ updateFromFrontend sessionId clientId msg model =
                                         AnonymousUser _ ->
                                             u
 
-                                        PreppingUser sid pt ->
+                                        PreppingUser _ _ ->
                                             toCreate
 
                                         FullUser userData ->
@@ -798,8 +802,6 @@ updateFromFrontend sessionId clientId msg model =
                                                     let
                                                         newDiscussLevel : CurrentLevel -> CurrentLevel
                                                         newDiscussLevel (CurrentLevel discussLevel maybeTimes) =
-                                                            -- ClickPricing.mapCurrentLevel
-                                                            --     (ClickPricing.setCurrentLevelLevel <| ClickPricing.nextLevel discussLevel)
                                                             CurrentLevel (ClickPricing.nextLevel discussLevel) maybeTimes
 
                                                         newCurrentLevels : CurrentLevels
@@ -807,16 +809,9 @@ updateFromFrontend sessionId clientId msg model =
                                                             ClickPricing.mapCurrentLevels
                                                                 .discuss
                                                                 (\currentLevels discussCurrentLevel ->
-                                                                    { currentLevels
-                                                                        | discuss =
-                                                                            newDiscussLevel discussCurrentLevel
-                                                                    }
+                                                                    setDiscuss currentLevels <| newDiscussLevel discussCurrentLevel
                                                                 )
                                                                 ud.currentLevels
-
-                                                        asd : UserData
-                                                        asd =
-                                                            ud
                                                     in
                                                     { ud
                                                         | xp = ud.xp - upgradeCost
@@ -824,8 +819,6 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    -- check can afford upgrade
-                                    -- reduce XP by 5
                                     ( setUsers model newUsers
                                     , getUserBySessionId newUsers sessionId
                                         |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
@@ -857,16 +850,9 @@ updateFromFrontend sessionId clientId msg model =
                                                             ClickPricing.mapCurrentLevels
                                                                 .argue
                                                                 (\currentLevels argueCurrentLevel ->
-                                                                    { currentLevels
-                                                                        | argue =
-                                                                            newArgueLevel argueCurrentLevel
-                                                                    }
+                                                                    setArgue currentLevels <| newArgueLevel argueCurrentLevel
                                                                 )
                                                                 ud.currentLevels
-
-                                                        asd : UserData
-                                                        asd =
-                                                            ud
                                                     in
                                                     { ud
                                                         | xp = ud.xp - upgradeCost
@@ -874,8 +860,6 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    -- check can afford upgrade
-                                    -- reduce XP by 5
                                     ( setUsers model newUsers
                                     , getUserBySessionId newUsers sessionId
                                         |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
@@ -913,10 +897,6 @@ updateFromFrontend sessionId clientId msg model =
                                                                     }
                                                                 )
                                                                 ud.currentLevels
-
-                                                        asd : UserData
-                                                        asd =
-                                                            ud
                                                     in
                                                     { ud
                                                         | xp = ud.xp - upgradeCost
@@ -924,8 +904,6 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    -- check can afford upgrade
-                                    -- reduce XP by 5
                                     ( setUsers model newUsers
                                     , getUserBySessionId newUsers sessionId
                                         |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
@@ -1036,7 +1014,15 @@ updateFromFrontend sessionId clientId msg model =
                                 |> --remove user from all groups
                                    List.Extra.updateIf
                                     (.members >> List.member userData.userId)
-                                    (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
+                                    (\group ->
+                                        { group
+                                            | members =
+                                                List.partition
+                                                    ((==) userData.userId)
+                                                    group.members
+                                                    |> Tuple.second
+                                        }
+                                    )
 
                         newRealistTeams : Team
                         newRealistTeams =
