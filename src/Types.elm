@@ -27,6 +27,7 @@ type alias UserData =
     , groupId : Maybe GroupId
     , userId : UUID.UUID
     , currentLevels : CurrentLevels
+    , energizeCycleCap : Int
     }
 
 
@@ -45,6 +46,7 @@ createUserData sessionId username personalityType =
         , argue = CurrentLevel (Level 0) Nothing
         , energize = CurrentLevel (Level 0) Nothing
         }
+    , energizeCycleCap = 10
     }
 
 

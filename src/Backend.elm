@@ -405,6 +405,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     (ClickPricing.bonusDuration basicBonuses.energize <|
                                                         ClickPricing.getCurrentLevelLevel newEnergize
                                                     )
+                                                    userData.energizeCycleCap
                                 in
                                 ( setEnergize currentLevels newCurrentLevel, gained )
 
@@ -606,6 +607,7 @@ updateFromFrontend sessionId clientId msg model =
                                 , groupId = existingUserData.groupId
                                 , userId = existingUserData.userId
                                 , currentLevels = existingUserData.currentLevels
+                                , energizeCycleCap = existingUserData.energizeCycleCap
                                 }
 
                         updateExistingUser newUser =

@@ -752,15 +752,9 @@ viewCycleButton progress clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Element FrontendMsg
-actionArea lastTick xp numGroupMembers currentLevels =
+actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Int -> Element FrontendMsg
+actionArea lastTick xp numGroupMembers currentLevels energizeCycleCap=
     let
-        discussionLevel =
-            currentLevels.discuss |> getCurrentLevelLevel
-
-        argueLevel =
-            currentLevels.argue |> getCurrentLevelLevel
-
         spacer =
             el [ padding 5 ] <| Element.none
     in
@@ -802,11 +796,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                     lastTick
                     (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
                 )
-                -- (clickBonus basicBonuses.energize energizeLevel)
-                -- TODO calculate the number of cycles since the last collection
                 (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
                     lastTick
                     (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                    |> Maybe.map (min energizeCycleCap)
                     |> Maybe.withDefault 0
                 )
                 ( "Energize", CollectEnergize )
@@ -830,6 +823,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                     }
             ]
         , -- discuss
+          let
+            discussionLevel =
+                currentLevels.discuss |> getCurrentLevelLevel
+          in
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
@@ -853,6 +850,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         }
                 ]
         , -- argue
+          let
+            argueLevel =
+                currentLevels.argue |> getCurrentLevelLevel
+          in
           showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
             column [ centerX, width fill, spacing 10 ]
                 [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
@@ -1018,7 +1019,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
                 , el [ centerX ] <|
-                    actionArea model.lastTick xp numGroupMembers userData.currentLevels
+                    actionArea model.lastTick xp numGroupMembers userData.currentLevels userData.energizeCycleCap
                 , viewPlayers model userData Idealistic
                 ]
             ]

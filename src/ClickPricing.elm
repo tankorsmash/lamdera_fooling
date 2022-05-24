@@ -329,13 +329,15 @@ getAvailableCyclesCurrentLevel (CurrentLevel level maybeTimes) now duration =
 
 {-| update the lastCollectionTime and return the collected clicks
 -}
-collectCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> ( CurrentLevel, Maybe Int )
-collectCurrentLevel ((CurrentLevel level maybeTimes) as currentLevel) now duration =
+collectCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> Int -> ( CurrentLevel, Maybe Int )
+collectCurrentLevel ((CurrentLevel level maybeTimes) as currentLevel) now duration cycleCap =
     case maybeTimes of
         Just ( startTime, _ ) ->
             let
                 toCollect =
                     getAvailableCyclesCurrentLevel currentLevel now duration
+                        |> --limit output
+                           Maybe.map (min cycleCap)
             in
             ( CurrentLevel level (Just ( startTime, now )), toCollect )
 
