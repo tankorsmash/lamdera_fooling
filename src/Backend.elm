@@ -390,7 +390,7 @@ updateFromFrontend sessionId clientId msg model =
                                         case getCurrentLevelProgress newEnergize model.lastTick of
                                             NotStarted ->
                                                 -- start the ticker
-                                                ( ClickPricing.currentLevelRestarter
+                                                ( ClickPricing.currentLevelStarter
                                                     newEnergize
                                                     model.lastTick
                                                     basicBonuses.energize

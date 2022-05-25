@@ -153,8 +153,8 @@ basicBonuses =
         CycleBonus
             { clickBonus = \(Level level) -> level
             , xpCost = \(Level level) -> level * 25
-            , durationMs = always <| Duration.seconds 45
-            , cycleCap = \(Level level) -> level * 10
+            , durationMs = always <| Duration.seconds 4
+            , cycleCap = \(Level level) -> 10 + (level * 10)
             , cycleCapUpgradeCost = \(Level level) -> level * 15
             }
     }
@@ -198,6 +198,7 @@ cycleCap wholeBonus level =
 
         CycleBonus bonus ->
             Just <| bonus.cycleCap level
+
 
 cycleCapUpgradeCost : Bonus -> Level -> Maybe Int
 cycleCapUpgradeCost wholeBonus level =
@@ -243,6 +244,21 @@ restartCurrentLevelHelper (CurrentLevel level _) now duration =
 currentLevelRestarter : CurrentLevel -> Time.Posix -> Bonus -> CurrentLevel
 currentLevelRestarter currentLevel tick bonus =
     restartCurrentLevelHelper
+        currentLevel
+        tick
+        (bonusDuration bonus <|
+            getCurrentLevelLevel currentLevel
+        )
+
+
+startCurrentLevelHelper : CurrentLevel -> Time.Posix -> Duration.Duration -> CurrentLevel
+startCurrentLevelHelper (CurrentLevel level _) now duration =
+    CurrentLevel level (Just ( now, now ))
+
+
+currentLevelStarter : CurrentLevel -> Time.Posix -> Bonus -> CurrentLevel
+currentLevelStarter currentLevel tick bonus =
+    startCurrentLevelHelper
         currentLevel
         tick
         (bonusDuration bonus <|
