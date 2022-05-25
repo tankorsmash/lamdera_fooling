@@ -405,7 +405,10 @@ updateFromFrontend sessionId clientId msg model =
                                                     (ClickPricing.bonusDuration basicBonuses.energize <|
                                                         ClickPricing.getCurrentLevelLevel newEnergize
                                                     )
-                                                    userData.energizeCycleCap
+                                                    (ClickPricing.cycleCap basicBonuses.energize
+                                                        (ClickPricing.getCurrentLevelLevel userData.currentLevels.energizeCycleCap)
+                                                        |> Maybe.withDefault 10
+                                                    )
                                 in
                                 ( setEnergize currentLevels newCurrentLevel, gained )
 
@@ -607,7 +610,6 @@ updateFromFrontend sessionId clientId msg model =
                                 , groupId = existingUserData.groupId
                                 , userId = existingUserData.userId
                                 , currentLevels = existingUserData.currentLevels
-                                , energizeCycleCap = existingUserData.energizeCycleCap
                                 }
 
                         updateExistingUser newUser =
@@ -834,6 +836,51 @@ updateFromFrontend sessionId clientId msg model =
                                                                 (\currentLevels energizeCurrentLevel ->
                                                                     { currentLevels
                                                                         | energize =
+                                                                            newEnergizeLevel energizeCurrentLevel
+                                                                    }
+                                                                )
+                                                                ud.currentLevels
+                                                    in
+                                                    { ud
+                                                        | xp = ud.xp - upgradeCost
+                                                        , currentLevels = newCurrentLevels
+                                                    }
+                                                )
+                                    in
+                                    ( setUsers model newUsers
+                                    , getUserBySessionId newUsers sessionId
+                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                                        |> Maybe.withDefault Cmd.none
+                                    )
+
+                                else
+                                    noop
+
+                            Types.EnergizeCap level ->
+                                let
+                                    upgradeCost =
+                                        ClickPricing.cycleCapUpgradeCost ClickPricing.basicBonuses.energize level
+                                            |> Maybe.withDefault 1
+                                in
+                                if userData.xp >= upgradeCost then
+                                    let
+                                        newUsers =
+                                            updateFullUserBySessionId
+                                                model.users
+                                                sessionId
+                                                (\ud ->
+                                                    let
+                                                        newEnergizeLevel : CurrentLevel -> CurrentLevel
+                                                        newEnergizeLevel (CurrentLevel energizeLevel maybeTimes) =
+                                                            CurrentLevel (ClickPricing.nextLevel energizeLevel) maybeTimes
+
+                                                        newCurrentLevels : CurrentLevels
+                                                        newCurrentLevels =
+                                                            ClickPricing.mapCurrentLevels
+                                                                .energizeCycleCap
+                                                                (\currentLevels energizeCurrentLevel ->
+                                                                    { currentLevels
+                                                                        | energizeCycleCap =
                                                                             newEnergizeLevel energizeCurrentLevel
                                                                     }
                                                                 )

@@ -117,6 +117,13 @@ type Bonus
         , xpCost : Level -> Int
         , durationMs : Level -> Duration.Duration
         }
+    | CycleBonus
+        { clickBonus : Level -> Int
+        , xpCost : Level -> Int
+        , durationMs : Level -> Duration.Duration
+        , cycleCap : Level -> Int
+        , cycleCapUpgradeCost : Level -> Int
+        }
 
 
 type alias Bonuses =
@@ -143,27 +150,63 @@ basicBonuses =
             , durationMs = always <| Duration.seconds 30
             }
     , energize =
-        Bonus
+        CycleBonus
             { clickBonus = \(Level level) -> level
             , xpCost = \(Level level) -> level * 25
             , durationMs = always <| Duration.seconds 45
+            , cycleCap = \(Level level) -> level * 10
+            , cycleCapUpgradeCost = \(Level level) -> level * 15
             }
     }
 
 
 clickBonus : Bonus -> Level -> Int
-clickBonus (Bonus bonus) level =
-    bonus.clickBonus level
+clickBonus wholeBonus level =
+    case wholeBonus of
+        Bonus bonus ->
+            bonus.clickBonus level
+
+        CycleBonus bonus ->
+            bonus.clickBonus level
 
 
 xpCost : Bonus -> Level -> Int
-xpCost (Bonus bonus) level =
-    bonus.xpCost level
+xpCost wholeBonus level =
+    case wholeBonus of
+        Bonus bonus ->
+            bonus.xpCost level
+
+        CycleBonus bonus ->
+            bonus.xpCost level
 
 
 bonusDuration : Bonus -> Level -> Duration.Duration
-bonusDuration (Bonus bonus) level =
-    bonus.durationMs level
+bonusDuration wholeBonus level =
+    case wholeBonus of
+        Bonus bonus ->
+            bonus.durationMs level
+
+        CycleBonus bonus ->
+            bonus.durationMs level
+
+
+cycleCap : Bonus -> Level -> Maybe Int
+cycleCap wholeBonus level =
+    case wholeBonus of
+        Bonus _ ->
+            Nothing
+
+        CycleBonus bonus ->
+            Just <| bonus.cycleCap level
+
+cycleCapUpgradeCost : Bonus -> Level -> Maybe Int
+cycleCapUpgradeCost wholeBonus level =
+    case wholeBonus of
+        Bonus _ ->
+            Nothing
+
+        CycleBonus bonus ->
+            Just <| bonus.cycleCapUpgradeCost level
 
 
 type CurrentLevel
@@ -174,6 +217,7 @@ type alias CurrentLevels =
     { discuss : CurrentLevel
     , argue : CurrentLevel
     , energize : CurrentLevel
+    , energizeCycleCap : CurrentLevel
     }
 
 
@@ -330,14 +374,14 @@ getAvailableCyclesCurrentLevel (CurrentLevel level maybeTimes) now duration =
 {-| update the lastCollectionTime and return the collected clicks
 -}
 collectCurrentLevel : CurrentLevel -> Time.Posix -> Duration.Duration -> Int -> ( CurrentLevel, Maybe Int )
-collectCurrentLevel ((CurrentLevel level maybeTimes) as currentLevel) now duration cycleCap =
+collectCurrentLevel ((CurrentLevel level maybeTimes) as currentLevel) now duration cycleCap_ =
     case maybeTimes of
         Just ( startTime, _ ) ->
             let
                 toCollect =
                     getAvailableCyclesCurrentLevel currentLevel now duration
                         |> --limit output
-                           Maybe.map (min cycleCap)
+                           Maybe.map (min cycleCap_)
             in
             ( CurrentLevel level (Just ( startTime, now )), toCollect )
 

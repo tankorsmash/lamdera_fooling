@@ -27,7 +27,6 @@ type alias UserData =
     , groupId : Maybe GroupId
     , userId : UUID.UUID
     , currentLevels : CurrentLevels
-    , energizeCycleCap : Int
     }
 
 
@@ -45,8 +44,8 @@ createUserData sessionId username personalityType =
         { discuss = CurrentLevel (Level 0) Nothing
         , argue = CurrentLevel (Level 0) Nothing
         , energize = CurrentLevel (Level 0) Nothing
+        , energizeCycleCap = CurrentLevel (Level 0) Nothing
         }
-    , energizeCycleCap = 10
     }
 
 
@@ -315,6 +314,7 @@ type UpgradeType
     = Discussion Level
     | Argumentation Level
     | Energization Level
+    | EnergizeCap Level
 
 
 
