@@ -464,6 +464,7 @@ updateFromFrontend sessionId clientId msg model =
                                         { ud
                                             | currentLevels = newCurrentLevels
                                             , userClicks = Maybe.withDefault 0 maybeClicksGained + ud.userClicks
+                                            , xp = ud.xp + 1
                                         }
                                     )
                                     userData.username
