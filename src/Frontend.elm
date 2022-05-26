@@ -835,8 +835,13 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         , colorTheme = UI.BrightTheme
                         }
                 , let
-                    energizeCapLevel =
-                        currentLevels.energizeCycleCap |> getCurrentLevelLevel
+                    upgradeXpCost =
+                        ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel)
+                            |> Maybe.withDefault -123
+
+                    energizeCycleCap =
+                        ClickPricing.cycleCap basicBonuses.energize energizeCycleCapLevel
+                            |> Maybe.withDefault 10
                   in
                   UI.button <|
                     UI.TextParams
@@ -846,7 +851,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                             , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
-                                if xp >= (ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel) |> Maybe.withDefault 9999999) then
+                                if xp >= upgradeXpCost then
                                     1.0
 
                                 else
@@ -855,15 +860,9 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         , onPressMsg = SendBuyUpgrade (Types.EnergizeCap <| nextLevel energizeCycleCapLevel)
                         , textLabel =
                             "Increase Cap to "
-                                ++ (ClickPricing.cycleCap basicBonuses.energize energizeCycleCapLevel
-                                        |> Maybe.withDefault 10
-                                        |> String.fromInt
-                                   )
+                                ++ (energizeCycleCap |> String.fromInt)
                                 ++ " ("
-                                ++ (ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel)
-                                        |> Maybe.withDefault -123
-                                        |> String.fromInt
-                                   )
+                                ++ String.fromInt upgradeXpCost
                                 ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
