@@ -153,7 +153,7 @@ basicBonuses =
         CycleBonus
             { clickBonus = \(Level level) -> level
             , xpCost = \(Level level) -> level * 25
-            , durationMs = always <| Duration.seconds 4
+            , durationMs = always <| Duration.seconds 45
             , cycleCap = \(Level level) -> 10 + (level * 10)
             , cycleCapUpgradeCost = \(Level level) -> level * 15
             }
