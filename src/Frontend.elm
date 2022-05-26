@@ -836,7 +836,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         }
                 , let
                     energizeCapLevel =
-                        currentLevels.energize |> getCurrentLevelLevel
+                        currentLevels.energizeCycleCap |> getCurrentLevelLevel
                   in
                   UI.button <|
                     UI.TextParams
@@ -846,14 +846,25 @@ actionArea lastTick xp numGroupMembers currentLevels =
                             , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
-                                if xp >= xpCost basicBonuses.energize (nextLevel energizeLevel) then
+                                if xp >= (ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel) |> Maybe.withDefault 9999999) then
                                     1.0
 
                                 else
                                     0.25
                             ]
                         , onPressMsg = SendBuyUpgrade (Types.EnergizeCap <| nextLevel energizeCycleCapLevel)
-                        , textLabel = "Increase Cap +1 WIP (" ++ String.fromInt (xpCost basicBonuses.energize (addToLevel energizeLevel 1)) ++ "xp)"
+                        , textLabel =
+                            "Increase Cap to "
+                                ++ (ClickPricing.cycleCap basicBonuses.energize energizeCycleCapLevel
+                                        |> Maybe.withDefault 10
+                                        |> String.fromInt
+                                   )
+                                ++ " ("
+                                ++ (ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel)
+                                        |> Maybe.withDefault -123
+                                        |> String.fromInt
+                                   )
+                                ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]
