@@ -384,31 +384,50 @@ updateFromFrontend sessionId clientId msg model =
                     (\userData ->
                         let
                             currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
-                            currentLevelUpdater currentLevels newEnergize =
+                            currentLevelUpdater currentLevels energizeCurrentLevel =
                                 let
+                                    energizeBonus =
+                                        basicBonuses.energize
+
+                                    energizeCapCurrentLevel =
+                                        userData.currentLevels.energizeCycleCap
+
+                                    energizeCycleCap =
+                                        ClickPricing.cycleCap energizeBonus
+                                            (ClickPricing.getCurrentLevelLevel energizeCapCurrentLevel)
+                                            |> Maybe.withDefault 10
+
+                                    energizeDuration =
+                                        ClickPricing.bonusDuration energizeBonus <|
+                                            ClickPricing.getCurrentLevelLevel energizeCurrentLevel
+
+                                    addClickBonusToAvailableCycles =
+                                        \availableCycles ->
+                                            availableCycles
+                                                * ClickPricing.clickBonus
+                                                    energizeBonus
+                                                    -- FIXME? should this use the energizeCurrentLevel inside the tuple that its currently ignoring?
+                                                    (ClickPricing.getCurrentLevelLevel energizeCurrentLevel)
+
                                     ( newCurrentLevel, gained ) =
-                                        case getCurrentLevelProgress newEnergize model.lastTick of
+                                        case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
                                             NotStarted ->
                                                 -- start the ticker
                                                 ( ClickPricing.currentLevelStarter
-                                                    newEnergize
+                                                    energizeCurrentLevel
                                                     model.lastTick
-                                                    basicBonuses.energize
+                                                    energizeBonus
                                                 , Nothing
                                                 )
 
                                             _ ->
                                                 -- otherwise collect it
                                                 ClickPricing.collectCurrentLevel
-                                                    newEnergize
+                                                    energizeCurrentLevel
                                                     model.lastTick
-                                                    (ClickPricing.bonusDuration basicBonuses.energize <|
-                                                        ClickPricing.getCurrentLevelLevel newEnergize
-                                                    )
-                                                    (ClickPricing.cycleCap basicBonuses.energize
-                                                        (ClickPricing.getCurrentLevelLevel userData.currentLevels.energizeCycleCap)
-                                                        |> Maybe.withDefault 10
-                                                    )
+                                                    energizeDuration
+                                                    energizeCycleCap
+                                                    |> Tuple.mapSecond (Maybe.map addClickBonusToAvailableCycles)
                                 in
                                 ( setEnergize currentLevels newCurrentLevel, gained )
 

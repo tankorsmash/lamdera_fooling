@@ -151,7 +151,7 @@ basicBonuses =
             }
     , energize =
         CycleBonus
-            { clickBonus = \(Level level) -> level
+            { clickBonus = \(Level level) -> level * 2
             , xpCost = \(Level level) -> level * 25
             , durationMs = always <| Duration.seconds 45
             , cycleCap = \(Level level) -> 10 + (level * 10)
