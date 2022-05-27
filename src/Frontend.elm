@@ -788,8 +788,61 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 , colorTheme = UI.BrightTheme
                 }
         , spacer
-        , -- convert Xp to clicks
+        , -- discuss
           let
+            discussionLevel =
+                currentLevels.discuss |> getCurrentLevelLevel
+          in
+          showIf (xp >= 10 || getLevel discussionLevel > 0) <|
+            column [ centerX, width fill, spacing 10 ]
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
+                , UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            , Element.alpha <|
+                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
+                                    1.0
+
+                                else
+                                    0.25
+                            ]
+                        , onPressMsg = SendBuyUpgrade (Types.Discussion <| nextLevel discussionLevel)
+                        , textLabel = "Discussion +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
+                        , colorTheme = UI.BrightTheme
+                        }
+                ]
+        , -- argue
+          let
+            argueLevel =
+                currentLevels.argue |> getCurrentLevelLevel
+          in
+          showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
+            column [ centerX, width fill, spacing 10 ]
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
+                , UI.button <|
+                    UI.TextParams
+                        { buttonType = UI.Outline
+                        , customAttrs =
+                            [ centerX
+                            , width Element.shrink
+                            , UI.scaled_font 2
+                            , Element.alpha <|
+                                if xp >= xpCost basicBonuses.argue (nextLevel argueLevel) then
+                                    1.0
+
+                                else
+                                    0.25
+                            ]
+                        , onPressMsg = SendBuyUpgrade (Types.Argumentation <| nextLevel argueLevel)
+                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
+                        , colorTheme = UI.BrightTheme
+                        }
+                ]
+        , let
             energizeLevel =
                 currentLevels.energize |> getCurrentLevelLevel
 
@@ -868,62 +921,9 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         }
                 ]
             ]
-        , -- discuss
-          let
-            discussionLevel =
-                currentLevels.discuss |> getCurrentLevelLevel
-          in
-          showIf (xp >= 10 || getLevel discussionLevel > 0) <|
-            column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
-                , UI.button <|
-                    UI.TextParams
-                        { buttonType = UI.Outline
-                        , customAttrs =
-                            [ centerX
-                            , width Element.shrink
-                            , UI.scaled_font 2
-                            , Element.alpha <|
-                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
-                                    1.0
-
-                                else
-                                    0.25
-                            ]
-                        , onPressMsg = SendBuyUpgrade (Types.Discussion <| nextLevel discussionLevel)
-                        , textLabel = "Discussion +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
-                        , colorTheme = UI.BrightTheme
-                        }
-                ]
-        , -- argue
-          let
-            argueLevel =
-                currentLevels.argue |> getCurrentLevelLevel
-          in
-          showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
-            column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
-                , UI.button <|
-                    UI.TextParams
-                        { buttonType = UI.Outline
-                        , customAttrs =
-                            [ centerX
-                            , width Element.shrink
-                            , UI.scaled_font 2
-                            , Element.alpha <|
-                                if xp >= xpCost basicBonuses.argue (nextLevel argueLevel) then
-                                    1.0
-
-                                else
-                                    0.25
-                            ]
-                        , onPressMsg = SendBuyUpgrade (Types.Argumentation <| nextLevel argueLevel)
-                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
-                        , colorTheme = UI.BrightTheme
-                        }
-                ]
         , spacer
-        , el [ centerX, Font.underline ] <| text "Spend your clicks"
+        , -- convert Xp to clicks
+          el [ centerX, Font.underline ] <| text "Spend your clicks"
         , UI.button <|
             UI.TextParams
                 { buttonType = UI.Outline
