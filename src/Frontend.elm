@@ -1029,7 +1029,7 @@ viewPlayers model userData personalityType =
                                 text "Groups"
                                     :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
                                             |> .groups
-                                            |> List.map (\group -> viewGroup group)
+                                            |> List.map viewGroup
                                        )
                             ]
                                 ++ (names
@@ -1053,9 +1053,19 @@ viewPlayers model userData personalityType =
                                                                 else
                                                                     []
                                                                )
+
+                                                    maxClicks =
+                                                        -- TODO: use the model for this, inside a CurrentLevel
+                                                        1234
+
+                                                    content =
+                                                        if username /= userData.username then
+                                                            text (username ++ " x" ++ String.fromInt clicks)
+
+                                                        else
+                                                            text (username ++ " x" ++ String.fromInt clicks ++ "/" ++ String.fromInt maxClicks)
                                                 in
-                                                el attrs <|
-                                                    text (username ++ " x" ++ String.fromInt clicks)
+                                                el attrs content
                                             )
                                    )
                    )
