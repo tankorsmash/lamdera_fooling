@@ -963,13 +963,12 @@ viewPlayers model userData personalityType =
 
         viewUsersInPersonalityType =
             model.teamsUserClicks
-                |> (\tuc ->
-                        case personalityType of
-                            Realistic ->
-                                tuc.realists
+                |> (case personalityType of
+                        Realistic ->
+                            .realists
 
-                            Idealistic ->
-                                tuc.idealists
+                        Idealistic ->
+                            .idealists
                    )
                 |> (\names ->
                         let
@@ -1038,13 +1037,25 @@ viewPlayers model userData personalityType =
                                         |> List.reverse
                                         |> List.map
                                             (\{ username, clicks, isOnline } ->
-                                                if isOnline then
-                                                    el [ Font.color <| UI.convertColor Color.lightGreen ] <|
-                                                        text <|
-                                                            (username ++ " x" ++ String.fromInt clicks)
+                                                let
+                                                    onlineAttrs =
+                                                        if isOnline then
+                                                            [ Font.color <| UI.convertColor Color.lightGreen ]
 
-                                                else
-                                                    text <| username ++ " x" ++ String.fromInt clicks
+                                                        else
+                                                            []
+
+                                                    attrs =
+                                                        onlineAttrs
+                                                            ++ (if username == userData.username then
+                                                                    [ Font.underline ]
+
+                                                                else
+                                                                    []
+                                                               )
+                                                in
+                                                el attrs <|
+                                                    text (username ++ " x" ++ String.fromInt clicks)
                                             )
                                    )
                    )
