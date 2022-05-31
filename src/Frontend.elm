@@ -961,6 +961,37 @@ viewPlayers model userData personalityType =
             Maybe.map .groupId
                 (Types.getUserGroup model.teamsFromBackend userData)
 
+        viewUserInSidebar { username, clicks, isOnline } =
+            let
+                onlineAttrs =
+                    if isOnline then
+                        [ Font.color <| UI.convertColor Color.lightGreen ]
+
+                    else
+                        []
+
+                attrs =
+                    onlineAttrs
+                        ++ (if username == userData.username then
+                                [ Font.underline ]
+
+                            else
+                                []
+                           )
+
+                maxClicks =
+                    -- TODO: use the model for this, inside a CurrentLevel
+                    1234
+
+                content =
+                    if username /= userData.username then
+                        text (username ++ " x" ++ String.fromInt clicks)
+
+                    else
+                        text (username ++ " x" ++ String.fromInt clicks ++ "/" ++ String.fromInt maxClicks)
+            in
+            el attrs content
+
         viewUsersInPersonalityType =
             model.teamsUserClicks
                 |> (case personalityType of
@@ -1035,38 +1066,7 @@ viewPlayers model userData personalityType =
                                 ++ (names
                                         |> List.sortBy .clicks
                                         |> List.reverse
-                                        |> List.map
-                                            (\{ username, clicks, isOnline } ->
-                                                let
-                                                    onlineAttrs =
-                                                        if isOnline then
-                                                            [ Font.color <| UI.convertColor Color.lightGreen ]
-
-                                                        else
-                                                            []
-
-                                                    attrs =
-                                                        onlineAttrs
-                                                            ++ (if username == userData.username then
-                                                                    [ Font.underline ]
-
-                                                                else
-                                                                    []
-                                                               )
-
-                                                    maxClicks =
-                                                        -- TODO: use the model for this, inside a CurrentLevel
-                                                        1234
-
-                                                    content =
-                                                        if username /= userData.username then
-                                                            text (username ++ " x" ++ String.fromInt clicks)
-
-                                                        else
-                                                            text (username ++ " x" ++ String.fromInt clicks ++ "/" ++ String.fromInt maxClicks)
-                                                in
-                                                el attrs content
-                                            )
+                                        |> List.map viewUserInSidebar
                                    )
                    )
     in
