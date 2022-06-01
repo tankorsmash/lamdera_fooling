@@ -111,25 +111,40 @@ contributeClickBonus (Level level) =
     level
 
 
-type Bonus
-    = Bonus
-        { clickBonus : Level -> Int
+type alias TimedBonus =
+    { clickBonus : Level -> Int
+    , xpCost : Level -> Int
+    , durationMs : Level -> Duration.Duration
+    }
+
+
+type alias CycleBonus =
+    { clickBonus : Level -> Int
+    , xpCost : Level -> Int
+    , durationMs : Level -> Duration.Duration
+    , cycleCap : Level -> Int
+    , cycleCapUpgradeCost : Level -> Int
+    }
+
+
+type alias BasicBonusData a =
+    { a
+        | clickBonus : Level -> Int
         , xpCost : Level -> Int
-        , durationMs : Level -> Duration.Duration
-        }
-    | CycleBonus
-        { clickBonus : Level -> Int
-        , xpCost : Level -> Int
-        , durationMs : Level -> Duration.Duration
-        , cycleCap : Level -> Int
-        , cycleCapUpgradeCost : Level -> Int
-        }
+    }
+
+
+type alias FlatBonus =
+    { clickBonus : Level -> Int
+    , xpCost : Level -> Int
+    }
 
 
 type alias Bonuses =
-    { discuss : Bonus
-    , argue : Bonus
-    , energize : Bonus
+    { clickCap : FlatBonus
+    , discuss : TimedBonus
+    , argue : TimedBonus
+    , energize : CycleBonus
     }
 
 
@@ -137,77 +152,33 @@ type alias Bonuses =
 -}
 basicBonuses : Bonuses
 basicBonuses =
-    { discuss =
-        Bonus
-            { clickBonus = \(Level level) -> level + 5
-            , xpCost = \(Level level) -> level * 5
-            , durationMs = always <| Duration.seconds 10
-            }
+    { clickCap =
+        { clickBonus = always 0
+        , xpCost = \(Level level) -> level * 5
+        }
+    , discuss =
+        { clickBonus = \(Level level) -> level + 5
+        , xpCost = \(Level level) -> level * 5
+        , durationMs = always <| Duration.seconds 10
+        }
     , argue =
-        Bonus
-            { clickBonus = \(Level level) -> (level * 5) + 30
-            , xpCost = \(Level level) -> level * 45
-            , durationMs = always <| Duration.seconds 30
-            }
+        { clickBonus = \(Level level) -> (level * 5) + 30
+        , xpCost = \(Level level) -> level * 45
+        , durationMs = always <| Duration.seconds 30
+        }
     , energize =
-        CycleBonus
-            { clickBonus = \(Level level) -> level * 2
-            , xpCost = \(Level level) -> level * 25
-            , durationMs = always <| Duration.seconds 45
-            , cycleCap = \(Level level) -> 10 + (level * 10)
-            , cycleCapUpgradeCost = \(Level level) -> level * 15
-            }
+        { clickBonus = \(Level level) -> level * 2
+        , xpCost = \(Level level) -> level * 25
+        , durationMs = always <| Duration.seconds 45
+        , cycleCap = \(Level level) -> 10 + (level * 10)
+        , cycleCapUpgradeCost = \(Level level) -> level * 15
+        }
     }
 
 
-clickBonus : Bonus -> Level -> Int
-clickBonus wholeBonus level =
-    case wholeBonus of
-        Bonus bonus ->
-            bonus.clickBonus level
-
-        CycleBonus bonus ->
-            bonus.clickBonus level
-
-
-xpCost : Bonus -> Level -> Int
-xpCost wholeBonus level =
-    case wholeBonus of
-        Bonus bonus ->
-            bonus.xpCost level
-
-        CycleBonus bonus ->
-            bonus.xpCost level
-
-
-bonusDuration : Bonus -> Level -> Duration.Duration
-bonusDuration wholeBonus level =
-    case wholeBonus of
-        Bonus bonus ->
-            bonus.durationMs level
-
-        CycleBonus bonus ->
-            bonus.durationMs level
-
-
-cycleCap : Bonus -> Level -> Maybe Int
-cycleCap wholeBonus level =
-    case wholeBonus of
-        Bonus _ ->
-            Nothing
-
-        CycleBonus bonus ->
-            Just <| bonus.cycleCap level
-
-
-cycleCapUpgradeCost : Bonus -> Level -> Maybe Int
-cycleCapUpgradeCost wholeBonus level =
-    case wholeBonus of
-        Bonus _ ->
-            Nothing
-
-        CycleBonus bonus ->
-            Just <| bonus.cycleCapUpgradeCost level
+xpCost : BasicBonusData a -> Level -> Int
+xpCost bonus level =
+    bonus.xpCost level
 
 
 type CurrentLevel
@@ -215,7 +186,8 @@ type CurrentLevel
 
 
 type alias CurrentLevels =
-    { discuss : CurrentLevel
+    { clickCap : CurrentLevel
+    , discuss : CurrentLevel
     , argue : CurrentLevel
     , energize : CurrentLevel
     , energizeCycleCap : CurrentLevel
@@ -241,12 +213,22 @@ restartCurrentLevelHelper (CurrentLevel level _) now duration =
     CurrentLevel level (Just ( now, Duration.addTo now duration ))
 
 
-currentLevelRestarter : CurrentLevel -> Time.Posix -> Bonus -> CurrentLevel
-currentLevelRestarter currentLevel tick bonus =
+currentLevelCycleRestarter : CurrentLevel -> Time.Posix -> CycleBonus -> CurrentLevel
+currentLevelCycleRestarter currentLevel tick bonus =
     restartCurrentLevelHelper
         currentLevel
         tick
-        (bonusDuration bonus <|
+        (bonus.durationMs <|
+            getCurrentLevelLevel currentLevel
+        )
+
+
+currentLevelTimedRestarter : CurrentLevel -> Time.Posix -> TimedBonus -> CurrentLevel
+currentLevelTimedRestarter currentLevel tick bonus =
+    restartCurrentLevelHelper
+        currentLevel
+        tick
+        (bonus.durationMs <|
             getCurrentLevelLevel currentLevel
         )
 
@@ -256,12 +238,21 @@ startCurrentLevelHelper (CurrentLevel level _) now duration =
     CurrentLevel level (Just ( now, now ))
 
 
-currentLevelStarter : CurrentLevel -> Time.Posix -> Bonus -> CurrentLevel
-currentLevelStarter currentLevel tick bonus =
+currentLevelCycleStarter : CurrentLevel -> Time.Posix -> CycleBonus -> CurrentLevel
+currentLevelCycleStarter currentLevel tick bonus =
     startCurrentLevelHelper
         currentLevel
         tick
-        (bonusDuration bonus <|
+        (bonus.durationMs <|
+            getCurrentLevelLevel currentLevel
+        )
+
+currentLevelTimedStarter : CurrentLevel -> Time.Posix -> TimedBonus -> CurrentLevel
+currentLevelTimedStarter currentLevel tick bonus =
+    startCurrentLevelHelper
+        currentLevel
+        tick
+        (bonus.durationMs <|
             getCurrentLevelLevel currentLevel
         )
 

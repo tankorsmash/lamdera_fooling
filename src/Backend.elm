@@ -266,10 +266,13 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\userData ->
+                    (\( userData) ->
                         let
+                            clickBonus =
+                                basicBonuses.discuss.clickBonus
+
                             modifyClicks clicks =
-                                clicks + ClickPricing.clickBonus ClickPricing.basicBonuses.discuss (Level 1)
+                                clicks + clickBonus (Level 1)
 
                             newTeams =
                                 updateTeamByPersonalityType
@@ -289,7 +292,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     .discuss
                                                     (\cls newDiscuss ->
                                                         setDiscuss cls <|
-                                                            ClickPricing.currentLevelRestarter newDiscuss model.lastTick basicBonuses.discuss
+                                                            ClickPricing.currentLevelTimedRestarter newDiscuss model.lastTick basicBonuses.discuss
                                                     )
                                                     ud.currentLevels
                                         }
@@ -322,10 +325,10 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\userData ->
+                    (\( userData) ->
                         let
                             modifyClicks clicks =
-                                clicks + ClickPricing.clickBonus ClickPricing.basicBonuses.argue (Level 1)
+                                clicks + basicBonuses.argue.clickBonus (Level 1)
 
                             newTeams =
                                 updateTeamByPersonalityType
@@ -335,7 +338,7 @@ updateFromFrontend sessionId clientId msg model =
 
                             restartArgue : CurrentLevel -> CurrentLevel
                             restartArgue currentLevel =
-                                ClickPricing.currentLevelRestarter currentLevel model.lastTick basicBonuses.argue
+                                ClickPricing.currentLevelTimedRestarter currentLevel model.lastTick basicBonuses.argue
 
                             newUsers =
                                 updateFullUserByUsername
@@ -381,31 +384,26 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\userData ->
+                    (\( userData) ->
                         let
                             currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
                             currentLevelUpdater currentLevels energizeCurrentLevel =
                                 let
-                                    energizeBonus =
-                                        basicBonuses.energize
-
                                     energizeCapCurrentLevel =
                                         userData.currentLevels.energizeCycleCap
 
                                     energizeCycleCap =
-                                        ClickPricing.cycleCap energizeBonus
+                                        basicBonuses.energize.cycleCap
                                             (ClickPricing.getCurrentLevelLevel energizeCapCurrentLevel)
-                                            |> Maybe.withDefault 10
 
                                     energizeDuration =
-                                        ClickPricing.bonusDuration energizeBonus <|
+                                        basicBonuses.energize.durationMs <|
                                             ClickPricing.getCurrentLevelLevel energizeCurrentLevel
 
                                     addClickBonusToAvailableCycles =
                                         \availableCycles ->
                                             availableCycles
-                                                * ClickPricing.clickBonus
-                                                    energizeBonus
+                                                * basicBonuses.energize.clickBonus
                                                     -- FIXME? should this use the energizeCurrentLevel inside the tuple that its currently ignoring?
                                                     (ClickPricing.getCurrentLevelLevel energizeCurrentLevel)
 
@@ -413,10 +411,10 @@ updateFromFrontend sessionId clientId msg model =
                                         case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
                                             NotStarted ->
                                                 -- start the ticker
-                                                ( ClickPricing.currentLevelStarter
+                                                ( ClickPricing.currentLevelTimedStarter
                                                     energizeCurrentLevel
                                                     model.lastTick
-                                                    energizeBonus
+                                                    basicBonuses.argue
                                                 , Nothing
                                                 )
 
@@ -749,6 +747,11 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.andThen getUserData
                 |> Maybe.map
                     (\userData ->
+                        let
+                            upgradeXpCost : Level -> Int
+                            upgradeXpCost level =
+                                Debug.todo "xp cost"
+                        in
                         case upgradeType of
                             Types.Discussion level ->
                                 let
@@ -792,11 +795,7 @@ updateFromFrontend sessionId clientId msg model =
                                     noop
 
                             Types.Argumentation level ->
-                                let
-                                    upgradeCost =
-                                        ClickPricing.xpCost ClickPricing.basicBonuses.argue level
-                                in
-                                if userData.xp >= upgradeCost then
+                                if userData.xp >= upgradeXpCost level then
                                     let
                                         newUsers =
                                             updateFullUserBySessionId
@@ -818,7 +817,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                 ud.currentLevels
                                                     in
                                                     { ud
-                                                        | xp = ud.xp - upgradeCost
+                                                        | xp = ud.xp - upgradeXpCost level
                                                         , currentLevels = newCurrentLevels
                                                     }
                                                 )
@@ -835,7 +834,7 @@ updateFromFrontend sessionId clientId msg model =
                             Types.Energization level ->
                                 let
                                     upgradeCost =
-                                        ClickPricing.xpCost ClickPricing.basicBonuses.energize level
+                                        upgradeXpCost level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
@@ -879,8 +878,10 @@ updateFromFrontend sessionId clientId msg model =
                             Types.EnergizeCap level ->
                                 let
                                     upgradeCost =
-                                        ClickPricing.cycleCapUpgradeCost ClickPricing.basicBonuses.energize level
-                                            |> Maybe.withDefault 1
+                                        Debug.todo "energizeCycleCap xp cap"
+
+                                    -- ClickPricing.cycleCapUpgradeCost ClickPricing.basicBonuses.energize level
+                                    --     |> Maybe.withDefault 1
                                 in
                                 if userData.xp >= upgradeCost then
                                     let

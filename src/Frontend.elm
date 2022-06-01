@@ -3,7 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
-import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, clickBonus, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
+import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
 import Color
 import Dict
 import Duration
@@ -184,13 +184,13 @@ update msg model =
                             ClickPricing.getCurrentLevelCycleProgress
                                 currentLevels.energize
                                 model.lastTick
-                                (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                                ( basicBonuses.energize.durationMs energizeLevel)
 
                         prog =
                             Debug.log "prog" <|
                                 (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
                                     model.lastTick
-                                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                                    ( basicBonuses.energize.durationMs energizeLevel)
                                     |> Maybe.withDefault -123
                                 )
                     in
@@ -792,10 +792,11 @@ actionArea lastTick xp numGroupMembers currentLevels =
           let
             discussionLevel =
                 currentLevels.discuss |> getCurrentLevelLevel
+
           in
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (clickBonus basicBonuses.discuss discussionLevel) ( "Discuss", Discuss )
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (basicBonuses.discuss.clickBonus discussionLevel) ( "Discuss", Discuss )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -822,7 +823,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
           in
           showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
             column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (clickBonus basicBonuses.argue argueLevel) ( "Argue", Argue )
+                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (basicBonuses.argue.clickBonus argueLevel) ( "Argue", Argue )
                 , UI.button <|
                     UI.TextParams
                         { buttonType = UI.Outline
@@ -854,15 +855,14 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 (ClickPricing.getCurrentLevelCycleProgress
                     currentLevels.energize
                     lastTick
-                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                    ( basicBonuses.energize.durationMs energizeLevel)
                 )
                 (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
                     lastTick
-                    (ClickPricing.bonusDuration basicBonuses.energize energizeLevel)
+                    ( basicBonuses.energize.durationMs energizeLevel)
                     |> Maybe.map
                         (min <|
-                            (ClickPricing.cycleCap basicBonuses.energize energizeCycleCapLevel
-                                |> Maybe.withDefault 10
+                            ( basicBonuses.energize.cycleCap energizeCycleCapLevel
                             )
                         )
                     |> Maybe.withDefault 0
@@ -889,12 +889,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         }
                 , let
                     upgradeXpCost =
-                        ClickPricing.cycleCapUpgradeCost basicBonuses.energize (nextLevel energizeCycleCapLevel)
-                            |> Maybe.withDefault -123
+                         basicBonuses.energize.cycleCapUpgradeCost (nextLevel energizeCycleCapLevel)
 
                     energizeCycleCap =
-                        ClickPricing.cycleCap basicBonuses.energize energizeCycleCapLevel
-                            |> Maybe.withDefault 10
+                         basicBonuses.energize.cycleCap energizeCycleCapLevel
                   in
                   UI.button <|
                     UI.TextParams
