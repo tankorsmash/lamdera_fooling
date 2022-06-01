@@ -247,6 +247,7 @@ currentLevelCycleStarter currentLevel tick bonus =
             getCurrentLevelLevel currentLevel
         )
 
+
 currentLevelTimedStarter : CurrentLevel -> Time.Posix -> TimedBonus -> CurrentLevel
 currentLevelTimedStarter currentLevel tick bonus =
     startCurrentLevelHelper

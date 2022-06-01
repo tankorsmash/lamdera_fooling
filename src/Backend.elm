@@ -266,7 +266,7 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\( userData) ->
+                    (\userData ->
                         let
                             clickBonus =
                                 basicBonuses.discuss.clickBonus
@@ -314,7 +314,7 @@ updateFromFrontend sessionId clientId msg model =
                             , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                             , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
                             , getUserBySessionId newModel.users sessionId
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
                                 |> Maybe.withDefault Cmd.none
                             ]
                         )
@@ -325,7 +325,7 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\( userData) ->
+                    (\userData ->
                         let
                             modifyClicks clicks =
                                 clicks + basicBonuses.argue.clickBonus (Level 1)
@@ -384,7 +384,7 @@ updateFromFrontend sessionId clientId msg model =
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
                 |> Maybe.map
-                    (\( userData) ->
+                    (\userData ->
                         let
                             currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
                             currentLevelUpdater currentLevels energizeCurrentLevel =
@@ -481,7 +481,7 @@ updateFromFrontend sessionId clientId msg model =
                         ( newModel
                         , Cmd.batch
                             [ maybeNewUser
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser << Debug.log "new user")
+                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
                                 |> Maybe.withDefault Cmd.none
                             , Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
                             , Lamdera.broadcast (NewTeams newModel.teams)
@@ -747,11 +747,6 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.andThen getUserData
                 |> Maybe.map
                     (\userData ->
-                        let
-                            upgradeXpCost : Level -> Int
-                            upgradeXpCost level =
-                                Debug.todo "xp cost"
-                        in
                         case upgradeType of
                             Types.Discussion level ->
                                 let
@@ -795,7 +790,11 @@ updateFromFrontend sessionId clientId msg model =
                                     noop
 
                             Types.Argumentation level ->
-                                if userData.xp >= upgradeXpCost level then
+                                let
+                                    upgradeCost =
+                                        ClickPricing.xpCost ClickPricing.basicBonuses.argue level
+                                in
+                                if userData.xp >= upgradeCost then
                                     let
                                         newUsers =
                                             updateFullUserBySessionId
@@ -817,7 +816,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                 ud.currentLevels
                                                     in
                                                     { ud
-                                                        | xp = ud.xp - upgradeXpCost level
+                                                        | xp = ud.xp - upgradeCost
                                                         , currentLevels = newCurrentLevels
                                                     }
                                                 )
@@ -834,7 +833,7 @@ updateFromFrontend sessionId clientId msg model =
                             Types.Energization level ->
                                 let
                                     upgradeCost =
-                                        upgradeXpCost level
+                                        ClickPricing.xpCost ClickPricing.basicBonuses.energize level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
