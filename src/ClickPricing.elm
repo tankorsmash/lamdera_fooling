@@ -95,6 +95,11 @@ nextLevel (Level level) =
     Level <| level + 1
 
 
+nextCurrentLevel : CurrentLevel -> CurrentLevel
+nextCurrentLevel (CurrentLevel level maybeTimes) =
+    CurrentLevel (nextLevel level) maybeTimes
+
+
 getNextLevel : Level -> Int
 getNextLevel (Level level) =
     level + 1

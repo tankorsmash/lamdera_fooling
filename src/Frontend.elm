@@ -129,7 +129,7 @@ update msg model =
                 Just currentLevels ->
                     let
                         prog =
-                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.discuss model.lastTick
+                            ClickPricing.getCurrentLevelProgress currentLevels.discuss model.lastTick
                     in
                     if prog == Completed || prog == NotStarted then
                         ( model, Lamdera.sendToBackend UserDiscussed )
@@ -184,13 +184,13 @@ update msg model =
                             ClickPricing.getCurrentLevelCycleProgress
                                 currentLevels.energize
                                 model.lastTick
-                                ( basicBonuses.energize.durationMs energizeLevel)
+                                (basicBonuses.energize.durationMs energizeLevel)
 
                         prog =
                             Debug.log "prog" <|
                                 (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
                                     model.lastTick
-                                    ( basicBonuses.energize.durationMs energizeLevel)
+                                    (basicBonuses.energize.durationMs energizeLevel)
                                     |> Maybe.withDefault -123
                                 )
                     in
@@ -792,7 +792,6 @@ actionArea lastTick xp numGroupMembers currentLevels =
           let
             discussionLevel =
                 currentLevels.discuss |> getCurrentLevelLevel
-
           in
           showIf (xp >= 10 || getLevel discussionLevel > 0) <|
             column [ centerX, width fill, spacing 10 ]
@@ -855,15 +854,14 @@ actionArea lastTick xp numGroupMembers currentLevels =
                 (ClickPricing.getCurrentLevelCycleProgress
                     currentLevels.energize
                     lastTick
-                    ( basicBonuses.energize.durationMs energizeLevel)
+                    (basicBonuses.energize.durationMs energizeLevel)
                 )
                 (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
                     lastTick
-                    ( basicBonuses.energize.durationMs energizeLevel)
+                    (basicBonuses.energize.durationMs energizeLevel)
                     |> Maybe.map
                         (min <|
-                            ( basicBonuses.energize.cycleCap energizeCycleCapLevel
-                            )
+                            basicBonuses.energize.cycleCap energizeCycleCapLevel
                         )
                     |> Maybe.withDefault 0
                 )
@@ -889,10 +887,10 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         }
                 , let
                     upgradeXpCost =
-                         basicBonuses.energize.cycleCapUpgradeCost (nextLevel energizeCycleCapLevel)
+                        basicBonuses.energize.cycleCapUpgradeCost (nextLevel energizeCycleCapLevel)
 
                     energizeCycleCap =
-                         basicBonuses.energize.cycleCap energizeCycleCapLevel
+                        basicBonuses.energize.cycleCap energizeCycleCapLevel
                   in
                   UI.button <|
                     UI.TextParams

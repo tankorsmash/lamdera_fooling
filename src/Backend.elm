@@ -761,16 +761,12 @@ updateFromFrontend sessionId clientId msg model =
                                                 sessionId
                                                 (\ud ->
                                                     let
-                                                        newDiscussLevel : CurrentLevel -> CurrentLevel
-                                                        newDiscussLevel (CurrentLevel discussLevel maybeTimes) =
-                                                            CurrentLevel (ClickPricing.nextLevel discussLevel) maybeTimes
-
                                                         newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
                                                                 .discuss
                                                                 (\currentLevels discussCurrentLevel ->
-                                                                    setDiscuss currentLevels <| newDiscussLevel discussCurrentLevel
+                                                                    setDiscuss currentLevels <| nextCurrentLevel discussCurrentLevel
                                                                 )
                                                                 ud.currentLevels
                                                     in
@@ -802,16 +798,12 @@ updateFromFrontend sessionId clientId msg model =
                                                 sessionId
                                                 (\ud ->
                                                     let
-                                                        newArgueLevel : CurrentLevel -> CurrentLevel
-                                                        newArgueLevel (CurrentLevel argueLevel maybeTimes) =
-                                                            CurrentLevel (ClickPricing.nextLevel argueLevel) maybeTimes
-
                                                         newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
                                                                 .argue
                                                                 (\currentLevels argueCurrentLevel ->
-                                                                    setArgue currentLevels <| newArgueLevel argueCurrentLevel
+                                                                    setArgue currentLevels <| nextCurrentLevel argueCurrentLevel
                                                                 )
                                                                 ud.currentLevels
                                                     in
@@ -843,10 +835,6 @@ updateFromFrontend sessionId clientId msg model =
                                                 sessionId
                                                 (\ud ->
                                                     let
-                                                        newEnergizeLevel : CurrentLevel -> CurrentLevel
-                                                        newEnergizeLevel (CurrentLevel energizeLevel maybeTimes) =
-                                                            CurrentLevel (ClickPricing.nextLevel energizeLevel) maybeTimes
-
                                                         newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
@@ -854,7 +842,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                 (\currentLevels energizeCurrentLevel ->
                                                                     { currentLevels
                                                                         | energize =
-                                                                            newEnergizeLevel energizeCurrentLevel
+                                                                            nextCurrentLevel energizeCurrentLevel
                                                                     }
                                                                 )
                                                                 ud.currentLevels
@@ -890,10 +878,6 @@ updateFromFrontend sessionId clientId msg model =
                                                 sessionId
                                                 (\ud ->
                                                     let
-                                                        newEnergizeLevel : CurrentLevel -> CurrentLevel
-                                                        newEnergizeLevel (CurrentLevel energizeLevel maybeTimes) =
-                                                            CurrentLevel (ClickPricing.nextLevel energizeLevel) maybeTimes
-
                                                         newCurrentLevels : CurrentLevels
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
@@ -901,7 +885,7 @@ updateFromFrontend sessionId clientId msg model =
                                                                 (\currentLevels energizeCurrentLevel ->
                                                                     { currentLevels
                                                                         | energizeCycleCap =
-                                                                            newEnergizeLevel energizeCurrentLevel
+                                                                            nextCurrentLevel energizeCurrentLevel
                                                                     }
                                                                 )
                                                                 ud.currentLevels
