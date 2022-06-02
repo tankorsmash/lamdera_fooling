@@ -167,6 +167,21 @@ updateIdealists teams updater =
     { teams | idealists = updater teams.idealists }
 
 
+setUserClicks : Int -> UserData -> UserData
+setUserClicks newClicks userData =
+    { userData | userClicks = newClicks }
+
+
+setXp : Int -> UserData -> UserData
+setXp newXp userData =
+    { userData | xp = newXp }
+
+
+setCurrentLevels : CurrentLevels -> UserData -> UserData
+setCurrentLevels newCurrentLevels userData =
+    { userData | currentLevels = newCurrentLevels }
+
+
 setDiscuss : CurrentLevels -> CurrentLevel -> CurrentLevels
 setDiscuss currentLevels newDiscuss =
     { currentLevels | discuss = newDiscuss }
@@ -235,6 +250,35 @@ sendNewUserAfterClicksGained model sessionId clientId =
         ]
 
 
+updateWithNewClicksGained : Teams -> List User -> PersonalityType -> String -> Int -> ( Teams, List User )
+updateWithNewClicksGained teams users personalityType username clicksToAdd =
+    let
+        modifyClicks =
+            (+) clicksToAdd
+
+        --modify the Teams Clicks
+        newTeams =
+            updateTeamByPersonalityType
+                teams
+                personalityType
+                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+        --modify the users clicks
+        newUsers =
+            updateFullUserByUsername
+                users
+                (\ud ->
+                    ud
+                        |> setUserClicks (modifyClicks ud.userClicks)
+                        |> setXp (ud.xp + 1)
+                 -- TODO
+                 -- |> setCurrentLevels (restartCurrentLevel ud.currentLevels)
+                )
+                username
+    in
+    ( newTeams, newUsers )
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -299,43 +343,46 @@ updateFromFrontend sessionId clientId msg model =
 
         UserDiscussed ->
             let
+                withUserData : UserData -> ( Model, Cmd BackendMsg )
                 withUserData userData =
                     let
-                        clickBonus =
-                            basicBonuses.discuss.clickBonus
+                        clicksToAdd : Int
+                        clicksToAdd =
+                            basicBonuses.discuss.clickBonus (getCurrentLevelLevel userData.currentLevels.discuss)
 
-                        modifyClicks clicks =
-                            clicks + clickBonus (Level 1)
-
-                        newTeams =
-                            updateTeamByPersonalityType
-                                model.teams
-                                userData.personalityType
-                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                        newUsers =
-                            updateFullUserByUsername
-                                model.users
-                                (\ud ->
-                                    { ud
-                                        | userClicks = modifyClicks ud.userClicks
-                                        , xp = ud.xp + 1
-                                        , currentLevels =
-                                            mapCurrentLevels
-                                                .discuss
-                                                (\cls newDiscuss ->
-                                                    setDiscuss cls <|
-                                                        ClickPricing.currentLevelTimedRestarter newDiscuss model.lastTick basicBonuses.discuss
-                                                )
-                                                ud.currentLevels
-                                    }
+                        restartCurrentLevel : CurrentLevels -> CurrentLevels
+                        restartCurrentLevel currentLevels =
+                            mapCurrentLevels
+                                .discuss
+                                (\currentLevels_ newDiscussCurrentLevel ->
+                                    let
+                                        restartedDiscuss =
+                                            ClickPricing.currentLevelTimedRestarter
+                                                newDiscussCurrentLevel
+                                                model.lastTick
+                                                basicBonuses.discuss
+                                    in
+                                    setDiscuss currentLevels_ restartedDiscuss
                                 )
-                                userData.username
+                                currentLevels
 
+                        ( newTeams, newUsers ) =
+                            updateWithNewClicksGained model.teams model.users userData.personalityType userData.username clicksToAdd
+                                |> Tuple.mapSecond
+                                    (\users ->
+                                        updateFullUserByUsername
+                                            users
+                                            (\ud ->
+                                                setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
+                                            )
+                                            userData.username
+                                    )
+
+                        -- set the new teams and users
                         newModel : Model
                         newModel =
                             { model
-                                | totalClicks = modifyClicks model.totalClicks
+                                | totalClicks = model.totalClicks + clicksToAdd
                                 , teams = newTeams
                                 , users = newUsers
                             }
