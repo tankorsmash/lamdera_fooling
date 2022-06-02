@@ -2,7 +2,7 @@ module Backend exposing (..)
 
 import ClickPricing exposing (..)
 import Dict
-import Lamdera exposing (SessionId)
+import Lamdera exposing (ClientId, SessionId)
 import List.Extra
 import Process
 import Task
@@ -196,6 +196,45 @@ accumulateTeamPoints team =
         team
 
 
+{-| broadcasts all the data required after a user gains a click of some sort
+
+NOTE: doesn't update the user-specific stuff like sending the NewUser etc
+
+-}
+broadcastNewGlobalClicksAndSummaries : Model -> Cmd BackendMsg
+broadcastNewGlobalClicksAndSummaries model =
+    Cmd.batch
+        [ Lamdera.broadcast (NewTotalClicks model.totalClicks)
+        , Lamdera.broadcast (NewTeams model.teams)
+        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks model.users))
+        ]
+
+
+{-| assumes a full user, since AnonymousUser and PreppingUsers can't gain clicks
+-}
+sendNewUserAfterClicksGained : Model -> SessionId -> ClientId -> Cmd BackendMsg
+sendNewUserAfterClicksGained model sessionId clientId =
+    Cmd.batch
+        [ getUserBySessionId model.users sessionId
+            |> Maybe.map
+                (\user ->
+                    case user of
+                        AnonymousUser _ ->
+                            Cmd.none
+
+                        PreppingUser _ _ ->
+                            Cmd.none
+
+                        FullUser userData ->
+                            Cmd.batch
+                                [ Lamdera.sendToFrontend clientId <| NewUser user
+                                , Lamdera.sendToFrontend clientId (NewClicksByUser <| userData.userClicks)
+                                ]
+                )
+            |> Maybe.withDefault Cmd.none
+        ]
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -248,13 +287,8 @@ updateFromFrontend sessionId clientId msg model =
                     in
                     ( newModel
                     , Cmd.batch
-                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                        , Lamdera.broadcast (NewTeams newModel.teams)
-                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                        , getUserBySessionId newModel.users sessionId
-                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                            |> Maybe.withDefault Cmd.none
+                        [ broadcastNewGlobalClicksAndSummaries newModel
+                        , sendNewUserAfterClicksGained newModel sessionId clientId
                         ]
                     )
             in
@@ -308,13 +342,8 @@ updateFromFrontend sessionId clientId msg model =
                     in
                     ( newModel
                     , Cmd.batch
-                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                        , Lamdera.broadcast (NewTeams newModel.teams)
-                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                        , getUserBySessionId newModel.users sessionId
-                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                            |> Maybe.withDefault Cmd.none
+                        [ broadcastNewGlobalClicksAndSummaries newModel
+                        , sendNewUserAfterClicksGained newModel sessionId clientId
                         ]
                     )
             in
@@ -368,13 +397,8 @@ updateFromFrontend sessionId clientId msg model =
                     in
                     ( newModel
                     , Cmd.batch
-                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                        , Lamdera.broadcast (NewTeams newModel.teams)
-                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                        , getUserBySessionId newModel.users sessionId
-                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                            |> Maybe.withDefault Cmd.none
+                        [ broadcastNewGlobalClicksAndSummaries newModel
+                        , sendNewUserAfterClicksGained newModel sessionId clientId
                         ]
                     )
             in
@@ -481,12 +505,8 @@ updateFromFrontend sessionId clientId msg model =
                     in
                     ( newModel
                     , Cmd.batch
-                        [ maybeNewUser
-                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                            |> Maybe.withDefault Cmd.none
-                        , Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                        , Lamdera.broadcast (NewTeams newModel.teams)
-                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                        [ broadcastNewGlobalClicksAndSummaries newModel
+                        , sendNewUserAfterClicksGained newModel sessionId clientId
                         ]
                     )
             in
@@ -563,10 +583,8 @@ updateFromFrontend sessionId clientId msg model =
                         in
                         ( newModel
                         , Cmd.batch
-                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewTeams newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifySelfClicks userData.userClicks)
+                            [ broadcastNewGlobalClicksAndSummaries newModel
+                            , sendNewUserAfterClicksGained newModel sessionId clientId
                             ]
                         )
                     )
