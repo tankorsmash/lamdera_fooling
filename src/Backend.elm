@@ -750,8 +750,9 @@ updateFromFrontend sessionId clientId msg model =
                         case upgradeType of
                             Types.Discussion level ->
                                 let
+                                    upgradeCost : Int
                                     upgradeCost =
-                                        ClickPricing.xpCost ClickPricing.basicBonuses.discuss level
+                                        ClickPricing.basicBonuses.discuss.xpCost level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
@@ -864,14 +865,18 @@ updateFromFrontend sessionId clientId msg model =
 
                             Types.EnergizeCap level ->
                                 let
+                                    upgradeCost : Int
                                     upgradeCost =
-                                        Debug.todo "energizeCycleCap xp cap"
-
-                                    -- ClickPricing.cycleCapUpgradeCost ClickPricing.basicBonuses.energize level
-                                    --     |> Maybe.withDefault 1
+                                        basicBonuses.energize.cycleCapUpgradeCost level
                                 in
                                 if userData.xp >= upgradeCost then
                                     let
+                                        setEnergizeCycleCapToNextCurrentLevel currentLevels currentLevel =
+                                            { currentLevels
+                                                | energizeCycleCap =
+                                                    nextCurrentLevel currentLevel
+                                            }
+
                                         newUsers =
                                             updateFullUserBySessionId
                                                 model.users
@@ -882,12 +887,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         newCurrentLevels =
                                                             ClickPricing.mapCurrentLevels
                                                                 .energizeCycleCap
-                                                                (\currentLevels energizeCurrentLevel ->
-                                                                    { currentLevels
-                                                                        | energizeCycleCap =
-                                                                            nextCurrentLevel energizeCurrentLevel
-                                                                    }
-                                                                )
+                                                                setEnergizeCycleCapToNextCurrentLevel
                                                                 ud.currentLevels
                                                     in
                                                     { ud
