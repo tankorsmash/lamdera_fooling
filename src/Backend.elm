@@ -207,288 +207,292 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         UserGainedAClick ->
+            let
+                withUserData userData =
+                    let
+                        modifyClicks clicks =
+                            let
+                                numGroupMembers =
+                                    Types.getGroupNumGroupMembers model.teams userData
+                                        |> Maybe.withDefault 0
+
+                                extraClicks =
+                                    ClickPricing.groupMemberClickBonus numGroupMembers
+                            in
+                            clicks + 1 + extraClicks
+
+                        newTeams =
+                            updateTeamByPersonalityType
+                                model.teams
+                                userData.personalityType
+                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+                        newUsers =
+                            updateFullUserByUsername
+                                model.users
+                                (\ud ->
+                                    { ud
+                                        | userClicks = modifyClicks ud.userClicks
+                                        , xp = ud.xp + 1
+                                    }
+                                )
+                                userData.username
+
+                        newModel : Model
+                        newModel =
+                            { model
+                                | totalClicks = modifyClicks model.totalClicks
+                                , teams = newTeams
+                                , users = newUsers
+                            }
+                    in
+                    ( newModel
+                    , Cmd.batch
+                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                        , Lamdera.broadcast (NewTeams newModel.teams)
+                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                        , getUserBySessionId newModel.users sessionId
+                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        ]
+                    )
+            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            modifyClicks clicks =
-                                let
-                                    numGroupMembers =
-                                        Types.getGroupNumGroupMembers model.teams userData
-                                            |> Maybe.withDefault 0
-
-                                    extraClicks =
-                                        ClickPricing.groupMemberClickBonus numGroupMembers
-                                in
-                                clicks + 1 + extraClicks
-
-                            newTeams =
-                                updateTeamByPersonalityType
-                                    model.teams
-                                    userData.personalityType
-                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                            newUsers =
-                                updateFullUserByUsername
-                                    model.users
-                                    (\ud ->
-                                        { ud
-                                            | userClicks = modifyClicks ud.userClicks
-                                            , xp = ud.xp + 1
-                                        }
-                                    )
-                                    userData.username
-
-                            newModel : Model
-                            newModel =
-                                { model
-                                    | totalClicks = modifyClicks model.totalClicks
-                                    , teams = newTeams
-                                    , users = newUsers
-                                }
-                        in
-                        ( newModel
-                        , Cmd.batch
-                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewTeams newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                            , getUserBySessionId newModel.users sessionId
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                                |> Maybe.withDefault Cmd.none
-                            ]
-                        )
-                    )
+                |> Maybe.map withUserData
                 |> Maybe.withDefault noop
 
         UserDiscussed ->
+            let
+                withUserData userData =
+                    let
+                        clickBonus =
+                            basicBonuses.discuss.clickBonus
+
+                        modifyClicks clicks =
+                            clicks + clickBonus (Level 1)
+
+                        newTeams =
+                            updateTeamByPersonalityType
+                                model.teams
+                                userData.personalityType
+                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+                        newUsers =
+                            updateFullUserByUsername
+                                model.users
+                                (\ud ->
+                                    { ud
+                                        | userClicks = modifyClicks ud.userClicks
+                                        , xp = ud.xp + 1
+                                        , currentLevels =
+                                            mapCurrentLevels
+                                                .discuss
+                                                (\cls newDiscuss ->
+                                                    setDiscuss cls <|
+                                                        ClickPricing.currentLevelTimedRestarter newDiscuss model.lastTick basicBonuses.discuss
+                                                )
+                                                ud.currentLevels
+                                    }
+                                )
+                                userData.username
+
+                        newModel : Model
+                        newModel =
+                            { model
+                                | totalClicks = modifyClicks model.totalClicks
+                                , teams = newTeams
+                                , users = newUsers
+                            }
+                    in
+                    ( newModel
+                    , Cmd.batch
+                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                        , Lamdera.broadcast (NewTeams newModel.teams)
+                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                        , getUserBySessionId newModel.users sessionId
+                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        ]
+                    )
+            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            clickBonus =
-                                basicBonuses.discuss.clickBonus
-
-                            modifyClicks clicks =
-                                clicks + clickBonus (Level 1)
-
-                            newTeams =
-                                updateTeamByPersonalityType
-                                    model.teams
-                                    userData.personalityType
-                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                            newUsers =
-                                updateFullUserByUsername
-                                    model.users
-                                    (\ud ->
-                                        { ud
-                                            | userClicks = modifyClicks ud.userClicks
-                                            , xp = ud.xp + 1
-                                            , currentLevels =
-                                                mapCurrentLevels
-                                                    .discuss
-                                                    (\cls newDiscuss ->
-                                                        setDiscuss cls <|
-                                                            ClickPricing.currentLevelTimedRestarter newDiscuss model.lastTick basicBonuses.discuss
-                                                    )
-                                                    ud.currentLevels
-                                        }
-                                    )
-                                    userData.username
-
-                            newModel : Model
-                            newModel =
-                                { model
-                                    | totalClicks = modifyClicks model.totalClicks
-                                    , teams = newTeams
-                                    , users = newUsers
-                                }
-                        in
-                        ( newModel
-                        , Cmd.batch
-                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewTeams newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                            , getUserBySessionId newModel.users sessionId
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                                |> Maybe.withDefault Cmd.none
-                            ]
-                        )
-                    )
+                |> Maybe.map withUserData
                 |> Maybe.withDefault noop
 
         UserArgued ->
+            let
+                withUserData userData =
+                    let
+                        modifyClicks clicks =
+                            clicks + basicBonuses.argue.clickBonus (Level 1)
+
+                        newTeams =
+                            updateTeamByPersonalityType
+                                model.teams
+                                userData.personalityType
+                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+                        restartArgue : CurrentLevel -> CurrentLevel
+                        restartArgue currentLevel =
+                            ClickPricing.currentLevelTimedRestarter currentLevel model.lastTick basicBonuses.argue
+
+                        newUsers =
+                            updateFullUserByUsername
+                                model.users
+                                (\ud ->
+                                    { ud
+                                        | userClicks = modifyClicks ud.userClicks
+                                        , xp = ud.xp + 1
+                                        , currentLevels =
+                                            mapCurrentLevels
+                                                .argue
+                                                (\cls newArgue ->
+                                                    setArgue cls (restartArgue newArgue)
+                                                )
+                                                ud.currentLevels
+                                    }
+                                )
+                                userData.username
+
+                        newModel : Model
+                        newModel =
+                            { model
+                                | totalClicks = modifyClicks model.totalClicks
+                                , teams = newTeams
+                                , users = newUsers
+                            }
+                    in
+                    ( newModel
+                    , Cmd.batch
+                        [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                        , Lamdera.broadcast (NewTeams newModel.teams)
+                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                        , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
+                        , getUserBySessionId newModel.users sessionId
+                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        ]
+                    )
+            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            modifyClicks clicks =
-                                clicks + basicBonuses.argue.clickBonus (Level 1)
-
-                            newTeams =
-                                updateTeamByPersonalityType
-                                    model.teams
-                                    userData.personalityType
-                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                            restartArgue : CurrentLevel -> CurrentLevel
-                            restartArgue currentLevel =
-                                ClickPricing.currentLevelTimedRestarter currentLevel model.lastTick basicBonuses.argue
-
-                            newUsers =
-                                updateFullUserByUsername
-                                    model.users
-                                    (\ud ->
-                                        { ud
-                                            | userClicks = modifyClicks ud.userClicks
-                                            , xp = ud.xp + 1
-                                            , currentLevels =
-                                                mapCurrentLevels
-                                                    .argue
-                                                    (\cls newArgue ->
-                                                        setArgue cls (restartArgue newArgue)
-                                                    )
-                                                    ud.currentLevels
-                                        }
-                                    )
-                                    userData.username
-
-                            newModel : Model
-                            newModel =
-                                { model
-                                    | totalClicks = modifyClicks model.totalClicks
-                                    , teams = newTeams
-                                    , users = newUsers
-                                }
-                        in
-                        ( newModel
-                        , Cmd.batch
-                            [ Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewTeams newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                            , Lamdera.sendToFrontend clientId (NewClicksByUser <| modifyClicks userData.userClicks)
-                            , getUserBySessionId newModel.users sessionId
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                                |> Maybe.withDefault Cmd.none
-                            ]
-                        )
-                    )
+                |> Maybe.map withUserData
                 |> Maybe.withDefault noop
 
         UserEnergized ->
+            let
+                withUserData userData =
+                    let
+                        currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
+                        currentLevelUpdater currentLevels energizeCurrentLevel =
+                            let
+                                energizeCapCurrentLevel =
+                                    userData.currentLevels.energizeCycleCap
+
+                                energizeCycleCap =
+                                    basicBonuses.energize.cycleCap
+                                        (ClickPricing.getCurrentLevelLevel energizeCapCurrentLevel)
+
+                                energizeDuration =
+                                    basicBonuses.energize.durationMs <|
+                                        ClickPricing.getCurrentLevelLevel energizeCurrentLevel
+
+                                addClickBonusToAvailableCycles =
+                                    \availableCycles ->
+                                        availableCycles
+                                            * basicBonuses.energize.clickBonus
+                                                -- FIXME? should this use the energizeCurrentLevel inside the tuple that its currently ignoring?
+                                                (ClickPricing.getCurrentLevelLevel energizeCurrentLevel)
+
+                                ( newCurrentLevel, gained ) =
+                                    case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
+                                        NotStarted ->
+                                            -- start the ticker
+                                            ( ClickPricing.currentLevelTimedStarter
+                                                energizeCurrentLevel
+                                                model.lastTick
+                                                basicBonuses.argue
+                                            , Nothing
+                                            )
+
+                                        _ ->
+                                            -- otherwise collect it
+                                            ClickPricing.collectCurrentLevel
+                                                energizeCurrentLevel
+                                                model.lastTick
+                                                energizeDuration
+                                                energizeCycleCap
+                                                |> Tuple.mapSecond (Maybe.map addClickBonusToAvailableCycles)
+                            in
+                            ( setEnergize currentLevels newCurrentLevel, gained )
+
+                        -- diffs between the new user's userdata and original userData
+                        modifyClicks existingClicks =
+                            let
+                                newClicks =
+                                    (maybeNewUser
+                                        |> Maybe.andThen getUserData
+                                        |> Maybe.map .userClicks
+                                        |> Maybe.withDefault userData.userClicks
+                                    )
+                                        - userData.userClicks
+                            in
+                            existingClicks
+                                + newClicks
+
+                        newTeams =
+                            updateTeamByPersonalityType
+                                model.teams
+                                userData.personalityType
+                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+                        newUsers =
+                            updateFullUserByUsername
+                                model.users
+                                (\ud ->
+                                    let
+                                        ( newCurrentLevels, maybeClicksGained ) =
+                                            currentLevelUpdater
+                                                ud.currentLevels
+                                                ud.currentLevels.energize
+                                    in
+                                    { ud
+                                        | currentLevels = newCurrentLevels
+                                        , userClicks = Maybe.withDefault 0 maybeClicksGained + ud.userClicks
+                                        , xp = ud.xp + 1
+                                    }
+                                )
+                                userData.username
+
+                        newModel : Model
+                        newModel =
+                            { model
+                                | totalClicks = modifyClicks model.totalClicks
+                                , users = newUsers
+                                , teams = newTeams
+                            }
+
+                        maybeNewUser =
+                            getUserBySessionId newUsers sessionId
+                    in
+                    ( newModel
+                    , Cmd.batch
+                        [ maybeNewUser
+                            |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        , Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
+                        , Lamdera.broadcast (NewTeams newModel.teams)
+                        , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
+                        ]
+                    )
+            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
-                            currentLevelUpdater currentLevels energizeCurrentLevel =
-                                let
-                                    energizeCapCurrentLevel =
-                                        userData.currentLevels.energizeCycleCap
-
-                                    energizeCycleCap =
-                                        basicBonuses.energize.cycleCap
-                                            (ClickPricing.getCurrentLevelLevel energizeCapCurrentLevel)
-
-                                    energizeDuration =
-                                        basicBonuses.energize.durationMs <|
-                                            ClickPricing.getCurrentLevelLevel energizeCurrentLevel
-
-                                    addClickBonusToAvailableCycles =
-                                        \availableCycles ->
-                                            availableCycles
-                                                * basicBonuses.energize.clickBonus
-                                                    -- FIXME? should this use the energizeCurrentLevel inside the tuple that its currently ignoring?
-                                                    (ClickPricing.getCurrentLevelLevel energizeCurrentLevel)
-
-                                    ( newCurrentLevel, gained ) =
-                                        case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
-                                            NotStarted ->
-                                                -- start the ticker
-                                                ( ClickPricing.currentLevelTimedStarter
-                                                    energizeCurrentLevel
-                                                    model.lastTick
-                                                    basicBonuses.argue
-                                                , Nothing
-                                                )
-
-                                            _ ->
-                                                -- otherwise collect it
-                                                ClickPricing.collectCurrentLevel
-                                                    energizeCurrentLevel
-                                                    model.lastTick
-                                                    energizeDuration
-                                                    energizeCycleCap
-                                                    |> Tuple.mapSecond (Maybe.map addClickBonusToAvailableCycles)
-                                in
-                                ( setEnergize currentLevels newCurrentLevel, gained )
-
-                            -- diffs between the new user's userdata and original userData
-                            modifyClicks existingClicks =
-                                let
-                                    newClicks =
-                                        (maybeNewUser
-                                            |> Maybe.andThen getUserData
-                                            |> Maybe.map .userClicks
-                                            |> Maybe.withDefault userData.userClicks
-                                        )
-                                            - userData.userClicks
-                                in
-                                existingClicks
-                                    + newClicks
-
-                            newTeams =
-                                updateTeamByPersonalityType
-                                    model.teams
-                                    userData.personalityType
-                                    (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                            newUsers =
-                                updateFullUserByUsername
-                                    model.users
-                                    (\ud ->
-                                        let
-                                            ( newCurrentLevels, maybeClicksGained ) =
-                                                currentLevelUpdater
-                                                    ud.currentLevels
-                                                    ud.currentLevels.energize
-                                        in
-                                        { ud
-                                            | currentLevels = newCurrentLevels
-                                            , userClicks = Maybe.withDefault 0 maybeClicksGained + ud.userClicks
-                                            , xp = ud.xp + 1
-                                        }
-                                    )
-                                    userData.username
-
-                            newModel : Model
-                            newModel =
-                                { model
-                                    | totalClicks = modifyClicks model.totalClicks
-                                    , users = newUsers
-                                    , teams = newTeams
-                                }
-
-                            maybeNewUser =
-                                getUserBySessionId newUsers sessionId
-                        in
-                        ( newModel
-                        , Cmd.batch
-                            [ maybeNewUser
-                                |> Maybe.map (Lamdera.sendToFrontend clientId << NewUser)
-                                |> Maybe.withDefault Cmd.none
-                            , Lamdera.broadcast (NewTotalClicks newModel.totalClicks)
-                            , Lamdera.broadcast (NewTeams newModel.teams)
-                            , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
-                            ]
-                        )
-                    )
+                |> Maybe.map withUserData
                 |> Maybe.withDefault noop
 
         UserWantsToSpend ->
