@@ -2,10 +2,12 @@ module Backend exposing (..)
 
 import ClickPricing exposing (..)
 import Dict
+import Expect
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
 import Process
 import Task
+import Test exposing (..)
 import Time
 import Types exposing (..)
 
@@ -1250,3 +1252,27 @@ updateFullUserBySessionId users sessionId updater =
                     |> Maybe.map FullUser
                     |> Maybe.withDefault oldUser
             )
+
+
+suite : Test.Test
+suite =
+    let
+        testUsername =
+            "Testy McTesterson Jr."
+
+        testFullUser =
+            FullUser <| createUserData "TEST_SESSION_ID" testUsername Realistic
+
+        testUsers =
+            [ testFullUser ]
+    in
+    describe "Test Suites"
+        [ test "getting user by username succeeds" <|
+            \_ ->
+                Expect.notEqual Nothing <|
+                    getUserByUsername testUsers testUsername
+        , test "getting user by username fails if its not a real username" <|
+            \_ ->
+                Expect.equal Nothing <|
+                    getUserByUsername testUsers "ASDADSA ASD ADASAD AS ASD ASD"
+        ]
