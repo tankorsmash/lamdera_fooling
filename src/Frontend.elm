@@ -119,91 +119,76 @@ update msg model =
             ( model, Lamdera.sendToBackend UserGainedAClick )
 
         Discuss ->
-            let
-                maybeCurrentLevels =
-                    model.user
-                        |> getUserData
-                        |> Maybe.map .currentLevels
-            in
-            case maybeCurrentLevels of
-                Just currentLevels ->
-                    let
-                        prog =
-                            ClickPricing.getCurrentLevelProgress currentLevels.discuss model.lastTick
-                    in
-                    if prog == Completed || prog == NotStarted then
-                        ( model, Lamdera.sendToBackend UserDiscussed )
+            model.user
+                |> getUserData
+                |> Maybe.map .currentLevels
+                |> Maybe.map
+                    (\currentLevels ->
+                        let
+                            prog =
+                                ClickPricing.getCurrentLevelProgress currentLevels.discuss model.lastTick
+                        in
+                        if prog == Completed || prog == NotStarted then
+                            ( model, Lamdera.sendToBackend UserDiscussed )
 
-                    else
-                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                        Debug.log "unclickable " noop
-
-                Nothing ->
-                    -- TODO this should never happen, since the user is only able to do this if they're logged in
-                    Debug.log "impossible" noop
+                        else
+                            -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                            noop
+                    )
+                |> Maybe.withDefault noop
 
         Argue ->
-            let
-                maybeCurrentLevels =
-                    model.user
-                        |> getUserData
-                        |> Maybe.map .currentLevels
-            in
-            case maybeCurrentLevels of
-                Just currentLevels ->
-                    let
-                        prog =
-                            Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
-                    in
-                    if prog == Completed || prog == NotStarted then
-                        ( model, Lamdera.sendToBackend UserArgued )
+            model.user
+                |> getUserData
+                |> Maybe.map .currentLevels
+                |> Maybe.map
+                    (\currentLevels ->
+                        let
+                            prog =
+                                Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
+                        in
+                        if prog == Completed || prog == NotStarted then
+                            ( model, Lamdera.sendToBackend UserArgued )
 
-                    else
-                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                        Debug.log "unclickable " noop
-
-                Nothing ->
-                    -- TODO this should never happen, since the user is only able to do this if they're logged in
-                    Debug.log "impossible" noop
+                        else
+                            -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                            Debug.log "unclickable " noop
+                    )
+                |> Maybe.withDefault noop
 
         CollectEnergize ->
-            let
-                maybeCurrentLevels =
-                    model.user
-                        |> getUserData
-                        |> Maybe.map .currentLevels
-            in
-            case maybeCurrentLevels of
-                Just currentLevels ->
-                    let
-                        energizeLevel =
-                            currentLevels.energize |> getCurrentLevelLevel
+            model.user
+                |> getUserData
+                |> Maybe.map .currentLevels
+                |> Maybe.map
+                    (\currentLevels ->
+                        let
+                            energizeLevel =
+                                currentLevels.energize |> getCurrentLevelLevel
 
-                        progress : Progress
-                        progress =
-                            ClickPricing.getCurrentLevelCycleProgress
-                                currentLevels.energize
-                                model.lastTick
-                                (basicBonuses.energize.durationMs energizeLevel)
-
-                        prog =
-                            Debug.log "prog" <|
-                                (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                            progress : Progress
+                            progress =
+                                ClickPricing.getCurrentLevelCycleProgress
+                                    currentLevels.energize
                                     model.lastTick
                                     (basicBonuses.energize.durationMs energizeLevel)
-                                    |> Maybe.withDefault -123
-                                )
-                    in
-                    if prog > 0 || progress == NotStarted then
-                        ( model, Lamdera.sendToBackend UserEnergized )
 
-                    else
-                        -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                        Debug.log "unclickable " noop
+                            prog =
+                                Debug.log "prog" <|
+                                    (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                                        model.lastTick
+                                        (basicBonuses.energize.durationMs energizeLevel)
+                                        |> Maybe.withDefault -123
+                                    )
+                        in
+                        if prog > 0 || progress == NotStarted then
+                            ( model, Lamdera.sendToBackend UserEnergized )
 
-                Nothing ->
-                    -- TODO this should never happen, since the user is only able to do this if they're logged in
-                    Debug.log "impossible" noop
+                        else
+                            -- TODO hopefully dont need to make a ui notification for the button being unclickable
+                            Debug.log "unclickable " noop
+                    )
+                |> Maybe.withDefault noop
 
         SendWantsToSpendToBackend ->
             ( model, Lamdera.sendToBackend UserWantsToSpend )
