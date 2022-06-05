@@ -281,6 +281,53 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
+userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
+    let
+        modifyClicks clicks =
+            let
+                numGroupMembers =
+                    Types.getGroupNumGroupMembers teams userData
+                        |> Maybe.withDefault 0
+
+                extraClicks =
+                    ClickPricing.groupMemberClickBonus numGroupMembers
+            in
+            clicks + 1 + extraClicks
+
+        newTeams =
+            updateTeamByPersonalityType
+                teams
+                userData.personalityType
+                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
+
+        newUsers =
+            updateFullUserByUsername
+                users
+                (\ud ->
+                    { ud
+                        | userClicks = modifyClicks ud.userClicks
+                        , xp = ud.xp + 1
+                    }
+                )
+                userData.username
+
+        newModel =
+            { totalClicks = modifyClicks totalClicks
+            , teams = newTeams
+            , users = newUsers
+            }
+    in
+    newModel
+
+
+
+-- , Cmd.batch
+--     [ broadcastNewGlobalClicksAndSummaries newModel
+--     , sendNewUserAfterClicksGained newModel sessionId clientId
+--     ]
+-- )
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -292,55 +339,26 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         UserGainedAClick ->
-            let
-                withUserData userData =
-                    let
-                        modifyClicks clicks =
-                            let
-                                numGroupMembers =
-                                    Types.getGroupNumGroupMembers model.teams userData
-                                        |> Maybe.withDefault 0
-
-                                extraClicks =
-                                    ClickPricing.groupMemberClickBonus numGroupMembers
-                            in
-                            clicks + 1 + extraClicks
-
-                        newTeams =
-                            updateTeamByPersonalityType
-                                model.teams
-                                userData.personalityType
-                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                        newUsers =
-                            updateFullUserByUsername
-                                model.users
-                                (\ud ->
-                                    { ud
-                                        | userClicks = modifyClicks ud.userClicks
-                                        , xp = ud.xp + 1
-                                    }
-                                )
-                                userData.username
-
-                        newModel : Model
-                        newModel =
-                            { model
-                                | totalClicks = modifyClicks model.totalClicks
-                                , teams = newTeams
-                                , users = newUsers
-                            }
-                    in
-                    ( newModel
-                    , Cmd.batch
-                        [ broadcastNewGlobalClicksAndSummaries newModel
-                        , sendNewUserAfterClicksGained newModel sessionId clientId
-                        ]
-                    )
-            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map withUserData
+                |> Maybe.map (userGainedAClick sessionId clientId model)
+                |> Maybe.map
+                    (\{ teams, totalClicks, users } ->
+                        let
+                            newModel =
+                                { model
+                                    | teams = teams
+                                    , totalClicks = totalClicks
+                                    , users = users
+                                }
+                        in
+                        ( newModel
+                        , Cmd.batch
+                            [ broadcastNewGlobalClicksAndSummaries newModel
+                            , sendNewUserAfterClicksGained newModel sessionId clientId
+                            ]
+                        )
+                    )
                 |> Maybe.withDefault noop
 
         UserDiscussed ->
