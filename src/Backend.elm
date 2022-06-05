@@ -284,7 +284,8 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
 userGainedAClick : SessionId -> ClientId -> { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
 userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
     let
-        modifyClicks clicks =
+        clicksToAdd : Int
+        clicksToAdd =
             let
                 numGroupMembers =
                     Types.getGroupNumGroupMembers teams userData
@@ -293,14 +294,21 @@ userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
                 extraClicks =
                     ClickPricing.groupMemberClickBonus numGroupMembers
             in
-            clicks + 1 + extraClicks
+            1 + extraClicks
 
+
+        modifyClicks : Int -> Int
+        modifyClicks clicks =
+            clicks + clicksToAdd
+
+        newTeams : Teams
         newTeams =
             updateTeamByPersonalityType
                 teams
                 userData.personalityType
                 (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
+        newUsers : List User
         newUsers =
             updateFullUserByUsername
                 users
@@ -311,14 +319,11 @@ userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
                     }
                 )
                 userData.username
-
-        newModel =
-            { totalClicks = modifyClicks totalClicks
-            , teams = newTeams
-            , users = newUsers
-            }
     in
-    newModel
+    { totalClicks = modifyClicks totalClicks
+    , teams = newTeams
+    , users = newUsers
+    }
 
 
 
