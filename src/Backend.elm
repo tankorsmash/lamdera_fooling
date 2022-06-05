@@ -281,6 +281,7 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
+userGainedAClick : SessionId -> ClientId -> { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
 userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
     let
         modifyClicks clicks =
