@@ -281,8 +281,8 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
-userGainedAClick : SessionId -> ClientId -> { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
-userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
+userGainedAClick : { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
+userGainedAClick { teams, users, totalClicks } userData =
     let
         clicksToAdd : Int
         clicksToAdd =
@@ -296,11 +296,12 @@ userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
             in
             1 + extraClicks
 
-
+        -- modifies whichever clicks get added
         modifyClicks : Int -> Int
         modifyClicks clicks =
             clicks + clicksToAdd
 
+        --update the teams clicks
         newTeams : Teams
         newTeams =
             updateTeamByPersonalityType
@@ -308,6 +309,7 @@ userGainedAClick sessionId clientId { teams, users, totalClicks } userData =
                 userData.personalityType
                 (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
 
+        -- register the clicks for the user gaining them
         newUsers : List User
         newUsers =
             updateFullUserByUsername
@@ -347,7 +349,7 @@ updateFromFrontend sessionId clientId msg model =
         UserGainedAClick ->
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map (userGainedAClick sessionId clientId model)
+                |> Maybe.map (userGainedAClick model)
                 |> Maybe.map
                     (\{ teams, totalClicks, users } ->
                         let
@@ -1284,11 +1286,17 @@ suite =
         testUsername =
             "Testy McTesterson Jr."
 
+        testUserData =
+            createUserData "TEST_SESSION_ID" testUsername Realistic
+
         testFullUser =
-            FullUser <| createUserData "TEST_SESSION_ID" testUsername Realistic
+            FullUser testUserData
 
         testUsers =
             [ testFullUser ]
+
+        testModel =
+            { initBackendModel | users = testUsers }
     in
     describe "Test Suites"
         [ test "getting user by username succeeds" <|
@@ -1299,4 +1307,13 @@ suite =
             \_ ->
                 Expect.equal Nothing <|
                     getUserByUsername testUsers "ASDADSA ASD ADASAD AS ASD ASD"
+        , describe "With Existing User"
+            [ test "user gains a click" <|
+                \_ ->
+                    let
+                        resultData =
+                            userGainedAClick testModel testUserData
+                    in
+                    Expect.equal 1 resultData.totalClicks
+            ]
         ]
