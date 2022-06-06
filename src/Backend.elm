@@ -281,21 +281,9 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
-userGainedAClick : { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
-userGainedAClick { teams, users, totalClicks } userData =
+registerUserGainedAClick : Int -> { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
+registerUserGainedAClick clicksToAdd { teams, users, totalClicks } userData =
     let
-        clicksToAdd : Int
-        clicksToAdd =
-            let
-                numGroupMembers =
-                    Types.getGroupNumGroupMembers teams userData
-                        |> Maybe.withDefault 0
-
-                extraClicks =
-                    ClickPricing.groupMemberClickBonus numGroupMembers
-            in
-            1 + extraClicks
-
         -- modifies whichever clicks get added
         modifyClicks : Int -> Int
         modifyClicks clicks =
@@ -328,12 +316,22 @@ userGainedAClick { teams, users, totalClicks } userData =
     }
 
 
+userGainedAClick : { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
+userGainedAClick ({ teams, users, totalClicks } as gameData) userData =
+    let
+        clicksToAdd : Int
+        clicksToAdd =
+            let
+                numGroupMembers =
+                    Types.getGroupNumGroupMembers teams userData
+                        |> Maybe.withDefault 0
 
--- , Cmd.batch
---     [ broadcastNewGlobalClicksAndSummaries newModel
---     , sendNewUserAfterClicksGained newModel sessionId clientId
---     ]
--- )
+                extraClicks =
+                    ClickPricing.groupMemberClickBonus numGroupMembers
+            in
+            1 + extraClicks
+    in
+    registerUserGainedAClick clicksToAdd gameData userData
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -1315,5 +1313,13 @@ suite =
                             userGainedAClick testModel testUserData
                     in
                     Expect.equal 1 resultData.totalClicks
+
+            -- , test "user gains a tons of clicks but runs into the click limit" <|
+            --     \_ ->
+            --         let
+            --             resultData =
+            --                 userGainedAClick testModel testUserData
+            --         in
+            --         Expect.equal 1 resultData.totalClicks
             ]
         ]
