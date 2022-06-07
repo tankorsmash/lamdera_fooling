@@ -281,8 +281,8 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
-registerUserGainedAClick : Int -> { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
-registerUserGainedAClick clicksToAdd { teams, users, totalClicks } userData =
+registerUserGainedAClick : Int -> UpdateData a -> UserData -> UpdateData a
+registerUserGainedAClick clicksToAdd ({ teams, users, totalClicks } as updateData) userData =
     let
         -- modifies whichever clicks get added
         modifyClicks : Int -> Int
@@ -310,13 +310,18 @@ registerUserGainedAClick clicksToAdd { teams, users, totalClicks } userData =
                 )
                 userData.username
     in
-    { totalClicks = modifyClicks totalClicks
-    , teams = newTeams
-    , users = newUsers
+    { updateData
+        | totalClicks = modifyClicks totalClicks
+        , teams = newTeams
+        , users = newUsers
     }
 
 
-userGainedAClick : { a | teams : Teams, users : List User, totalClicks : Int } -> UserData -> { teams : Teams, users : List User, totalClicks : Int }
+type alias UpdateData a =
+    { a | teams : Teams, users : List User, totalClicks : Int }
+
+
+userGainedAClick : UpdateData a -> UserData -> UpdateData a
 userGainedAClick ({ teams, users, totalClicks } as gameData) userData =
     let
         clicksToAdd : Int
@@ -349,15 +354,7 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.andThen getUserData
                 |> Maybe.map (userGainedAClick model)
                 |> Maybe.map
-                    (\{ teams, totalClicks, users } ->
-                        let
-                            newModel =
-                                { model
-                                    | teams = teams
-                                    , totalClicks = totalClicks
-                                    , users = users
-                                }
-                        in
+                    (\newModel ->
                         ( newModel
                         , Cmd.batch
                             [ broadcastNewGlobalClicksAndSummaries newModel
