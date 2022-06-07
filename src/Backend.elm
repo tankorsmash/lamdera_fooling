@@ -339,6 +339,52 @@ userGainedAClick ({ teams, users, totalClicks } as gameData) userData =
     registerUserGainedAClick clicksToAdd gameData userData
 
 
+userDiscussed model userData =
+    let
+        clicksToAdd : Int
+        clicksToAdd =
+            basicBonuses.discuss.clickBonus (getCurrentLevelLevel userData.currentLevels.discuss)
+
+        restartCurrentLevel : CurrentLevels -> CurrentLevels
+        restartCurrentLevel currentLevels =
+            mapCurrentLevels
+                .discuss
+                (\currentLevels_ newDiscussCurrentLevel ->
+                    let
+                        restartedDiscuss =
+                            ClickPricing.currentLevelTimedRestarter
+                                newDiscussCurrentLevel
+                                model.lastTick
+                                basicBonuses.discuss
+                    in
+                    setDiscuss currentLevels_ restartedDiscuss
+                )
+                currentLevels
+
+        ( newTeams, newUsers ) =
+            updateWithNewClicksGained model.teams model.users userData.personalityType userData.username clicksToAdd
+                |> Tuple.mapSecond
+                    (\users ->
+                        updateFullUserByUsername
+                            users
+                            (\ud ->
+                                setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
+                            )
+                            userData.username
+                    )
+
+        -- set the new teams and users
+        newModel : Model
+        newModel =
+            { model
+                | totalClicks = model.totalClicks + clicksToAdd
+                , teams = newTeams
+                , users = newUsers
+            }
+    in
+    newModel
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -365,61 +411,18 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserDiscussed ->
-            let
-                withUserData : UserData -> ( Model, Cmd BackendMsg )
-                withUserData userData =
-                    let
-                        clicksToAdd : Int
-                        clicksToAdd =
-                            basicBonuses.discuss.clickBonus (getCurrentLevelLevel userData.currentLevels.discuss)
-
-                        restartCurrentLevel : CurrentLevels -> CurrentLevels
-                        restartCurrentLevel currentLevels =
-                            mapCurrentLevels
-                                .discuss
-                                (\currentLevels_ newDiscussCurrentLevel ->
-                                    let
-                                        restartedDiscuss =
-                                            ClickPricing.currentLevelTimedRestarter
-                                                newDiscussCurrentLevel
-                                                model.lastTick
-                                                basicBonuses.discuss
-                                    in
-                                    setDiscuss currentLevels_ restartedDiscuss
-                                )
-                                currentLevels
-
-                        ( newTeams, newUsers ) =
-                            updateWithNewClicksGained model.teams model.users userData.personalityType userData.username clicksToAdd
-                                |> Tuple.mapSecond
-                                    (\users ->
-                                        updateFullUserByUsername
-                                            users
-                                            (\ud ->
-                                                setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
-                                            )
-                                            userData.username
-                                    )
-
-                        -- set the new teams and users
-                        newModel : Model
-                        newModel =
-                            { model
-                                | totalClicks = model.totalClicks + clicksToAdd
-                                , teams = newTeams
-                                , users = newUsers
-                            }
-                    in
-                    ( newModel
-                    , Cmd.batch
-                        [ broadcastNewGlobalClicksAndSummaries newModel
-                        , sendNewUserAfterClicksGained newModel sessionId clientId
-                        ]
-                    )
-            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map withUserData
+                |> Maybe.map (userDiscussed model)
+                |> Maybe.map
+                    (\newModel ->
+                        ( newModel
+                        , Cmd.batch
+                            [ broadcastNewGlobalClicksAndSummaries newModel
+                            , sendNewUserAfterClicksGained newModel sessionId clientId
+                            ]
+                        )
+                    )
                 |> Maybe.withDefault noop
 
         UserArgued ->
@@ -1310,6 +1313,13 @@ suite =
                             userGainedAClick testModel testUserData
                     in
                     Expect.equal 1 resultData.totalClicks
+            , test "user discusses" <|
+                \_ ->
+                    let
+                        resultData =
+                            userDiscussed testModel testUserData
+                    in
+                    Expect.equal 5 resultData.totalClicks
 
             -- , test "user gains a tons of clicks but runs into the click limit" <|
             --     \_ ->
