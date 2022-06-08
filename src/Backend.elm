@@ -361,28 +361,22 @@ userDiscussed model userData =
                 )
                 currentLevels
 
-        ( newTeams, newUsers ) =
-            updateWithNewClicksGained model.teams model.users userData.personalityType userData.username clicksToAdd
-                |> Tuple.mapSecond
-                    (\users ->
-                        updateFullUserByUsername
-                            users
-                            (\ud ->
-                                setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
-                            )
-                            userData.username
-                    )
-
-        -- set the new teams and users
-        newModel : Model
-        newModel =
-            { model
-                | totalClicks = model.totalClicks + clicksToAdd
-                , teams = newTeams
-                , users = newUsers
-            }
+        restartDiscuss : List User -> List User
+        restartDiscuss users =
+            updateFullUserByUsername
+                users
+                (\ud ->
+                    setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
+                )
+                userData.username
     in
-    newModel
+    registerUserGainedAClick clicksToAdd model userData
+        |> (\model_ -> mapUsers model_ restartDiscuss)
+
+
+mapUsers : Model -> (List User -> List User) -> Model
+mapUsers model func =
+    { model | users = func model.users }
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
