@@ -365,7 +365,9 @@ userDiscussed model userData =
     let
         clicksToAdd : Int
         clicksToAdd =
-            basicBonuses.discuss.clickBonus (getCurrentLevelLevel userData.currentLevels.discuss)
+            userData.currentLevels.discuss
+                |> getCurrentLevelLevel
+                |> basicBonuses.discuss.clickBonus
 
         restartCurrentLevel : CurrentLevels -> CurrentLevels
         restartCurrentLevel currentLevels =
@@ -394,6 +396,43 @@ userDiscussed model userData =
     in
     registerUserGainedAClick clicksToAdd model userData
         |> (\model_ -> mapUsers model_ restartDiscuss)
+
+userArgued model userData =
+    let
+        clicksToAdd : Int
+        clicksToAdd =
+            userData.currentLevels.argue
+                |> getCurrentLevelLevel
+                |> basicBonuses.argue.clickBonus
+
+        -- basicBonuses.argue.clickBonus (getCurrentLevelLevel userData.currentLevels.argue)
+        restartCurrentLevel : CurrentLevels -> CurrentLevels
+        restartCurrentLevel currentLevels =
+            mapCurrentLevels
+                .argue
+                (\currentLevels_ newArgueCurrentLevel ->
+                    let
+                        restartedArgue =
+                            ClickPricing.currentLevelTimedRestarter
+                                newArgueCurrentLevel
+                                model.lastTick
+                                basicBonuses.argue
+                    in
+                    setArgue currentLevels_ restartedArgue
+                )
+                currentLevels
+
+        restartArgue : List User -> List User
+        restartArgue users =
+            updateFullUserByUsername
+                users
+                (\ud ->
+                    setCurrentLevels (restartCurrentLevel ud.currentLevels) ud
+                )
+                userData.username
+    in
+    registerUserGainedAClick clicksToAdd model userData
+        |> (\model_ -> mapUsers model_ restartArgue)
 
 
 mapUsers : Model -> (List User -> List User) -> Model
@@ -442,58 +481,18 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserArgued ->
-            let
-                withUserData userData =
-                    let
-                        modifyClicks clicks =
-                            clicks + basicBonuses.argue.clickBonus (Level 1)
-
-                        newTeams =
-                            updateTeamByPersonalityType
-                                model.teams
-                                userData.personalityType
-                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                        restartArgue : CurrentLevel -> CurrentLevel
-                        restartArgue currentLevel =
-                            ClickPricing.currentLevelTimedRestarter currentLevel model.lastTick basicBonuses.argue
-
-                        newUsers =
-                            updateFullUserByUsername
-                                model.users
-                                (\ud ->
-                                    { ud
-                                        | userClicks = modifyClicks ud.userClicks
-                                        , xp = ud.xp + 1
-                                        , currentLevels =
-                                            mapCurrentLevels
-                                                .argue
-                                                (\cls newArgue ->
-                                                    setArgue cls (restartArgue newArgue)
-                                                )
-                                                ud.currentLevels
-                                    }
-                                )
-                                userData.username
-
-                        newModel : Model
-                        newModel =
-                            { model
-                                | totalClicks = modifyClicks model.totalClicks
-                                , teams = newTeams
-                                , users = newUsers
-                            }
-                    in
-                    ( newModel
-                    , Cmd.batch
-                        [ broadcastNewGlobalClicksAndSummaries newModel
-                        , sendNewUserAfterClicksGained newModel sessionId clientId
-                        ]
-                    )
-            in
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map withUserData
+                |> Maybe.map (userArgued model)
+                |> Maybe.map
+                    (\newModel ->
+                        ( newModel
+                        , Cmd.batch
+                            [ broadcastNewGlobalClicksAndSummaries newModel
+                            , sendNewUserAfterClicksGained newModel sessionId clientId
+                            ]
+                        )
+                    )
                 |> Maybe.withDefault noop
 
         UserEnergized ->
@@ -1336,28 +1335,49 @@ suite =
                             userDiscussed testModel testUserData
                     in
                     Expect.equal 5 resultData.totalClicks
-            , test "user gains a tons of clicks but runs into the click limit without adding more clicks" <|
-                \_ ->
-                    let
-                        alterUserData ud =
-                            { ud | userClicks = clickCap }
+            , describe "click caps" <|
+                let
+                    alterUserData ud =
+                        { ud | userClicks = clickCap }
 
-                        alteredUsers =
-                            updateFullUserByUsername
-                                testModel.users
-                                alterUserData
-                                testUserData.username
+                    alteredUsers =
+                        updateFullUserByUsername
+                            testModel.users
+                            alterUserData
+                            testUserData.username
 
-                        clickCap =
-                            testUserData.currentLevels.clickCap
-                                |> getCurrentLevelLevel
-                                |> basicBonuses.clickCap.clickBonus
-
-                        resultData =
-                            userGainedAClick
-                                { testModel | totalClicks = clickCap, users = alteredUsers }
-                                (alterUserData testUserData)
-                    in
-                    Expect.equal clickCap resultData.totalClicks
+                    clickCap =
+                        testUserData.currentLevels.clickCap
+                            |> getCurrentLevelLevel
+                            |> basicBonuses.clickCap.clickBonus
+                in
+                [ test "user gains a tons of clicks but runs into the click limit without adding more clicks" <|
+                    \_ ->
+                        let
+                            resultData =
+                                userGainedAClick
+                                    { testModel | totalClicks = clickCap, users = alteredUsers }
+                                    (alterUserData testUserData)
+                        in
+                        Expect.equal clickCap resultData.totalClicks
+                , test "user discusses and runs into the click limit without adding more clicks" <|
+                    \_ ->
+                        let
+                            resultData =
+                                userDiscussed
+                                    { testModel | totalClicks = clickCap, users = alteredUsers }
+                                    (alterUserData testUserData)
+                        in
+                        Expect.equal clickCap resultData.totalClicks
+                , test "user argues and runs into the click limit without adding more clicks" <|
+                    \_ ->
+                        let
+                            resultData =
+                                userArgued
+                                    { testModel | totalClicks = clickCap, users = alteredUsers }
+                                    (alterUserData testUserData)
+                        in
+                        Expect.equal clickCap resultData.totalClicks
+                ]
             ]
         ]
