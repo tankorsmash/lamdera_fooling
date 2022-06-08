@@ -284,6 +284,12 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
 registerUserGainedAClick : Int -> UpdateData a -> UserData -> UpdateData a
 registerUserGainedAClick clicksToAdd ({ teams, users, totalClicks } as updateData) userData =
     let
+        clickCap : Int
+        clickCap =
+            userData.currentLevels.clickCap
+                |> getCurrentLevelLevel
+                |> basicBonuses.clickCap.clickBonus
+
         -- modifies whichever clicks get added
         modifyClicks : Int -> Int
         modifyClicks clicks =
@@ -304,17 +310,33 @@ registerUserGainedAClick clicksToAdd ({ teams, users, totalClicks } as updateDat
                 users
                 (\ud ->
                     { ud
-                        | userClicks = modifyClicks ud.userClicks
+                        | userClicks = modifyClicks ud.userClicks |> min clickCap
                         , xp = ud.xp + 1
                     }
                 )
                 userData.username
+
+        clicksChanged : Int
+        clicksChanged =
+            getUserByUsername newUsers userData.username
+                |> Maybe.andThen getUserData
+                |> Maybe.map
+                    (.userClicks
+                        >> (-) userData.userClicks
+                        >> abs
+                    )
+                |> Maybe.withDefault 0
     in
-    { updateData
-        | totalClicks = modifyClicks totalClicks
-        , teams = newTeams
-        , users = newUsers
-    }
+    -- only add the clicks to the team and user, if there's been a change
+    if clicksChanged > 0 then
+        { updateData
+            | totalClicks = modifyClicks totalClicks
+            , teams = newTeams
+            , users = newUsers
+        }
+
+    else
+        updateData
 
 
 type alias UpdateData a =
@@ -1314,13 +1336,28 @@ suite =
                             userDiscussed testModel testUserData
                     in
                     Expect.equal 5 resultData.totalClicks
+            , test "user gains a tons of clicks but runs into the click limit without adding more clicks" <|
+                \_ ->
+                    let
+                        alterUserData ud =
+                            { ud | userClicks = clickCap }
 
-            -- , test "user gains a tons of clicks but runs into the click limit" <|
-            --     \_ ->
-            --         let
-            --             resultData =
-            --                 userGainedAClick testModel testUserData
-            --         in
-            --         Expect.equal 1 resultData.totalClicks
+                        alteredUsers =
+                            updateFullUserByUsername
+                                testModel.users
+                                alterUserData
+                                testUserData.username
+
+                        clickCap =
+                            testUserData.currentLevels.clickCap
+                                |> getCurrentLevelLevel
+                                |> basicBonuses.clickCap.clickBonus
+
+                        resultData =
+                            userGainedAClick
+                                { testModel | totalClicks = clickCap, users = alteredUsers }
+                                (alterUserData testUserData)
+                    in
+                    Expect.equal clickCap resultData.totalClicks
             ]
         ]
