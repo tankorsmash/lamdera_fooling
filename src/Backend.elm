@@ -16,6 +16,12 @@ type alias Model =
     BackendModel
 
 
+app :
+    { init : ( Model, Cmd BackendMsg )
+    , update : BackendMsg -> Model -> ( Model, Cmd BackendMsg )
+    , updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
+    , subscriptions : Model -> Sub BackendMsg
+    }
 app =
     Lamdera.backend
         { init = init
@@ -344,7 +350,7 @@ type alias UpdateData a =
 
 
 userGainedAClick : UpdateData a -> UserData -> UpdateData a
-userGainedAClick ({ teams, users, totalClicks } as gameData) userData =
+userGainedAClick ({ teams } as gameData) userData =
     let
         clicksToAdd : Int
         clicksToAdd =
@@ -361,6 +367,7 @@ userGainedAClick ({ teams, users, totalClicks } as gameData) userData =
     registerUserGainedAClick clicksToAdd gameData userData
 
 
+userDiscussed : Model -> UserData -> Model
 userDiscussed model userData =
     let
         clicksToAdd : Int
@@ -397,6 +404,8 @@ userDiscussed model userData =
     registerUserGainedAClick clicksToAdd model userData
         |> (\model_ -> mapUsers model_ restartDiscuss)
 
+
+userArgued : Model -> UserData -> Model
 userArgued model userData =
     let
         clicksToAdd : Int
