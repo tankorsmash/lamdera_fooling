@@ -749,29 +749,66 @@ actionArea lastTick xp numGroupMembers currentLevels =
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
-        , UI.button <|
-            UI.CustomParams
-                { buttonType = UI.Outline
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , Font.size 24
-                    ]
-                , onPressMsg = SendClickToBackend
-                , customLabel =
-                    row []
-                        [ paragraph [ centerY, height fill ]
-                            [ text "Contribute +1" ]
-                        , el [ UI.scaled_font 2, Font.color <| UI.convertColor <| Color.lightBlue ] <|
-                            text <|
-                                if groupMemberClickBonus numGroupMembers > 0 then
-                                    " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
-
-                                else
-                                    ""
+        , row
+            [ width fill, centerX, spacing 10 ]
+            [ UI.button <|
+                UI.CustomParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , UI.scaled_font 2
                         ]
-                , colorTheme = UI.BrightTheme
-                }
+                    , onPressMsg = SendClickToBackend
+                    , customLabel =
+                        row []
+                            [ paragraph [ centerY, height fill ]
+                                [ text "Contribute +1" ]
+                            , el [ UI.scaled_font 2, Font.color <| UI.convertColor <| Color.lightBlue ] <|
+                                text <|
+                                    if groupMemberClickBonus numGroupMembers > 0 then
+                                        " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
+
+                                    else
+                                        ""
+                            ]
+                    , colorTheme = UI.BrightTheme
+                    }
+            , let
+                clickCapLevel =
+                    currentLevels.clickCap
+                        |> getCurrentLevelLevel
+
+                upgradeXpCost =
+                    basicBonuses.clickCap.xpCost (nextLevel clickCapLevel)
+
+                clickCap =
+                    basicBonuses.clickCap.clickBonus (nextLevel clickCapLevel)
+              in
+              UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , UI.scaled_font 2
+                        , Element.alpha <|
+                            if xp >= upgradeXpCost then
+                                1.0
+
+                            else
+                                0.25
+                        ]
+                    , onPressMsg = SendBuyUpgrade (Types.ClickCap <| nextLevel clickCapLevel)
+                    , textLabel =
+                        "(WIP need backend) Increase Cap to "
+                            ++ (clickCap |> String.fromInt)
+                            ++ " ("
+                            ++ String.fromInt upgradeXpCost
+                            ++ "xp)"
+                    , colorTheme = UI.BrightTheme
+                    }
+            ]
         , spacer
         , -- discuss
           let

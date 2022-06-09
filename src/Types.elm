@@ -316,6 +316,7 @@ type UpgradeType
     | Argumentation Level
     | Energization Level
     | EnergizeCap Level
+    | ClickCap Level
 
 
 

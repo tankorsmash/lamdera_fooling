@@ -1022,6 +1022,9 @@ updateFromFrontend sessionId clientId msg model =
 
                                 else
                                     noop
+
+                            Types.ClickCap level ->
+                                Debug.todo "upgrade click cap"
                     )
                 |> Maybe.withDefault noop
 
