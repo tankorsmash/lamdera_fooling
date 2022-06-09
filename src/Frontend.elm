@@ -951,7 +951,7 @@ viewPlayers model userData personalityType =
                     else
                         []
 
-                attrs =
+                usernameAttrs =
                     onlineAttrs
                         ++ (if username == userData.username then
                                 [ Font.underline ]
@@ -965,14 +965,30 @@ viewPlayers model userData personalityType =
                         |> getCurrentLevelLevel
                         |> ClickPricing.basicBonuses.clickCap.clickBonus
 
-                content =
+                usernameText =
+                    text username
+
+                clicksContent =
                     if username /= userData.username then
-                        text (username ++ " x" ++ String.fromInt clicks)
+                        text (" x" ++ String.fromInt clicks)
 
                     else
-                        text (username ++ " x" ++ String.fromInt clicks ++ "/" ++ String.fromInt maxClicks)
+                        el
+                            [ if clicks >= maxClicks then
+                                Font.color <| UI.convertColor <| Color.lightRed
+
+                              else
+                                UI.noopAttr
+                            ]
+                            (text
+                                (" x"
+                                    ++ String.fromInt clicks
+                                    ++ "/"
+                                    ++ String.fromInt maxClicks
+                                )
+                            )
             in
-            el attrs content
+            row [] [ el usernameAttrs usernameText, clicksContent ]
 
         viewUsersInPersonalityType =
             model.teamsUserClicks
