@@ -414,7 +414,6 @@ userArgued model userData =
                 |> getCurrentLevelLevel
                 |> basicBonuses.argue.clickBonus
 
-        -- basicBonuses.argue.clickBonus (getCurrentLevelLevel userData.currentLevels.argue)
         restartCurrentLevel : CurrentLevels -> CurrentLevels
         restartCurrentLevel currentLevels =
             mapCurrentLevels
