@@ -961,8 +961,9 @@ viewPlayers model userData personalityType =
                            )
 
                 maxClicks =
-                    -- TODO: use the model for this, inside a CurrentLevel
-                    1234
+                    userData.currentLevels.clickCap
+                        |> getCurrentLevelLevel
+                        |> ClickPricing.basicBonuses.clickCap.clickBonus
 
                 content =
                     if username /= userData.username then
