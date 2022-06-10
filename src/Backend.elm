@@ -456,7 +456,7 @@ updateFromFrontend sessionId clientId msg model =
     in
     case msg of
         NoOpToBackend ->
-            ( model, Cmd.none )
+            noop
 
         UserGainedAClick ->
             getUserBySessionId model.users sessionId
