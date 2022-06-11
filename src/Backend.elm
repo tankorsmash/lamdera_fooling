@@ -865,6 +865,14 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.andThen getUserData
                 |> Maybe.map
                     (\userData ->
+                        let
+                            updateWithNewUser newUsers =
+                                ( setUsers model newUsers
+                                , getUserBySessionId newUsers sessionId
+                                    |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                                    |> Maybe.withDefault Cmd.none
+                                )
+                        in
                         case upgradeType of
                             Types.Discussion level ->
                                 let
@@ -895,11 +903,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    ( setUsers model newUsers
-                                    , getUserBySessionId newUsers sessionId
-                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
-                                        |> Maybe.withDefault Cmd.none
-                                    )
+                                    updateWithNewUser newUsers
 
                                 else
                                     noop
@@ -932,11 +936,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    ( setUsers model newUsers
-                                    , getUserBySessionId newUsers sessionId
-                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
-                                        |> Maybe.withDefault Cmd.none
-                                    )
+                                    updateWithNewUser newUsers
 
                                 else
                                     noop
@@ -972,11 +972,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    ( setUsers model newUsers
-                                    , getUserBySessionId newUsers sessionId
-                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
-                                        |> Maybe.withDefault Cmd.none
-                                    )
+                                    updateWithNewUser newUsers
 
                                 else
                                     noop
@@ -990,10 +986,7 @@ updateFromFrontend sessionId clientId msg model =
                                 if userData.xp >= upgradeCost then
                                     let
                                         setEnergizeCycleCapToNextCurrentLevel currentLevels currentLevel =
-                                            { currentLevels
-                                                | energizeCycleCap =
-                                                    nextCurrentLevel currentLevel
-                                            }
+                                            { currentLevels | energizeCycleCap = nextCurrentLevel currentLevel }
 
                                         newUsers =
                                             updateFullUserBySessionId
@@ -1014,11 +1007,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     }
                                                 )
                                     in
-                                    ( setUsers model newUsers
-                                    , getUserBySessionId newUsers sessionId
-                                        |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
-                                        |> Maybe.withDefault Cmd.none
-                                    )
+                                    updateWithNewUser newUsers
 
                                 else
                                     noop
