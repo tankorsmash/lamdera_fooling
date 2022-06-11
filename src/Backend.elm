@@ -448,6 +448,13 @@ mapUsers model func =
     { model | users = func model.users }
 
 
+type alias LevelManager a =
+    { getter : CurrentLevels -> CurrentLevel
+    , setter : CurrentLevels -> CurrentLevel -> CurrentLevels
+    , bonus : BasicBonusData a
+    }
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -872,38 +879,45 @@ updateFromFrontend sessionId clientId msg model =
                                     |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
                                     |> Maybe.withDefault Cmd.none
                                 )
+
+                            setNextLevel : (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels -> (CurrentLevel -> CurrentLevels)
+                            setNextLevel levelSetter currentLevels =
+                                nextCurrentLevel >> levelSetter currentLevels
+
+                            upgradeCurrentLevel : LevelManager a -> CurrentLevels -> CurrentLevels
+                            upgradeCurrentLevel levelManager cls =
+                                ClickPricing.mapCurrentLevels levelManager.getter (setNextLevel levelManager.setter) cls
+
+                            upgradeUsersCurrentLevel levelManager upgradeCost =
+                                let
+                                    newUsers =
+                                        updateFullUserBySessionId
+                                            model.users
+                                            sessionId
+                                            (\ud ->
+                                                ud
+                                                    |> setCurrentLevels (upgradeCurrentLevel levelManager ud.currentLevels)
+                                                    |> setXp (ud.xp - upgradeCost)
+                                            )
+                                in
+                                updateWithNewUser newUsers
                         in
                         case upgradeType of
                             Types.Discussion level ->
                                 let
+                                    levelManager : LevelManager TimedBonus
+                                    levelManager =
+                                        { getter = .discuss
+                                        , setter = setDiscuss
+                                        , bonus = ClickPricing.basicBonuses.discuss
+                                        }
+
                                     upgradeCost : Int
                                     upgradeCost =
-                                        ClickPricing.basicBonuses.discuss.xpCost level
+                                        ClickPricing.xpCost levelManager.bonus level
                                 in
                                 if userData.xp >= upgradeCost then
-                                    let
-                                        newUsers =
-                                            updateFullUserBySessionId
-                                                model.users
-                                                sessionId
-                                                (\ud ->
-                                                    let
-                                                        newCurrentLevels : CurrentLevels
-                                                        newCurrentLevels =
-                                                            ClickPricing.mapCurrentLevels
-                                                                .discuss
-                                                                (\currentLevels discussCurrentLevel ->
-                                                                    setDiscuss currentLevels <| nextCurrentLevel discussCurrentLevel
-                                                                )
-                                                                ud.currentLevels
-                                                    in
-                                                    { ud
-                                                        | xp = ud.xp - upgradeCost
-                                                        , currentLevels = newCurrentLevels
-                                                    }
-                                                )
-                                    in
-                                    updateWithNewUser newUsers
+                                    upgradeUsersCurrentLevel levelManager upgradeCost
 
                                 else
                                     noop
