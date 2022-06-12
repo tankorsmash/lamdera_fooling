@@ -1,4 +1,4 @@
-module Internal.Estimation exposing (velocity, velocityAtTarget)
+module External.Animator.Internal.Estimation exposing (velocity, velocityAtTarget)
 
 {-| -}
 

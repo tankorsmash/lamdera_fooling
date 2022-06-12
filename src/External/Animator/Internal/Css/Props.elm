@@ -1,4 +1,4 @@
-module Internal.Css.Props exposing
+module External.Animator.Internal.Css.Props exposing
     ( Id, ids, hash, default, defaultPosition
     , isTransformId
     , Format, format, float, int, px

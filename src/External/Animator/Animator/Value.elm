@@ -1,4 +1,4 @@
-module Animator.Value exposing
+module External.Animator.Animator.Value exposing
     ( color
     , float, velocity, movement, Movement, to, xy, xyz
     , withWobble

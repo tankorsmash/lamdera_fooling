@@ -1,4 +1,4 @@
-module Internal.Spring exposing
+module External.Animator.Internal.Spring exposing
     ( SpringParams
     , analytical
     , criticalDamping

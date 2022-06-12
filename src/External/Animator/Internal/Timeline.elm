@@ -1,4 +1,4 @@
-module Internal.Timeline exposing
+module External.Animator.Internal.Timeline exposing
     ( Timeline(..), TimelineDetails, Occurring(..), getEvents
     , Schedule(..), Event(..)
     , needsUpdate, update, updateWith

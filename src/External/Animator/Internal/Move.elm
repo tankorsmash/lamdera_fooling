@@ -1,4 +1,4 @@
-module Internal.Move exposing
+module External.Animator.Internal.Move exposing
     ( Move(..), to, toWith
     , State, init
     , color

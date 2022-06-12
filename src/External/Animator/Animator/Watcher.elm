@@ -1,4 +1,4 @@
-module Animator.Watcher exposing
+module External.Animator.Animator.Watcher exposing
     ( Watching
     , init, watching, list
     , update, toSubscription

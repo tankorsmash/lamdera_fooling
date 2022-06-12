@@ -1,4 +1,4 @@
-module Internal.Css exposing
+module External.Animator.Internal.Css exposing
     ( Prop(..)
     , RenderedProp(..)
     , cssFromProps

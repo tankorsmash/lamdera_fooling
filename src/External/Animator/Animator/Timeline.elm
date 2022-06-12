@@ -1,4 +1,4 @@
-module Animator.Timeline exposing
+module External.Animator.Animator.Timeline exposing
     ( Timeline, init
     , to
     , Duration, ms

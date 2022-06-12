@@ -1,4 +1,4 @@
-module Internal.Units exposing
+module External.Animator.Internal.Units exposing
     ( Pixels
     , PixelsPerSecond
     , inPixels

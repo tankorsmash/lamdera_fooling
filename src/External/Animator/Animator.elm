@@ -1,4 +1,4 @@
-module Animator exposing
+module External.Animator.Animator exposing
     ( Animation, delay, transition
     , Attribute, opacity
     , rotation, x, y, scale, scaleX, scaleY

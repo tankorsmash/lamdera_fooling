@@ -1,4 +1,4 @@
-module Internal.Bezier exposing
+module External.Animator.Internal.Bezier exposing
     ( Spline(..), Point, hash, normalize
     , atX, pointOn
     , firstX, firstY, lastX, lastY
@@ -10,7 +10,7 @@ module Internal.Bezier exposing
     , horizontal, onePoint, scaleBy, scaleXYBy, withVelocities, zeroPoint
     )
 
-{-| This module defines types and functions for cubic bezier splines.
+{-| This module External.Animator.defines types and functions for cubic bezier splines.
 
 This is a mini embedded elm-geometry because I didn't want to impose it as a dependency.
 

@@ -1,4 +1,4 @@
-module Internal.Random exposing (random)
+module External.Animator.Internal.Random exposing (random)
 
 {-| -}
 

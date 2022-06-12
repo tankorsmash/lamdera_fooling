@@ -1,4 +1,4 @@
-module Internal.Transition exposing
+module External.Animator.Internal.Transition exposing
     ( Transition(..)
     , linear, standard, wobble, bezier
     , initialVelocity, atX
