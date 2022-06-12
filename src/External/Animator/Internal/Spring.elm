@@ -1,4 +1,4 @@
-module Internal.Spring exposing
+module External.Animator.Internal.Spring exposing
     ( SpringParams
     , criticalDamping
     , select
@@ -9,7 +9,7 @@ module Internal.Spring exposing
     )
 
 import Duration
-import Internal.Time as Time
+import External.Animator.Internal.Time as Time
 
 
 {-| Whew, math. Exciting isn't it?

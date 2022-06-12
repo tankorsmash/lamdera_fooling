@@ -1,5 +1,6 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
+import External.Animator.Animator as Animator
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
@@ -63,6 +64,21 @@ app =
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
     Time.every (1000 / 50) LocalTick
+
+
+timelineAnimator : Animator.Animator Model
+timelineAnimator =
+    Animator.animator
+        |> Animator.watchingWith
+            (.timelines >> .userClicksTimeline)
+            (\newTimeline ({ timelines } as m) ->
+                let
+                    newTimelines =
+                        { timelines | userClicksTimeline = newTimeline }
+                in
+                { m | timelines = newTimelines }
+            )
+            (always False)
 
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
@@ -145,14 +161,14 @@ update msg model =
                     (\currentLevels ->
                         let
                             prog =
-                                Debug.log "prog" <| ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
+                                 ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
                         in
                         if prog == Completed || prog == NotStarted then
                             ( model, Lamdera.sendToBackend UserArgued )
 
                         else
                             -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                            Debug.log "unclickable " noop
+                             noop
                     )
                 |> Maybe.withDefault noop
 
@@ -174,7 +190,7 @@ update msg model =
                                     (basicBonuses.energize.durationMs energizeLevel)
 
                             prog =
-                                Debug.log "prog" <|
+                                
                                     (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
                                         model.lastTick
                                         (basicBonuses.energize.durationMs energizeLevel)
@@ -186,7 +202,7 @@ update msg model =
 
                         else
                             -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                            Debug.log "unclickable " noop
+                             noop
                     )
                 |> Maybe.withDefault noop
 
@@ -801,7 +817,7 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         ]
                     , onPressMsg = SendBuyUpgrade (Types.ClickCap <| nextLevel clickCapLevel)
                     , textLabel =
-                        "(WIP need backend) Increase Cap to "
+                        "Limit+ to "
                             ++ (clickCap |> String.fromInt)
                             ++ " ("
                             ++ String.fromInt upgradeXpCost

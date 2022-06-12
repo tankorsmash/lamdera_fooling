@@ -1,4 +1,4 @@
-module Internal.Timeline exposing
+module External.Animator.Internal.Timeline exposing
     ( Timeline(..), TimelineDetails, Occurring(..), getEvents
     , Schedule(..), Event(..)
     , update, needsUpdate
@@ -34,7 +34,7 @@ module Internal.Timeline exposing
 -}
 
 import Duration
-import Internal.Time as Time
+import External.Animator.Internal.Time as Time
 import Quantity
 import Time
 

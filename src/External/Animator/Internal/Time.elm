@@ -1,4 +1,4 @@
-module Internal.Time exposing
+module External.Animator.Internal.Time exposing
     ( thisBeforeOrEqualThat, thisAfterOrEqualThat, equal
     , Absolute, AbsoluteTime(..), Duration, absolute, duration, progress
     , inMilliseconds

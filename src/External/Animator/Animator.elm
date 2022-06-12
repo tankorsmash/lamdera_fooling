@@ -1,4 +1,4 @@
-module Animator exposing
+module External.Animator.Animator exposing
     ( Timeline, init
     , current, previous, upcoming, upcomingWith, arrived, arrivedAt, arrivedAtWith
     , Animator
@@ -227,9 +227,9 @@ Here's an abreviated example of what the code looks like:
 import Browser.Events
 import Color exposing (Color)
 import Duration
-import Internal.Interpolate as Interpolate
-import Internal.Time as Time
-import Internal.Timeline as Timeline
+import External.Animator.Internal.Interpolate as Interpolate
+import External.Animator.Internal.Time as Time
+import External.Animator.Internal.Timeline as Timeline
 import Quantity
 import Time
 

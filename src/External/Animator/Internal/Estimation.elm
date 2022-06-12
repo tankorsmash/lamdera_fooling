@@ -1,10 +1,10 @@
-module Internal.Estimation exposing (velocity)
+module External.Animator.Internal.Estimation exposing (velocity)
 
 {-| -}
 
-import Animator
-import Internal.Interpolate as Interpolate
-import Internal.Timeline as Timeline
+import External.Animator.Animator
+import External.Animator.Internal.Interpolate as Interpolate
+import External.Animator.Internal.Timeline as Timeline
 import Time
 
 
