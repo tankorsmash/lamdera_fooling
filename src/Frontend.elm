@@ -1,6 +1,5 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
-import External.Animator.Animator as Animator
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
@@ -14,6 +13,7 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import External.Animator.Animator as Animator
 import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
@@ -161,14 +161,14 @@ update msg model =
                     (\currentLevels ->
                         let
                             prog =
-                                 ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
+                                ClickPricing.getCurrentLevelProgress currentLevels.argue model.lastTick
                         in
                         if prog == Completed || prog == NotStarted then
                             ( model, Lamdera.sendToBackend UserArgued )
 
                         else
                             -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                             noop
+                            noop
                     )
                 |> Maybe.withDefault noop
 
@@ -190,19 +190,17 @@ update msg model =
                                     (basicBonuses.energize.durationMs energizeLevel)
 
                             prog =
-                                
-                                    (ClickPricing.getCurrentLevelCycleCount currentLevels.energize
-                                        model.lastTick
-                                        (basicBonuses.energize.durationMs energizeLevel)
-                                        |> Maybe.withDefault -123
-                                    )
+                                ClickPricing.getCurrentLevelCycleCount currentLevels.energize
+                                    model.lastTick
+                                    (basicBonuses.energize.durationMs energizeLevel)
+                                    |> Maybe.withDefault -123
                         in
                         if prog > 0 || progress == NotStarted then
                             ( model, Lamdera.sendToBackend UserEnergized )
 
                         else
                             -- TODO hopefully dont need to make a ui notification for the button being unclickable
-                             noop
+                            noop
                     )
                 |> Maybe.withDefault noop
 
