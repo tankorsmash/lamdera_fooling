@@ -561,7 +561,20 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
 
 
         Types.ClickCap level ->
-            Debug.todo "upgrade click cap"
+            let
+                levelManager : LevelManager
+                levelManager =
+                    { getter = .clickCap
+                    , setter = (\cls nl-> {cls | clickCap = nl} )
+                    , upgradeCost =
+                        ClickPricing.xpCost ClickPricing.basicBonuses.clickCap level
+                    }
+            in
+            if canAffordUpgrade userData levelManager then
+                Just <| upgradeUsersCurrentLevel levelManager
+
+            else
+                Nothing
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
