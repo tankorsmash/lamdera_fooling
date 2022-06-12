@@ -470,11 +470,11 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
             nextCurrentLevel >> levelSetter currentLevels
 
         upgradeCurrentLevel : LevelManager -> CurrentLevels -> CurrentLevels
-        upgradeCurrentLevel levelManager cls =
-            ClickPricing.mapCurrentLevels levelManager.getter (setNextLevel levelManager.setter) cls
+        upgradeCurrentLevel levelManager_ cls =
+            ClickPricing.mapCurrentLevels levelManager_.getter (setNextLevel levelManager.setter) cls
 
         upgradeUsersCurrentLevel : LevelManager -> ( Model, Cmd msg )
-        upgradeUsersCurrentLevel levelManager =
+        upgradeUsersCurrentLevel levelManager_ =
             let
                 newUsers =
                     updateFullUserBySessionId
@@ -482,8 +482,8 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
                         sessionId
                         (\ud ->
                             ud
-                                |> setCurrentLevels (upgradeCurrentLevel levelManager ud.currentLevels)
-                                |> setXp (ud.xp - levelManager.upgradeCost)
+                                |> setCurrentLevels (upgradeCurrentLevel levelManager_ ud.currentLevels)
+                                |> setXp (ud.xp - levelManager_.upgradeCost)
                         )
             in
             updateWithNewUser newUsers
@@ -491,90 +491,50 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
         canAffordUpgrade : { a | xp : Int } -> LevelManager -> Bool
         canAffordUpgrade { xp } { upgradeCost } =
             xp >= upgradeCost
-    in
-    case upgradeType of
-        Types.Discussion level ->
-            let
-                levelManager : LevelManager
-                levelManager =
+
+        levelManager : LevelManager
+        levelManager =
+            case upgradeType of
+                Types.Discussion level ->
                     { getter = .discuss
                     , setter = setDiscuss
                     , upgradeCost =
                         ClickPricing.xpCost ClickPricing.basicBonuses.discuss level
                     }
-            in
-            if canAffordUpgrade userData levelManager then
-                Just <| upgradeUsersCurrentLevel levelManager
 
-            else
-                Nothing
-
-        Types.Argumentation level ->
-            let
-                levelManager : LevelManager
-                levelManager =
+                Types.Argumentation level ->
                     { getter = .argue
                     , setter = setArgue
                     , upgradeCost =
                         ClickPricing.xpCost ClickPricing.basicBonuses.argue level
                     }
-            in
-            if canAffordUpgrade userData levelManager then
-                Just <| upgradeUsersCurrentLevel levelManager
 
-            else
-                Nothing
-
-
-        Types.Energization level ->
-            let
-                levelManager : LevelManager
-                levelManager =
+                Types.Energization level ->
                     { getter = .energize
                     , setter = setEnergize
                     , upgradeCost =
                         ClickPricing.xpCost ClickPricing.basicBonuses.energize level
                     }
-            in
-            if canAffordUpgrade userData levelManager then
-                Just <| upgradeUsersCurrentLevel levelManager
 
-            else
-                Nothing
-
-
-        Types.EnergizeCap level ->
-            let
-                levelManager : LevelManager
-                levelManager =
+                Types.EnergizeCap level ->
                     { getter = .energizeCycleCap
-                    , setter = (\cls nl-> {cls | energizeCycleCap = nl} )
+                    , setter = \cls nl -> { cls | energizeCycleCap = nl }
                     , upgradeCost =
                         ClickPricing.basicBonuses.energize.cycleCapUpgradeCost level
                     }
-            in
-            if canAffordUpgrade userData levelManager then
-                Just <| upgradeUsersCurrentLevel levelManager
 
-            else
-                Nothing
-
-
-        Types.ClickCap level ->
-            let
-                levelManager : LevelManager
-                levelManager =
+                Types.ClickCap level ->
                     { getter = .clickCap
-                    , setter = (\cls nl-> {cls | clickCap = nl} )
+                    , setter = \cls nl -> { cls | clickCap = nl }
                     , upgradeCost =
                         ClickPricing.xpCost ClickPricing.basicBonuses.clickCap level
                     }
-            in
-            if canAffordUpgrade userData levelManager then
-                Just <| upgradeUsersCurrentLevel levelManager
+    in
+    if canAffordUpgrade userData levelManager then
+        Just <| upgradeUsersCurrentLevel levelManager
 
-            else
-                Nothing
+    else
+        Nothing
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
