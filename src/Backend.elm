@@ -448,11 +448,120 @@ mapUsers model func =
     { model | users = func model.users }
 
 
-type alias LevelManager a =
+type alias LevelManager =
     { getter : CurrentLevels -> CurrentLevel
     , setter : CurrentLevels -> CurrentLevel -> CurrentLevels
-    , bonus : BasicBonusData a
+    , upgradeCost : Int
     }
+
+
+upgradeUserCurrentLevels : Model -> SessionId -> ClientId -> UpgradeType -> { a | xp : Int } -> Maybe ( Model, Cmd msg )
+upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
+    let
+        updateWithNewUser newUsers =
+            ( setUsers model newUsers
+            , getUserBySessionId newUsers sessionId
+                |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
+                |> Maybe.withDefault Cmd.none
+            )
+
+        setNextLevel : (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels -> (CurrentLevel -> CurrentLevels)
+        setNextLevel levelSetter currentLevels =
+            nextCurrentLevel >> levelSetter currentLevels
+
+        upgradeCurrentLevel : LevelManager -> CurrentLevels -> CurrentLevels
+        upgradeCurrentLevel levelManager cls =
+            ClickPricing.mapCurrentLevels levelManager.getter (setNextLevel levelManager.setter) cls
+
+        upgradeUsersCurrentLevel : LevelManager -> ( Model, Cmd msg )
+        upgradeUsersCurrentLevel levelManager =
+            let
+                newUsers =
+                    updateFullUserBySessionId
+                        model.users
+                        sessionId
+                        (\ud ->
+                            ud
+                                |> setCurrentLevels (upgradeCurrentLevel levelManager ud.currentLevels)
+                                |> setXp (ud.xp - levelManager.upgradeCost)
+                        )
+            in
+            updateWithNewUser newUsers
+
+        canAffordUpgrade : { a | xp : Int } -> LevelManager -> Bool
+        canAffordUpgrade { xp } { upgradeCost } =
+            xp >= upgradeCost
+    in
+    case upgradeType of
+        Types.Discussion level ->
+            let
+                levelManager : LevelManager
+                levelManager =
+                    { getter = .discuss
+                    , setter = setDiscuss
+                    , upgradeCost =
+                        ClickPricing.xpCost ClickPricing.basicBonuses.discuss level
+                    }
+            in
+            if canAffordUpgrade userData levelManager then
+                Just <| upgradeUsersCurrentLevel levelManager
+
+            else
+                Nothing
+
+        Types.Argumentation level ->
+            let
+                levelManager : LevelManager
+                levelManager =
+                    { getter = .argue
+                    , setter = setArgue
+                    , upgradeCost =
+                        ClickPricing.xpCost ClickPricing.basicBonuses.argue level
+                    }
+            in
+            if canAffordUpgrade userData levelManager then
+                Just <| upgradeUsersCurrentLevel levelManager
+
+            else
+                Nothing
+
+
+        Types.Energization level ->
+            let
+                levelManager : LevelManager
+                levelManager =
+                    { getter = .energize
+                    , setter = setEnergize
+                    , upgradeCost =
+                        ClickPricing.xpCost ClickPricing.basicBonuses.energize level
+                    }
+            in
+            if canAffordUpgrade userData levelManager then
+                Just <| upgradeUsersCurrentLevel levelManager
+
+            else
+                Nothing
+
+
+        Types.EnergizeCap level ->
+            let
+                levelManager : LevelManager
+                levelManager =
+                    { getter = .energizeCycleCap
+                    , setter = (\cls nl-> {cls | energizeCycleCap = nl} )
+                    , upgradeCost =
+                        ClickPricing.basicBonuses.energize.cycleCapUpgradeCost level
+                    }
+            in
+            if canAffordUpgrade userData levelManager then
+                Just <| upgradeUsersCurrentLevel levelManager
+
+            else
+                Nothing
+
+
+        Types.ClickCap level ->
+            Debug.todo "upgrade click cap"
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -870,164 +979,12 @@ updateFromFrontend sessionId clientId msg model =
         UserWantsToBuyUpgrade upgradeType ->
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            updateWithNewUser newUsers =
-                                ( setUsers model newUsers
-                                , getUserBySessionId newUsers sessionId
-                                    |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
-                                    |> Maybe.withDefault Cmd.none
-                                )
-
-                            setNextLevel : (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels -> (CurrentLevel -> CurrentLevels)
-                            setNextLevel levelSetter currentLevels =
-                                nextCurrentLevel >> levelSetter currentLevels
-
-                            upgradeCurrentLevel : LevelManager a -> CurrentLevels -> CurrentLevels
-                            upgradeCurrentLevel levelManager cls =
-                                ClickPricing.mapCurrentLevels levelManager.getter (setNextLevel levelManager.setter) cls
-
-                            upgradeUsersCurrentLevel levelManager upgradeCost =
-                                let
-                                    newUsers =
-                                        updateFullUserBySessionId
-                                            model.users
-                                            sessionId
-                                            (\ud ->
-                                                ud
-                                                    |> setCurrentLevels (upgradeCurrentLevel levelManager ud.currentLevels)
-                                                    |> setXp (ud.xp - upgradeCost)
-                                            )
-                                in
-                                updateWithNewUser newUsers
-                        in
-                        case upgradeType of
-                            Types.Discussion level ->
-                                let
-                                    levelManager : LevelManager TimedBonus
-                                    levelManager =
-                                        { getter = .discuss
-                                        , setter = setDiscuss
-                                        , bonus = ClickPricing.basicBonuses.discuss
-                                        }
-
-                                    upgradeCost : Int
-                                    upgradeCost =
-                                        ClickPricing.xpCost levelManager.bonus level
-                                in
-                                if userData.xp >= upgradeCost then
-                                    upgradeUsersCurrentLevel levelManager upgradeCost
-
-                                else
-                                    noop
-
-                            Types.Argumentation level ->
-                                let
-                                    upgradeCost =
-                                        ClickPricing.xpCost ClickPricing.basicBonuses.argue level
-                                in
-                                if userData.xp >= upgradeCost then
-                                    let
-                                        newUsers =
-                                            updateFullUserBySessionId
-                                                model.users
-                                                sessionId
-                                                (\ud ->
-                                                    let
-                                                        newCurrentLevels : CurrentLevels
-                                                        newCurrentLevels =
-                                                            ClickPricing.mapCurrentLevels
-                                                                .argue
-                                                                (\currentLevels argueCurrentLevel ->
-                                                                    setArgue currentLevels <| nextCurrentLevel argueCurrentLevel
-                                                                )
-                                                                ud.currentLevels
-                                                    in
-                                                    { ud
-                                                        | xp = ud.xp - upgradeCost
-                                                        , currentLevels = newCurrentLevels
-                                                    }
-                                                )
-                                    in
-                                    updateWithNewUser newUsers
-
-                                else
-                                    noop
-
-                            Types.Energization level ->
-                                let
-                                    upgradeCost =
-                                        ClickPricing.xpCost ClickPricing.basicBonuses.energize level
-                                in
-                                if userData.xp >= upgradeCost then
-                                    let
-                                        newUsers =
-                                            updateFullUserBySessionId
-                                                model.users
-                                                sessionId
-                                                (\ud ->
-                                                    let
-                                                        newCurrentLevels : CurrentLevels
-                                                        newCurrentLevels =
-                                                            ClickPricing.mapCurrentLevels
-                                                                .energize
-                                                                (\currentLevels energizeCurrentLevel ->
-                                                                    { currentLevels
-                                                                        | energize =
-                                                                            nextCurrentLevel energizeCurrentLevel
-                                                                    }
-                                                                )
-                                                                ud.currentLevels
-                                                    in
-                                                    { ud
-                                                        | xp = ud.xp - upgradeCost
-                                                        , currentLevels = newCurrentLevels
-                                                    }
-                                                )
-                                    in
-                                    updateWithNewUser newUsers
-
-                                else
-                                    noop
-
-                            Types.EnergizeCap level ->
-                                let
-                                    upgradeCost : Int
-                                    upgradeCost =
-                                        basicBonuses.energize.cycleCapUpgradeCost level
-                                in
-                                if userData.xp >= upgradeCost then
-                                    let
-                                        setEnergizeCycleCapToNextCurrentLevel currentLevels currentLevel =
-                                            { currentLevels | energizeCycleCap = nextCurrentLevel currentLevel }
-
-                                        newUsers =
-                                            updateFullUserBySessionId
-                                                model.users
-                                                sessionId
-                                                (\ud ->
-                                                    let
-                                                        newCurrentLevels : CurrentLevels
-                                                        newCurrentLevels =
-                                                            ClickPricing.mapCurrentLevels
-                                                                .energizeCycleCap
-                                                                setEnergizeCycleCapToNextCurrentLevel
-                                                                ud.currentLevels
-                                                    in
-                                                    { ud
-                                                        | xp = ud.xp - upgradeCost
-                                                        , currentLevels = newCurrentLevels
-                                                    }
-                                                )
-                                    in
-                                    updateWithNewUser newUsers
-
-                                else
-                                    noop
-
-                            Types.ClickCap level ->
-                                Debug.todo "upgrade click cap"
+                |> Maybe.andThen
+                    (upgradeUserCurrentLevels
+                        model
+                        sessionId
+                        clientId
+                        upgradeType
                     )
                 |> Maybe.withDefault noop
 
