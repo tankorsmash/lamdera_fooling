@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (Timelines, BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -168,6 +168,10 @@ getSessionId user =
             userData.sessionId
 
 
+type alias Timelines =
+    { userClicksTimeline : Animator.Timeline (Maybe Int) }
+
+
 initFrontendModel : Key -> FrontendModel
 initFrontendModel key =
     { key = key
@@ -214,7 +218,7 @@ type alias FrontendModel =
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
-    , timelines : { userClicksTimeline : Animator.Timeline (Maybe Int) }
+    , timelines : Timelines
     }
 
 

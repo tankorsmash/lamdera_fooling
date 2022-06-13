@@ -32,6 +32,7 @@ import Types
         , PersonalityType(..)
         , Team
         , Teams
+        , Timelines
         , ToBackend(..)
         , ToFrontend(..)
         , User(..)
@@ -63,7 +64,9 @@ app =
 
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
-    Time.every (1000 / 50) LocalTick
+    Sub.batch
+        [ timelineAnimator |> Animator.toSubscription LocalTick model
+        ]
 
 
 timelineAnimator : Animator.Animator Model
@@ -103,6 +106,11 @@ focusElement htmlId =
         |> Task.attempt FocusError
 
 
+setTimelines : Timelines -> Model -> Model
+setTimelines timelines model =
+    { model | timelines = timelines }
+
+
 update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg )
 update msg model =
     let
@@ -129,10 +137,37 @@ update msg model =
             ( model, Cmd.none )
 
         LocalTick time ->
-            ( { model | lastTick = time }, Cmd.none )
+            ( { model | lastTick = time }
+                |> Animator.update time timelineAnimator
+            , Cmd.none
+            )
 
         SendClickToBackend ->
-            ( model, Lamdera.sendToBackend UserGainedAClick )
+            let
+                timelines =
+                    model.timelines
+
+                events =
+                    let
+                        currentValue =
+                            Animator.current timelines.userClicksTimeline
+                                |> Maybe.map ((+) 1)
+                                |> Maybe.withDefault 1
+                    in
+                    [ Animator.event Animator.quickly (Just currentValue)
+                    , Animator.wait Animator.slowly
+                    , Animator.event Animator.quickly Nothing
+                    ]
+
+                newTimelines =
+                    { timelines
+                        | userClicksTimeline =
+                            Animator.interrupt events model.timelines.userClicksTimeline
+                    }
+            in
+            ( { model | timelines = newTimelines }
+            , Lamdera.sendToBackend UserGainedAClick
+            )
 
         Discuss ->
             model.user
@@ -297,7 +332,9 @@ updateFromBackend msg model =
             ( { model | teamsUserClicks = newUsernamesByPersonalityTypes }, Cmd.none )
 
         NewTick time ->
-            ( model, Cmd.none )
+            ( model
+            , Cmd.none
+            )
 
         NewAllChatMessages allChatMessages ->
             ( { model | allChatMessages = allChatMessages }, Cmd.none )
@@ -751,8 +788,45 @@ viewCycleButton progress clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Element FrontendMsg
-actionArea lastTick xp numGroupMembers currentLevels =
+viewFlyingLabel : Animator.Timeline (Maybe Int) -> Element FrontendMsg
+viewFlyingLabel timeline =
+    let
+        labelHeight =
+            Animator.move timeline <|
+                \state ->
+                    case state of
+                        Just value ->
+                            Animator.at 10
+
+                        Nothing ->
+                            Animator.at 0
+
+        labelAlpha =
+            Animator.move timeline <|
+                \state ->
+                    case state of
+                        Just value ->
+                            Animator.at 1.0
+
+                        Nothing ->
+                            Animator.at 0.0
+
+        labelText =
+            Animator.current timeline
+                |> Maybe.map (String.fromInt >> (++) "+")
+                |> Maybe.withDefault " :)"
+    in
+    el
+        [ Element.moveUp labelHeight
+        , UI.font_grey
+        , Element.alpha labelAlpha
+        ]
+    <|
+        text labelText
+
+
+actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Timelines -> Element FrontendMsg
+actionArea lastTick xp numGroupMembers currentLevels timelines =
     let
         spacer =
             el [ padding 5 ] <| Element.none
@@ -760,6 +834,8 @@ actionArea lastTick xp numGroupMembers currentLevels =
         -- energizeCycleCap =
         --     ClickPricing.cycleCap basicBonuses.energizeCycleCap (getCurrentLevelLevel currentLevels.energizeCycleCap)
         --         |> Maybe.withDefault 10
+        flyingLabel =
+            viewFlyingLabel timelines.userClicksTimeline
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -772,13 +848,21 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         [ centerX
                         , width Element.shrink
                         , UI.scaled_font 2
+                        , Element.above <| flyingLabel
                         ]
                     , onPressMsg = SendClickToBackend
                     , customLabel =
                         row []
-                            [ paragraph [ centerY, height fill ]
+                            [ paragraph
+                                [ centerY
+                                , height fill
+                                ]
                                 [ text "Contribute +1" ]
-                            , el [ UI.scaled_font 2, Font.color <| UI.convertColor <| Color.lightBlue ] <|
+                            , el
+                                [ UI.scaled_font 2
+                                , Font.color <| UI.convertColor <| Color.lightBlue
+                                ]
+                              <|
                                 text <|
                                     if groupMemberClickBonus numGroupMembers > 0 then
                                         " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
@@ -815,9 +899,9 @@ actionArea lastTick xp numGroupMembers currentLevels =
                         ]
                     , onPressMsg = SendBuyUpgrade (Types.ClickCap <| nextLevel clickCapLevel)
                     , textLabel =
-                        "Limit+ to "
+                        "+Limit ["
                             ++ (clickCap |> String.fromInt)
-                            ++ " ("
+                            ++ "] ("
                             ++ String.fromInt upgradeXpCost
                             ++ "xp)"
                     , colorTheme = UI.BrightTheme
@@ -1135,7 +1219,7 @@ viewPlaying model ({ personalityType, xp } as userData) =
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
                 , el [ centerX ] <|
-                    actionArea model.lastTick xp numGroupMembers userData.currentLevels
+                    actionArea model.lastTick xp numGroupMembers userData.currentLevels model.timelines
                 , viewPlayers model userData Idealistic
                 ]
             ]

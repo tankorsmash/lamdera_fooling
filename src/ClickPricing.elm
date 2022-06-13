@@ -158,7 +158,7 @@ type alias Bonuses =
 basicBonuses : Bonuses
 basicBonuses =
     { clickCap =
-        { clickBonus = \(Level level ) -> (1 + level) * 10
+        { clickBonus = \(Level level ) -> (1 + level) * 1000
         , xpCost = \(Level level) -> level * 5
         }
     , discuss =
