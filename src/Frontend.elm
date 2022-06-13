@@ -29,6 +29,7 @@ import Types
         , FrontendModel
         , FrontendMsg(..)
         , Group
+        , LabelValue(..)
         , PersonalityType(..)
         , Team
         , Teams
@@ -143,31 +144,62 @@ update msg model =
             )
 
         SendClickToBackend ->
-            let
-                timelines =
-                    model.timelines
+            model.user
+                |> getUserData
+                |> Maybe.map
+                    (\userData ->
+                        let
+                            currentLevels =
+                                userData.currentLevels
 
-                events =
-                    let
-                        currentValue =
-                            Animator.current timelines.userClicksTimeline
-                                |> Maybe.map ((+) 1)
-                                |> Maybe.withDefault 1
-                    in
-                    [ Animator.event Animator.quickly (Just currentValue)
-                    , Animator.wait Animator.slowly
-                    , Animator.event Animator.quickly Nothing
-                    ]
+                            timelines =
+                                model.timelines
 
-                newTimelines =
-                    { timelines
-                        | userClicksTimeline =
-                            Animator.interrupt events model.timelines.userClicksTimeline
-                    }
-            in
-            ( { model | timelines = newTimelines }
-            , Lamdera.sendToBackend UserGainedAClick
-            )
+                            clickCap =
+                                currentLevels.clickCap
+                                    |> getCurrentLevelLevel
+                                    |> basicBonuses.clickCap.clickBonus
+
+                            events =
+                                let
+                                    animatedValue =
+                                        Animator.current timelines.userClicksTimeline
+                                            |> (\state ->
+                                                    case state of
+                                                        Nothing ->
+                                                            LabelNumber 1
+
+                                                        Just (LabelNumber value) ->
+                                                            LabelNumber (value + 1)
+
+                                                        Just (LabelString value) ->
+                                                            LabelNumber 1
+                                               )
+                                            |> (\value ->
+                                                    if userData.userClicks >= clickCap then
+                                                        LabelString "Limit"
+
+                                                    else
+                                                        value
+                                               )
+                                            |> Just
+                                in
+                                [ Animator.event Animator.quickly animatedValue
+                                , Animator.wait Animator.slowly
+                                , Animator.event Animator.quickly Nothing
+                                ]
+
+                            newTimelines =
+                                { timelines
+                                    | userClicksTimeline =
+                                        Animator.interrupt events model.timelines.userClicksTimeline
+                                }
+                        in
+                        ( { model | timelines = newTimelines }
+                        , Lamdera.sendToBackend UserGainedAClick
+                        )
+                    )
+                |> Maybe.withDefault noop
 
         Discuss ->
             model.user
@@ -788,7 +820,7 @@ viewCycleButton progress clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-viewFlyingLabel : Animator.Timeline (Maybe Int) -> Element FrontendMsg
+viewFlyingLabel : Animator.Timeline (Maybe LabelValue) -> Element FrontendMsg
 viewFlyingLabel timeline =
     let
         labelHeight =
@@ -813,8 +845,17 @@ viewFlyingLabel timeline =
 
         labelText =
             Animator.current timeline
-                |> Maybe.map (String.fromInt >> (++) "+")
-                |> Maybe.withDefault " :)"
+                |> (\state ->
+                        case state of
+                            Nothing ->
+                                " :)"
+
+                            Just (LabelNumber value) ->
+                                String.fromInt value |> (++) "+"
+
+                            Just (LabelString value) ->
+                                value
+                   )
     in
     el
         [ Element.moveUp labelHeight
