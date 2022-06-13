@@ -2,12 +2,15 @@ module Backend exposing (..)
 
 import ClickPricing exposing (..)
 import Dict
+import Element
 import Expect
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
 import Process
 import Task
 import Test exposing (..)
+import Test.Html.Query as Query
+import Test.Html.Selector as Selector
 import Time
 import Types exposing (..)
 
@@ -1256,7 +1259,20 @@ suite =
             { initBackendModel | users = testUsers }
     in
     describe "Test Suites"
-        [ test "getting user by username succeeds" <|
+        [ test "sample html test" <|
+            \_ ->
+                let
+                    renderedHtml =
+                        Element.layout [] (Element.text "hello")
+
+                    query =
+                        Query.fromHtml renderedHtml
+                in
+                Query.has
+                    [ Selector.text "hello"
+                    ]
+                    query
+        , test "getting user by username succeeds" <|
             \_ ->
                 Expect.notEqual Nothing <|
                     getUserByUsername testUsers testUsername
