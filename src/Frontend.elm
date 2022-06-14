@@ -83,6 +83,19 @@ timelineAnimator =
                 { m | timelines = newTimelines }
             )
             (always False)
+        |> Animator.watchingWith
+            (.timelines >> .cyclingNumberTimeline >> Tuple.first)
+            (\newTimeline ({ timelines } as m) ->
+                let
+                    newTimelines =
+                        { timelines
+                            | cyclingNumberTimeline =
+                                ( newTimeline, Tuple.second timelines.cyclingNumberTimeline )
+                        }
+                in
+                { m | timelines = newTimelines }
+            )
+            (always False)
 
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
@@ -135,7 +148,22 @@ update msg model =
             ( model, Cmd.none )
 
         NoOpFrontendMsg ->
-            ( model, Cmd.none )
+            let
+                timelines =
+                    model.timelines
+
+                newTimelines =
+                    { timelines
+                        | cyclingNumberTimeline =
+                            timelines.cyclingNumberTimeline
+                                |> (\( timeline, _ ) ->
+                                        ( Animator.go Animator.quickly (Animator.current timeline * 2) timeline
+                                        , Animator.current timeline
+                                        )
+                                   )
+                    }
+            in
+            ( setTimelines newTimelines model, Cmd.none )
 
         LocalTick time ->
             ( { model | lastTick = time }
@@ -171,6 +199,9 @@ update msg model =
 
                                                         Just (LabelNumber value) ->
                                                             LabelNumber (value + 1)
+
+                                                        Just (LabelNumber2 value) ->
+                                                            LabelNumber2 (value + 1)
 
                                                         Just (LabelString value) ->
                                                             LabelNumber 1
@@ -420,9 +451,77 @@ view model =
                     viewPrepping model personalityType
 
                 FullUser userData ->
-                    viewPlaying model userData
+                    -- viewPlaying model userData
+                    viewCyclingNumber model.timelines.cyclingNumberTimeline
         ]
     }
+
+
+forceLabelValueToInt : LabelValue -> Int
+forceLabelValueToInt labelValue =
+    case labelValue of
+        LabelString _ ->
+            1
+
+        LabelNumber number ->
+            number
+
+        LabelNumber2 number ->
+            number
+
+
+viewCyclingNumber : ( Animator.Timeline Int, Int ) -> Element FrontendMsg
+viewCyclingNumber ( timeline, oldNumber ) =
+    let
+        arrivedNumber =
+            Animator.arrived timeline
+
+        newNumber =
+            Animator.current timeline
+
+        oldStr =
+            String.fromInt oldNumber
+
+        newStr =
+            String.fromInt newNumber
+
+        digitLength =
+            max
+                (oldStr |> String.length)
+                (newStr |> String.length)
+
+        paddedNewStr =
+            newStr
+                |> String.padLeft digitLength '_'
+
+        paddedOldStr =
+            oldStr
+                |> String.padLeft digitLength '_'
+
+        doneAnimating =
+            arrivedNumber == newNumber
+    in
+    column []
+        [ el [ Font.alignRight ]
+            (if doneAnimating then
+                text (String.fromInt newNumber)
+
+             else
+                el [ Element.above <| el [ Font.alignRight ] <| text paddedNewStr ] <|
+                    text paddedOldStr
+            )
+        , text <| "old number: " ++ oldStr
+        , text <| "new number: " ++ newStr
+        , UI.button <|
+            UI.TextParams
+                { buttonType = UI.Secondary
+                , customAttrs =
+                    []
+                , onPressMsg = NoOpFrontendMsg
+                , textLabel = "Change"
+                , colorTheme = UI.BrightTheme
+                }
+        ]
 
 
 viewPrepping : Model -> PersonalityType -> Element FrontendMsg
@@ -851,6 +950,9 @@ viewFlyingLabel timeline =
                                 " :)"
 
                             Just (LabelNumber value) ->
+                                String.fromInt value |> (++) "+"
+
+                            Just (LabelNumber2 value) ->
                                 String.fromInt value |> (++) "+"
 
                             Just (LabelString value) ->

@@ -170,11 +170,15 @@ getSessionId user =
 
 type LabelValue
     = LabelNumber Int
+    | LabelNumber2 Int
     | LabelString String
 
 
 type alias Timelines =
-    { userClicksTimeline : Animator.Timeline (Maybe LabelValue) }
+    { userClicksTimeline : Animator.Timeline (Maybe LabelValue)
+    , --This is a tuple because Animator.previous doesn't work, so we manually track it https://github.com/mdgriffith/elm-animator/issues/16
+    cyclingNumberTimeline : (Animator.Timeline (Int), Int)
+    }
 
 
 initFrontendModel : Key -> FrontendModel
@@ -191,7 +195,10 @@ initFrontendModel key =
     , userChatMessage = Nothing
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
-    , timelines = { userClicksTimeline = Animator.init Nothing }
+    , timelines =
+        { userClicksTimeline = Animator.init Nothing
+        , cyclingNumberTimeline = (Animator.init (234), 1)
+        }
     }
 
 
