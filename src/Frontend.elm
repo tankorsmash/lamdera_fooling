@@ -7,6 +7,7 @@ import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(.
 import Color
 import Dict
 import Duration
+import Easings
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
@@ -502,13 +503,16 @@ viewCyclingNumber ( timeline, oldNumber ) =
             arrivedNumber == newNumber
 
         moveBy =
-            Animator.linear timeline <|
+            (Animator.linear timeline <|
                 \state ->
                     if state == oldNumber then
-                        Animator.at 0
+                        Animator.at 0.0
 
                     else
-                        Animator.at 20
+                        Animator.at 1.0
+            )
+                |> Easings.easeOutBack
+                |> (*) 20.0
     in
     column []
         [ el [ Font.alignRight ]
