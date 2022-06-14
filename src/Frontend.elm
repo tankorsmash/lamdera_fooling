@@ -500,15 +500,33 @@ viewCyclingNumber ( timeline, oldNumber ) =
 
         doneAnimating =
             arrivedNumber == newNumber
+
+        moveBy =
+            Animator.linear timeline <|
+                \state ->
+                    if state == oldNumber then
+                        Animator.at 0
+
+                    else
+                        Animator.at 20
     in
     column []
         [ el [ Font.alignRight ]
-            (if doneAnimating then
+            (if False && doneAnimating then
                 text (String.fromInt newNumber)
 
              else
-                el [ Element.above <| el [ Font.alignRight ] <| text paddedNewStr ] <|
-                    text paddedOldStr
+                el
+                    [ Element.inFront <|
+                        el [ Font.alignRight, Element.moveDown (20 - moveBy) ] <|
+                            text paddedNewStr
+                    , Element.clip
+                    , Element.inFront <|
+                        el [ Font.alignRight, Element.moveUp moveBy ] <|
+                            text paddedOldStr
+                    ]
+                <|
+                    text "                  "
             )
         , text <| "old number: " ++ oldStr
         , text <| "new number: " ++ newStr
