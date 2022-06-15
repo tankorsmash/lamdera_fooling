@@ -27,6 +27,7 @@ import Time
 import Types
     exposing
         ( ChatMessage
+        , CyclingTimeline
         , FrontendModel
         , FrontendMsg(..)
         , Group
@@ -149,22 +150,7 @@ update msg model =
             ( model, Cmd.none )
 
         NoOpFrontendMsg ->
-            let
-                timelines =
-                    model.timelines
-
-                newTimelines =
-                    { timelines
-                        | cyclingNumberTimeline =
-                            timelines.cyclingNumberTimeline
-                                |> (\( timeline, _ ) ->
-                                        ( Animator.go Animator.quickly (Animator.current timeline + 9) timeline
-                                        , Animator.current timeline
-                                        )
-                                   )
-                    }
-            in
-            ( setTimelines newTimelines model, Cmd.none )
+            noop
 
         LocalTick time ->
             ( { model | lastTick = time }
@@ -378,7 +364,22 @@ updateFromBackend msg model =
             ( model, Cmd.none )
 
         NewTotalClicks totalClicks ->
-            ( { model | totalClicksFromBackend = totalClicks }, Cmd.none )
+            let
+                timelines =
+                    model.timelines
+
+                newTimelines =
+                    { timelines
+                        | cyclingNumberTimeline =
+                            timelines.cyclingNumberTimeline
+                                |> (\( timeline, _ ) ->
+                                        ( Animator.go Animator.quickly totalClicks timeline
+                                        , Animator.current timeline
+                                        )
+                                   )
+                    }
+            in
+            ( setTimelines newTimelines { model | totalClicksFromBackend = totalClicks }, Cmd.none )
 
         NewTeams teams ->
             ( { model | teamsFromBackend = teams }, Cmd.none )
@@ -452,8 +453,7 @@ view model =
                     viewPrepping model personalityType
 
                 FullUser userData ->
-                    -- viewPlaying model userData
-                    viewCyclingNumber model.timelines.cyclingNumberTimeline
+                    viewPlaying model userData
         ]
     }
 
@@ -476,7 +476,7 @@ nbsp =
     "\u{00A0}"
 
 
-viewCyclingNumber : ( Animator.Timeline Int, Int ) -> Element FrontendMsg
+viewCyclingNumber : CyclingTimeline -> Element FrontendMsg
 viewCyclingNumber ( timeline, oldNumber ) =
     let
         arrivedNumber =
@@ -526,12 +526,12 @@ viewCyclingNumber ( timeline, oldNumber ) =
                 (String.toList paddedOldStr)
                 (String.toList paddedNewStr)
 
-        viewAnimatedOldDigit =
+        viewAnimatedNewDigit =
             String.fromChar
                 >> text
                 >> el [ Element.moveDown (moveDistance - moveBy) ]
 
-        viewAnimatedNewDigit =
+        viewAnimatedOldDigit =
             String.fromChar
                 >> text
                 >> el [ Element.moveUp moveBy ]
@@ -542,14 +542,19 @@ viewCyclingNumber ( timeline, oldNumber ) =
     in
     column []
         [ el [ Font.alignRight ]
-            (paragraph [ Font.alignRight, Font.family [ Font.monospace ], Element.clip ] <|
+            (paragraph
+                [ Font.alignRight
+                , Font.family [ Font.monospace ]
+                , Element.clip
+                ]
+             <|
                 (paddedZipped
                     |> List.map
                         (\( oldDigit, newDigit ) ->
                             el
                                 (if oldDigit /= newDigit then
-                                    [ Element.inFront <| viewAnimatedOldDigit oldDigit
-                                    , Element.inFront <| viewAnimatedNewDigit newDigit
+                                    [ Element.inFront <| viewAnimatedNewDigit newDigit
+                                    , Element.inFront <| viewAnimatedOldDigit oldDigit
                                     ]
 
                                  else
@@ -561,17 +566,16 @@ viewCyclingNumber ( timeline, oldNumber ) =
                         )
                 )
             )
-        , text <| "old number: " ++ oldStr
-        , text <| "new number: " ++ newStr
-        , UI.button <|
-            UI.TextParams
-                { buttonType = UI.Secondary
-                , customAttrs =
-                    []
-                , onPressMsg = NoOpFrontendMsg
-                , textLabel = "Change"
-                , colorTheme = UI.BrightTheme
-                }
+
+        -- , UI.button <|
+        --     UI.TextParams
+        --         { buttonType = UI.Secondary
+        --         , customAttrs =
+        --             []
+        --         , onPressMsg = NoOpFrontendMsg
+        --         , textLabel = "Change"
+        --         , colorTheme = UI.BrightTheme
+        --         }
         ]
 
 
@@ -1432,7 +1436,10 @@ scoreboard model personalityType =
                 text <| "Clicks from the other guys: " ++ String.fromInt team.totalTeamClicks
     in
     column [ width fill ]
-        [ el [ centerX ] <| text <| "All clicks: " ++ String.fromInt model.totalClicksFromBackend
+        [ row [ centerX, width fill, Font.center ]
+            [ el [ centerX ] <| text <| "All clicks: "
+            , el [ centerX ] <| viewCyclingNumber model.timelines.cyclingNumberTimeline
+            ]
         , row [ centerX, spacing 10 ] <|
             [ viewCountFromPersonality Idealistic model.teamsFromBackend.idealists
             , viewCountFromPersonality Realistic model.teamsFromBackend.realists

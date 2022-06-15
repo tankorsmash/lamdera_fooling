@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (CyclingTimeline, BackendModel, BackendMsg(..), ChatMessage, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -174,10 +174,12 @@ type LabelValue
     | LabelString String
 
 
+type alias CyclingTimeline = (Animator.Timeline (Int), Int)
+
 type alias Timelines =
     { userClicksTimeline : Animator.Timeline (Maybe LabelValue)
     , --This is a tuple because Animator.previous doesn't work, so we manually track it https://github.com/mdgriffith/elm-animator/issues/16
-    cyclingNumberTimeline : (Animator.Timeline (Int), Int)
+    cyclingNumberTimeline : CyclingTimeline
     }
 
 
@@ -197,7 +199,7 @@ initFrontendModel key =
     , lastTick = Time.millisToPosix 0
     , timelines =
         { userClicksTimeline = Animator.init Nothing
-        , cyclingNumberTimeline = (Animator.init (234), 1)
+        , cyclingNumberTimeline = (Animator.init (1), 0)
         }
     }
 
