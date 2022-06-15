@@ -1,27 +1,27 @@
-module Evergreen.Migrate.V6 exposing (..)
+module Evergreen.Migrate.V6 exposing (..)
 
-import Evergreen.V4.Types as Old
-import Evergreen.V6.Types as New
+import Evergreen.V4.Types as Old
+import Evergreen.V6.Types as New
 import Lamdera.Migrations exposing (..)
 
 
-frontendModel : Old.FrontendModel -> ModelMigration New.FrontendModel New.FrontendMsg
-frontendModel old =
+frontendModel : Old.FrontendModel -> ModelMigration New.FrontendModel New.FrontendMsg
+frontendModel old =
     ModelUnchanged
 
 
-backendModel : Old.BackendModel -> ModelMigration New.BackendModel New.BackendMsg
-backendModel old =
+backendModel : Old.BackendModel -> ModelMigration New.BackendModel New.BackendMsg
+backendModel old =
     ModelUnchanged
 
 
-frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
-frontendMsg old =
+frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
+frontendMsg old =
     MsgUnchanged
 
 
-toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
-toBackend old =
+toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
+toBackend old =
     MsgUnchanged
 
 
@@ -34,6 +34,6 @@ backendMsg old =
 
 
 
-toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
-toFrontend old =
+toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
+toFrontend old =
     MsgUnchanged

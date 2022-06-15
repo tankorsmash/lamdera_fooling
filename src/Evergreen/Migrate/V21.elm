@@ -1,7 +1,7 @@
-module Evergreen.Migrate.V21 exposing (..)
+module Evergreen.Migrate.V21 exposing (..)
 
-import Evergreen.V20.Types as Old
-import Evergreen.V21.Types as New
+import Evergreen.V20.Types as Old
+import Evergreen.V21.Types as New
 import Lamdera.Migrations exposing (..)
 
 
@@ -45,8 +45,8 @@ backendModel old =
 
 
 
-frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
-frontendMsg old =
+frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
+frontendMsg old =
     MsgMigrated <|
         case old of
             Old.UrlClicked a ->
@@ -93,8 +93,8 @@ frontendMsg old =
 
 
 
-toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
-toBackend old =
+toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
+toBackend old =
     MsgMigrated <|
         case old of
             Old.NoOpToBackend ->
@@ -119,13 +119,13 @@ toBackend old =
                 (New.UserSentMessage msg, Cmd.none)
 
 
-backendMsg : Old.BackendMsg -> MsgMigration New.BackendMsg New.BackendMsg
-backendMsg old =
+backendMsg : Old.BackendMsg -> MsgMigration New.BackendMsg New.BackendMsg
+backendMsg old =
     MsgUnchanged
 
 
-toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
-toFrontend old =
+toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
+toFrontend old =
     MsgMigrated <|
         ( case old of
             Old.NoOpToFrontend ->
