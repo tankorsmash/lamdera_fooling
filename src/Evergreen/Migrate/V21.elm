@@ -29,7 +29,6 @@ frontendModel old =
         )
 
 
-
 backendModel : Old.BackendModel -> ModelMigration New.BackendModel New.BackendMsg
 backendModel old =
     ModelMigrated
@@ -41,8 +40,6 @@ backendModel old =
           }
         , Cmd.none
         )
-
-
 
 
 frontendMsg : Old.FrontendMsg -> MsgMigration New.FrontendMsg New.FrontendMsg
@@ -89,8 +86,7 @@ frontendMsg old =
                 ( New.ChatInputSent, Cmd.none )
 
             Old.FocusError htmlId ->
-                (New.FocusError htmlId, Cmd.none)
-
+                ( New.FocusError htmlId, Cmd.none )
 
 
 toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg
@@ -113,10 +109,10 @@ toBackend old =
                 ( New.UserLoggedOut, Cmd.none )
 
             Old.UserWantsToSpend ->
-                (New.UserWantsToSpend, Cmd.none)
+                ( New.UserWantsToSpend, Cmd.none )
 
             Old.UserSentMessage msg ->
-                (New.UserSentMessage msg, Cmd.none)
+                ( New.UserSentMessage msg, Cmd.none )
 
 
 backendMsg : Old.BackendMsg -> MsgMigration New.BackendMsg New.BackendMsg
@@ -159,6 +155,7 @@ toFrontend old =
         , Cmd.none
         )
 
+
 convertChatMessages : Old.ChatMessage -> New.ChatMessage
 convertChatMessages old =
     { userData = convertUserData old.userData, message = old.message, date = old.date }
@@ -197,14 +194,16 @@ convertUserData old =
     , xp = 0
     }
 
+
 convertTeam : Old.Team -> New.Team
 convertTeam old =
     { totalTeamClicks = old.totalTeamClicks
-    , totalTeamPoints = old.totalTeamPoints}
+    , totalTeamPoints = old.totalTeamPoints
+    }
+
 
 convertTeams : Old.Teams -> New.Teams
 convertTeams old =
     { realists = convertTeam old.realists
     , idealists = convertTeam old.idealists
     }
-

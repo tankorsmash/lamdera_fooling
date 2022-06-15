@@ -51,17 +51,22 @@ toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
 toFrontend old =
     MsgUnchanged
 
+
 convertPersonalityType : Old.PersonalityType -> New.PersonalityType
 convertPersonalityType old =
     case old of
-        Old.Idealistic -> New.Idealistic
-        Old.Realistic -> New.Realistic
+        Old.Idealistic ->
+            New.Idealistic
+
+        Old.Realistic ->
+            New.Realistic
+
 
 convertUser : Old.User -> New.User
 convertUser old =
     case old of
         Old.AnonymousUser mbPt ->
-            New.AnonymousUser (Maybe.map (convertPersonalityType ) mbPt)
+            New.AnonymousUser (Maybe.map convertPersonalityType mbPt)
 
         Old.PreppingUser sessionId pt ->
             New.PreppingUser sessionId (convertPersonalityType pt)

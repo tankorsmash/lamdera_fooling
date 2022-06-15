@@ -33,7 +33,6 @@ backendMsg old =
                 ( New.NoOpBackendMsg, Cmd.none )
 
 
-
 toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
 toFrontend old =
     MsgUnchanged
