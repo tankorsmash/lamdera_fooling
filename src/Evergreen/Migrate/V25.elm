@@ -90,7 +90,7 @@ frontendMsg old =
                 ( New.FocusError htmlId, Cmd.none )
 
             Old.SendBuyUpgrade upgradeType ->
-                ( New.SendBuyUpgrade <| convertUpgradeType upgradeType, Cmd.none)
+                ( New.SendBuyUpgrade <| convertUpgradeType upgradeType, Cmd.none )
 
 
 toBackend : Old.ToBackend -> MsgMigration New.ToBackend New.BackendMsg

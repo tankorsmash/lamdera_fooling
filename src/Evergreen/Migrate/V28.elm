@@ -1,7 +1,7 @@
 module Evergreen.Migrate.V28 exposing (..)
 
-import Evergreen.V27.Types as Old
 import Evergreen.V27.ClickPricing as OldClickPricing
+import Evergreen.V27.Types as Old
 import Evergreen.V28.ClickPricing as NewClickPricing
 import Evergreen.V28.External.Animator.Animator as AnimatorTypes
 import Evergreen.V28.External.Animator.Internal.Time as AnimatorTime
@@ -9,9 +9,9 @@ import Evergreen.V28.External.Animator.Internal.Timeline
 import Evergreen.V28.Types as New
 import External.Animator.Animator as Animator
 import Lamdera.Migrations exposing (..)
+import Quantity
 import Time
 import UUID
-import Quantity
 
 
 myTimeAbsolute : Time.Posix -> AnimatorTime.Absolute
@@ -19,7 +19,7 @@ myTimeAbsolute posix =
     Quantity.Quantity (toFloat (Time.posixToMillis posix))
 
 
-myAnimatorInit : a  ->Evergreen.V28.External.Animator.Internal.Timeline.Timeline a
+myAnimatorInit : a -> Evergreen.V28.External.Animator.Internal.Timeline.Timeline a
 myAnimatorInit first =
     Evergreen.V28.External.Animator.Internal.Timeline.Timeline
         { initial = first
@@ -185,8 +185,9 @@ toBackend old =
 
             Old.UserWantsToLeaveGroup ->
                 ( New.UserWantsToLeaveGroup, Cmd.none )
+
             Old.UserSuperContibuted ->
-                ( New.NoOpToBackend, Cmd.none)
+                ( New.NoOpToBackend, Cmd.none )
 
 
 backendMsg : Old.BackendMsg -> MsgMigration New.BackendMsg New.BackendMsg
@@ -324,4 +325,4 @@ convertUpgradeType : Old.UpgradeType -> New.UpgradeType
 convertUpgradeType old =
     case old of
         Old.SelfImprovement (OldClickPricing.Level level) ->
-            New.Discussion (NewClickPricing.Level (level))
+            New.Discussion (NewClickPricing.Level level)

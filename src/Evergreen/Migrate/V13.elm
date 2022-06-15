@@ -52,7 +52,7 @@ backendMsg old =
 toFrontend : Old.ToFrontend -> MsgMigration New.ToFrontend New.FrontendMsg
 toFrontend old =
     MsgMigrated <|
-        (case old of
+        ( case old of
             Old.NoOpToFrontend ->
                 New.NoOpToFrontend
 
@@ -70,20 +70,25 @@ toFrontend old =
 
             Old.NewClicksByUser count ->
                 New.NewClicksByUser count
-                , Cmd.none)
+        , Cmd.none
+        )
 
 
 convertPersonalityType : Old.PersonalityType -> New.PersonalityType
 convertPersonalityType old =
     case old of
-        Old.Idealistic -> New.Idealistic
-        Old.Realistic -> New.Realistic
+        Old.Idealistic ->
+            New.Idealistic
+
+        Old.Realistic ->
+            New.Realistic
+
 
 convertUser : Old.User -> New.User
 convertUser old =
     case old of
         Old.AnonymousUser mbPt ->
-            New.AnonymousUser (Maybe.map (convertPersonalityType ) mbPt)
+            New.AnonymousUser (Maybe.map convertPersonalityType mbPt)
 
         Old.PreppingUser sessionId pt ->
             New.PreppingUser sessionId (convertPersonalityType pt)
