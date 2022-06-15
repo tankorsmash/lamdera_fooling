@@ -158,7 +158,7 @@ update msg model =
                         | cyclingNumberTimeline =
                             timelines.cyclingNumberTimeline
                                 |> (\( timeline, _ ) ->
-                                        ( Animator.go Animator.quickly (Animator.current timeline + 1) timeline
+                                        ( Animator.go Animator.quickly (Animator.current timeline + 9) timeline
                                         , Animator.current timeline
                                         )
                                    )
@@ -470,6 +470,7 @@ forceLabelValueToInt labelValue =
         LabelNumber2 number ->
             number
 
+
 nbsp : String
 nbsp =
     "\u{00A0}"
@@ -505,9 +506,6 @@ viewCyclingNumber ( timeline, oldNumber ) =
                 |> String.padLeft digitLength '_'
                 |> String.replace "_" nbsp
 
-        doneAnimating =
-            arrivedNumber == newNumber
-
         moveDistance =
             20
 
@@ -527,32 +525,41 @@ viewCyclingNumber ( timeline, oldNumber ) =
             List.Extra.zip
                 (String.toList paddedOldStr)
                 (String.toList paddedNewStr)
+
+        viewAnimatedOldDigit =
+            String.fromChar
+                >> text
+                >> el [ Element.moveDown (moveDistance - moveBy) ]
+
+        viewAnimatedNewDigit =
+            String.fromChar
+                >> text
+                >> el [ Element.moveUp moveBy ]
+
+        viewStaticNewDigit =
+            String.fromChar
+                >> text
     in
     column []
         [ el [ Font.alignRight ]
-            (if False && doneAnimating then
-                text (String.fromInt newNumber)
+            (paragraph [ Font.alignRight, Font.family [ Font.monospace ], Element.clip ] <|
+                (paddedZipped
+                    |> List.map
+                        (\( oldDigit, newDigit ) ->
+                            el
+                                (if oldDigit /= newDigit then
+                                    [ Element.inFront <| viewAnimatedOldDigit oldDigit
+                                    , Element.inFront <| viewAnimatedNewDigit newDigit
+                                    ]
 
-             else
-                paragraph [ Font.alignRight, Font.family [ Font.monospace ], Element.clip ] <|
-                    (paddedZipped
-                        |> List.map
-                            (\( oldDigit, newDigit ) ->
-                                if oldDigit /= newDigit then
-                                    el
-                                        [ Element.inFront <|
-                                            el [ Element.moveDown (moveDistance - moveBy) ] <|
-                                                text (String.fromChar oldDigit)
-                                        , Element.inFront <|
-                                            el [ Element.moveUp moveBy ] <|
-                                                text (String.fromChar newDigit)
-                                        ]
-                                    <|
-                                        text "\u{00A0}"
-                                else
-                                    text (String.fromChar newDigit)
-                            )
-                    )
+                                 else
+                                    [ Element.inFront <| viewStaticNewDigit newDigit
+                                    ]
+                                )
+                            <|
+                                text "\u{00A0}"
+                        )
+                )
             )
         , text <| "old number: " ++ oldStr
         , text <| "new number: " ++ newStr
