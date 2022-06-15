@@ -84,7 +84,7 @@ timelineAnimator =
                 in
                 { m | timelines = newTimelines }
             )
-            (always False)
+            (always True)
         |> Animator.watchingWith
             (.timelines >> .cyclingNumberTimeline >> Tuple.first)
             (\newTimeline ({ timelines } as m) ->
@@ -97,7 +97,7 @@ timelineAnimator =
                 in
                 { m | timelines = newTimelines }
             )
-            (always False)
+            (always True)
 
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
