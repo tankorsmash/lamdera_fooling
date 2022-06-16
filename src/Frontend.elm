@@ -47,6 +47,7 @@ import Types
         )
 import UUID
 import Url
+import Url.Parser as Parser exposing ((</>), Parser)
 
 
 type alias Model =
@@ -453,9 +454,35 @@ view model =
                     viewPrepping model personalityType
 
                 FullUser userData ->
-                    viewPlaying model userData
+                    let
+                        route =
+                            Parser.parse routeParser model.url
+                                |> Maybe.withDefault GamePage
+                    in
+                    case route of
+                        GamePage ->
+                            viewGamePage model userData
+                        AdminPage -> 
+                            viewAdminPage model userData
         ]
     }
+
+
+viewAdminPage : Model -> UserData ->Element FrontendMsg
+viewAdminPage model userData =
+    text "Admin page"
+
+type Route
+    = GamePage
+    | AdminPage
+
+
+routeParser : Parser (Route -> a) a
+routeParser =
+    Parser.oneOf
+        [ Parser.map GamePage Parser.top
+        , Parser.map AdminPage (Parser.s "ules")
+        ]
 
 
 forceLabelValueToInt : LabelValue -> Int
@@ -1404,8 +1431,8 @@ viewPlayers model userData personalityType =
     viewUsersInPersonalityType
 
 
-viewPlaying : Model -> Types.UserData -> Element FrontendMsg
-viewPlaying model ({ personalityType, xp } as userData) =
+viewGamePage : Model -> Types.UserData -> Element FrontendMsg
+viewGamePage model ({ personalityType, xp } as userData) =
     let
         numGroupMembers =
             Types.getGroupNumGroupMembers model.teamsFromBackend userData
