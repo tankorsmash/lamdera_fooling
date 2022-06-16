@@ -44,6 +44,7 @@ import Types
         , getUserData
         , getUsername
         , initFrontendModel
+        , setAdminFrontendModel
         , stringToPersonalityType
         )
 import UUID
@@ -421,6 +422,13 @@ updateFromBackend msg model =
 
         NewAllChatMessages allChatMessages ->
             ( { model | allChatMessages = allChatMessages }, Cmd.none )
+
+        NewToAdminFrontend toAdminFrontend ->
+            let
+                ( newAdminFrontendModel, adminCmd ) =
+                    AdminPage.updateFromBackend toAdminFrontend model.adminFrontendModel
+            in
+            ( setAdminFrontendModel model newAdminFrontendModel, Cmd.map GotAdminFrontendMsg adminCmd )
 
 
 view : Model -> Browser.Document FrontendMsg

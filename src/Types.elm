@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -187,7 +187,7 @@ type alias Timelines =
 
 initAdminFrontendModel : Url -> Key -> AdminFrontendModel
 initAdminFrontendModel url key =
-    {url = url, key = key}
+    { url = url, key = key }
 
 
 initFrontendModel : Url -> Key -> FrontendModel
@@ -351,12 +351,21 @@ type UpgradeType
     | ClickCap Level
 
 
+setAdminFrontendModel : FrontendModel -> AdminFrontendModel -> FrontendModel
+setAdminFrontendModel model adminFrontendModel =
+    { model | adminFrontendModel = adminFrontendModel }
+
+
 type alias AdminFrontendModel =
     { url : Url.Url, key : Key }
 
 
 type AdminFrontendMsg
     = NoOpAdminFrontend
+
+
+type AdminToBackend
+    = NoOpAdminToBackend
 
 
 type FrontendMsg
@@ -401,6 +410,7 @@ type ToBackend
     | UserWantsToBuyUpgrade UpgradeType
     | UserWantsToJoinGroup UUID.UUID
     | UserWantsToLeaveGroup
+    | AdminSendingToBackend AdminToBackend
 
 
 type BackendMsg
@@ -432,6 +442,10 @@ getGroupNumGroupMembers teams userData =
         |> Maybe.map (.members >> List.length)
 
 
+type ToAdminFrontend
+    = NoOpToAdminFrontend
+
+
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
@@ -442,3 +456,4 @@ type ToFrontend
     | NewUsernamesByPersonalityTypes TeamsUserClicks
     | NewTick Time.Posix
     | NewAllChatMessages (List ChatMessage)
+    | NewToAdminFrontend ToAdminFrontend

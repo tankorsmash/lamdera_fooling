@@ -1103,6 +1103,20 @@ updateFromFrontend sessionId clientId msg model =
                         ]
                     )
 
+        AdminSendingToBackend adminToBackend ->
+            updateFromAdminFrontend sessionId clientId adminToBackend model
+
+
+updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromAdminFrontend sessionId clientId msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
+    case msg of
+        NoOpAdminToBackend ->
+            noop
+
 
 setTeamGroups : Team -> List Group -> Team
 setTeamGroups team newUserGroups =

@@ -23,6 +23,17 @@ update msg model =
             noop
 
 
+updateFromBackend : ToAdminFrontend -> Model -> ( Model, Cmd Msg )
+updateFromBackend msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
+    case msg of
+        NoOpToAdminFrontend ->
+            noop
+
+
 view : Element Msg
 view =
     text "New Admin Page"
