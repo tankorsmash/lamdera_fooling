@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -362,10 +362,12 @@ type alias AdminFrontendModel =
 
 type AdminFrontendMsg
     = NoOpAdminFrontend
+    | DownloadUsers
 
 
 type AdminToBackend
     = NoOpAdminToBackend
+    | AdminWantsToDownloadUsers
 
 
 type FrontendMsg
@@ -442,8 +444,16 @@ getGroupNumGroupMembers teams userData =
         |> Maybe.map (.members >> List.length)
 
 
+{-| Allows the AdminPage to send to backend
+-}
+adminSendToBackend : AdminToBackend -> Cmd msg
+adminSendToBackend adminToBackend_ =
+    Lamdera.sendToBackend (AdminSendingToBackend adminToBackend_)
+
+
 type ToAdminFrontend
     = NoOpToAdminFrontend
+    | DownloadedUsers
 
 
 type ToFrontend

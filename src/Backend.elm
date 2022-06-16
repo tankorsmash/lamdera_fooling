@@ -1117,6 +1117,11 @@ updateFromAdminFrontend sessionId clientId msg model =
         NoOpAdminToBackend ->
             noop
 
+        AdminWantsToDownloadUsers ->
+            ( model
+            , Lamdera.sendToFrontend clientId (NewToAdminFrontend DownloadedUsers)
+            )
+
 
 setTeamGroups : Team -> List Group -> Team
 setTeamGroups team newUserGroups =
