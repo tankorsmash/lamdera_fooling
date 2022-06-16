@@ -135,9 +135,6 @@ update msg model =
     in
     case msg of
         UrlClicked urlRequest ->
-            let
-                _ = Debug.log "url clicked" urlRequest
-            in
             case urlRequest of
                 Internal url ->
                     ( model
@@ -150,9 +147,6 @@ update msg model =
                     )
 
         UrlChanged url ->
-            let
-                _ = Debug.log "url changed to" url
-            in
             ( model, Cmd.none )
 
         NoOpFrontendMsg ->
