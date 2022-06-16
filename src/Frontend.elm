@@ -1,5 +1,6 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
+import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Navigation as Nav
@@ -148,7 +149,14 @@ update msg model =
                     )
 
         UrlChanged url ->
-            ( model, Cmd.none )
+            let
+                adminFrontendModel =
+                    model.adminFrontendModel
+
+                newAdminFrontendModel =
+                    { adminFrontendModel | url = url }
+            in
+            ( { model | url = url, adminFrontendModel = newAdminFrontendModel }, Cmd.none )
 
         NoOpFrontendMsg ->
             noop
@@ -353,6 +361,15 @@ update msg model =
         TryToLeaveGroup ->
             ( model, Lamdera.sendToBackend Types.UserWantsToLeaveGroup )
 
+        GotAdminFrontendMsg adminFrontendMsg ->
+            let
+                ( newAdminFrontendModel, adminCmd ) =
+                    AdminPage.update adminFrontendMsg model.adminFrontendModel
+            in
+            ( { model | adminFrontendModel = newAdminFrontendModel }
+            , Cmd.map GotAdminFrontendMsg adminCmd
+            )
+
 
 
 -- end of update
@@ -462,15 +479,18 @@ view model =
                     case route of
                         GamePage ->
                             viewGamePage model userData
-                        AdminPage -> 
+
+                        AdminPage ->
                             viewAdminPage model userData
         ]
     }
 
 
-viewAdminPage : Model -> UserData ->Element FrontendMsg
+viewAdminPage : Model -> UserData -> Element FrontendMsg
 viewAdminPage model userData =
-    text "Admin page"
+    Element.map GotAdminFrontendMsg <|
+        AdminPage.view
+
 
 type Route
     = GamePage

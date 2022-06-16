@@ -1,4 +1,4 @@
-module Types exposing (BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -185,6 +185,11 @@ type alias Timelines =
     }
 
 
+initAdminFrontendModel : Url -> Key -> AdminFrontendModel
+initAdminFrontendModel url key =
+    {url = url, key = key}
+
+
 initFrontendModel : Url -> Key -> FrontendModel
 initFrontendModel url key =
     { key = key
@@ -204,6 +209,7 @@ initFrontendModel url key =
         { userClicksTimeline = Animator.init Nothing
         , cyclingNumberTimeline = ( Animator.init 1, 0 )
         }
+    , adminFrontendModel = initAdminFrontendModel url key
     }
 
 
@@ -237,6 +243,7 @@ type alias FrontendModel =
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
     , timelines : Timelines
+    , adminFrontendModel : AdminFrontendModel
     }
 
 
@@ -344,6 +351,14 @@ type UpgradeType
     | ClickCap Level
 
 
+type alias AdminFrontendModel =
+    { url : Url.Url, key : Key }
+
+
+type AdminFrontendMsg
+    = NoOpAdminFrontend
+
+
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
@@ -369,6 +384,7 @@ type FrontendMsg
     | ChatInputChanged (Maybe String)
     | ChatInputSent
     | FocusError (Result Browser.Dom.Error ())
+    | GotAdminFrontendMsg AdminFrontendMsg
 
 
 type ToBackend
