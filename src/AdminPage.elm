@@ -82,6 +82,9 @@ view model =
     let
         hasUsers =
             not <| List.isEmpty model.users
+
+        hasChatMessages =
+            not <| List.isEmpty model.allChatMessages
     in
     column [ width fill, spacing 5 ] <|
         [ text "New Admin Page"
@@ -96,7 +99,7 @@ view model =
         , column [ spacing 5 ] <|
             if hasUsers then
                 [ el [ Font.underline ] <| text "Users"
-                , column []
+                , column [ UI.allowUserSelect ]
                     (model.users
                         |> List.map getUserData
                         |> List.filterMap identity
@@ -108,9 +111,9 @@ view model =
                 []
         , button DownloadAllChatMessages "Download Chat Messages"
         , column [ spacing 5 ] <|
-            if hasUsers then
+            if hasChatMessages then
                 [ el [ Font.underline ] <| text "Chat Messages"
-                , column []
+                , column [ UI.allowUserSelect ]
                     (model.allChatMessages
                         |> List.map
                             (\chatMessage ->
