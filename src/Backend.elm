@@ -940,8 +940,14 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.map
                     (\userData ->
                         let
+                            newMessage : ChatMessage
                             newMessage =
-                                { userData = userData, message = chatContent, date = "" }
+                                { userData = userData
+                                , message = chatContent
+                                , --TODO date
+                                  date = ""
+                                , uuid = generateUuid (userData.username ++ chatContent)
+                                }
 
                             newAllChatMessages =
                                 newMessage :: model.allChatMessages

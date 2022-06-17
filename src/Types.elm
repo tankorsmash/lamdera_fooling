@@ -221,7 +221,9 @@ type alias ChatMessage =
     { userData : UserData
     , message : String
     , date : String
+    , uuid : UUID.UUID
     }
+
 
 
 type alias UserClickData =
