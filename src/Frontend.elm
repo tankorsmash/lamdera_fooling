@@ -227,6 +227,7 @@ update msg model =
                         , Lamdera.sendToBackend UserGainedAClick
                         )
                     )
+
                 |> Maybe.withDefault noop
 
         Discuss ->
@@ -529,6 +530,22 @@ forceLabelValueToInt labelValue =
 nbsp : String
 nbsp =
     "\u{00A0}"
+
+-- viewAnimatedNewDigit =
+--     String.fromChar
+--         >> text
+--         >> el [ Element.moveDown (moveDistance - moveBy) ]
+
+
+
+add1 : Int -> Int
+add1 x = x + 1
+
+sub10 : Int -> Int
+sub10 x = x - 10
+
+myValue : Int -> Int
+myValue = add1 >> sub10
 
 
 viewCyclingNumber : CyclingTimeline -> Element FrontendMsg

@@ -136,6 +136,15 @@ type alias ButtonTextParams msg =
     }
 
 
+type alias ButtonLinkParams msg =
+    { buttonType : ButtonType
+    , colorTheme : ColorTheme
+    , customAttrs : List (Element.Attribute msg)
+    , textLabel : String
+    , url : String
+    }
+
+
 type alias ButtonCustomParams msg =
     { buttonType : ButtonType
     , colorTheme : ColorTheme
@@ -147,6 +156,7 @@ type alias ButtonCustomParams msg =
 
 type ButtonParams msg
     = TextParams (ButtonTextParams msg)
+    | LinkTextParams (ButtonLinkParams msg)
     | CustomParams (ButtonCustomParams msg)
 
 
@@ -508,6 +518,11 @@ button params =
                 (addButtonAttrs buttonType customAttrs)
                 { onPress = Just onPressMsg, label = text textLabel }
 
+        LinkTextParams { buttonType, customAttrs, url, textLabel } ->
+            Element.link
+                (addButtonAttrs buttonType customAttrs)
+                { url = url, label = text textLabel }
+
         CustomParams { buttonType, customAttrs, onPressMsg, customLabel } ->
             Input.button
                 (addButtonAttrs buttonType customAttrs)
@@ -539,6 +554,11 @@ buttonWithTooltip params { tooltip_id, tooltip_body, onTooltipMsg } hoveredToolt
             Input.button
                 (addButtonAttrs buttonType (tooltipAttr colorTheme ++ customAttrs))
                 { onPress = Just onPressMsg, label = text textLabel }
+
+        LinkTextParams { colorTheme, buttonType, customAttrs, url, textLabel } ->
+            Element.link
+                (addButtonAttrs buttonType (tooltipAttr colorTheme ++ customAttrs))
+                { url = url, label = text textLabel }
 
         CustomParams { colorTheme, buttonType, customAttrs, onPressMsg, customLabel } ->
             Input.button

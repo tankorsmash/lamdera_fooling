@@ -1,10 +1,12 @@
 module AdminPage exposing (..)
 
+import Browser exposing (UrlRequest(..))
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Font as Font
 import Interface as UI
 import Lamdera
 import Types exposing (..)
+import Url
 
 
 type alias Model =
@@ -62,6 +64,19 @@ button msg str =
         }
 
 
+link : String -> String -> Element Msg
+link url str =
+    UI.button
+        (UI.LinkTextParams
+            { buttonType = UI.Outline
+            , colorTheme = UI.BrightTheme
+            , customAttrs = []
+            , textLabel = "Back"
+            , url = "/"
+            }
+        )
+
+
 view : Model -> Element Msg
 view model =
     let
@@ -70,6 +85,7 @@ view model =
     in
     column [ width fill, spacing 5 ] <|
         [ text "New Admin Page"
+        , link "/" "Back"
         , button DownloadUsers
             (if not hasUsers then
                 "Get All Users"
