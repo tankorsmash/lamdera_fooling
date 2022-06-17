@@ -38,12 +38,16 @@ updateFromBackend msg model =
         NoOpToAdminFrontend ->
             noop
 
-        DownloadedUsers ->
-            noop
+        DownloadedUsers users ->
+            let
+                _ =
+                    Debug.log "users" users
+            in
+            ( { model | users = users }, Cmd.none )
 
 
-view : Element Msg
-view =
+view : Model -> Element Msg
+view model =
     column [ width fill ] <|
         [ text "New Admin Page"
         , UI.primary_button
@@ -53,4 +57,10 @@ view =
             , textLabel = "Click me"
             , onPressMsg = DownloadUsers
             }
+        , column [] (
+            model.users
+                |> List.map getUserData
+                |> List.filterMap identity
+                |> List.map (\ud -> text ud.username)
+            )
         ]

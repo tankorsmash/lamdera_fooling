@@ -187,7 +187,10 @@ type alias Timelines =
 
 initAdminFrontendModel : Url -> Key -> AdminFrontendModel
 initAdminFrontendModel url key =
-    { url = url, key = key }
+    { url = url
+    , key = key
+    , users = []
+    }
 
 
 initFrontendModel : Url -> Key -> FrontendModel
@@ -357,7 +360,7 @@ setAdminFrontendModel model adminFrontendModel =
 
 
 type alias AdminFrontendModel =
-    { url : Url.Url, key : Key }
+    { url : Url.Url, key : Key, users : List User }
 
 
 type AdminFrontendMsg
@@ -453,7 +456,7 @@ adminSendToBackend adminToBackend_ =
 
 type ToAdminFrontend
     = NoOpToAdminFrontend
-    | DownloadedUsers
+    | DownloadedUsers (List User)
 
 
 type ToFrontend

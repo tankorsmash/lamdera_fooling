@@ -497,7 +497,7 @@ view model =
 viewAdminPage : Model -> UserData -> Element FrontendMsg
 viewAdminPage model userData =
     Element.map GotAdminFrontendMsg <|
-        AdminPage.view
+        AdminPage.view model.adminFrontendModel
 
 
 type Route

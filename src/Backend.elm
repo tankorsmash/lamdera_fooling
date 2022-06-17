@@ -1118,8 +1118,15 @@ updateFromAdminFrontend sessionId clientId msg model =
             noop
 
         AdminWantsToDownloadUsers ->
+            let
+                usersToSend =
+                    model.users
+            in
             ( model
-            , Lamdera.sendToFrontend clientId (NewToAdminFrontend DownloadedUsers)
+            , usersToSend
+                |> DownloadedUsers
+                |> NewToAdminFrontend
+                |> Lamdera.sendToFrontend clientId
             )
 
 
