@@ -190,6 +190,7 @@ initAdminFrontendModel url key =
     { url = url
     , key = key
     , users = []
+    , allChatMessages = []
     }
 
 
@@ -360,17 +361,23 @@ setAdminFrontendModel model adminFrontendModel =
 
 
 type alias AdminFrontendModel =
-    { url : Url.Url, key : Key, users : List User }
+    { url : Url.Url
+    , key : Key
+    , users : List User
+    , allChatMessages : List ChatMessage
+    }
 
 
 type AdminFrontendMsg
     = NoOpAdminFrontend
     | DownloadUsers
+    | DownloadAllChatMessages
 
 
 type AdminToBackend
     = NoOpAdminToBackend
     | AdminWantsToDownloadUsers
+    | AdminWantsToDownloadChatMessages
 
 
 type FrontendMsg
@@ -457,6 +464,7 @@ adminSendToBackend adminToBackend_ =
 type ToAdminFrontend
     = NoOpToAdminFrontend
     | DownloadedUsers (List User)
+    | DownloadedChatMessages (List ChatMessage)
 
 
 type ToFrontend

@@ -1129,6 +1129,18 @@ updateFromAdminFrontend sessionId clientId msg model =
                 |> Lamdera.sendToFrontend clientId
             )
 
+        AdminWantsToDownloadChatMessages ->
+            let
+                usersToSend =
+                    model.allChatMessages
+            in
+            ( model
+            , usersToSend
+                |> DownloadedChatMessages
+                |> NewToAdminFrontend
+                |> Lamdera.sendToFrontend clientId
+            )
+
 
 setTeamGroups : Team -> List Group -> Team
 setTeamGroups team newUserGroups =
