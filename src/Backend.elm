@@ -829,7 +829,9 @@ updateFromFrontend sessionId clientId msg model =
                         promoteUser sessionId_ personalityType =
                             --promote to full user
                             FullUser <|
-                                createUserData (Just sessionId) username personalityType
+                                (createUserData (Just sessionId) username personalityType
+                                    |> (\ud -> { ud | isOnline = True })
+                                )
 
                         replaceUser existingUserData =
                             FullUser
