@@ -1206,7 +1206,7 @@ generateDummyUser =
         generateExtraNumber =
             Random.int 0 1000
                 |> Random.map
-                    (String.fromInt >> (++) " ")
+                    (String.fromInt >> (++) "_")
     in
     Random.map3
         (\name personalityType extraNumber ->

@@ -99,12 +99,13 @@ view model =
              else
                 "Refresh Users"
             )
-        , column [ spacing 5, height fill ] <|
+        , column [ spacing 5, height fill, width fill ] <|
             if hasUsers then
                 [ el [ Font.underline ] <| text "Users"
                 , column
                     [ UI.allowUserSelect
-                    , height (fill |> Element.maximum 200)
+                    , height fill
+                    , width fill
                     , Element.scrollbarY
                     ]
                     (model.users
@@ -117,7 +118,7 @@ view model =
             else
                 []
         , button DownloadAllChatMessages "Download Chat Messages"
-        , column [ spacing 5 ] <|
+        , column [ spacing 5, height fill, width fill ] <|
             if hasChatMessages then
                 [ el [ Font.underline ] <| text "Chat Messages"
                 , column [ UI.allowUserSelect ]
