@@ -34,7 +34,7 @@ update msg model =
             ( model, adminSendToBackend AdminWantsToDownloadChatMessages )
 
         AddDummyUsers numUsers ->
-            (model, adminSendToBackend <| AdminWantsToAddDummyUsers numUsers)
+            ( model, adminSendToBackend <| AdminWantsToAddDummyUsers numUsers )
 
 
 updateFromBackend : ToAdminFrontend -> Model -> ( Model, Cmd Msg )
@@ -89,7 +89,7 @@ view model =
         hasChatMessages =
             not <| List.isEmpty model.allChatMessages
     in
-    column [ width fill, spacing 5 ] <|
+    column [ width fill, spacing 5, height fill ] <|
         [ text "New Admin Page"
         , link "/" "Back"
         , button DownloadUsers
@@ -99,10 +99,14 @@ view model =
              else
                 "Refresh Users"
             )
-        , column [ spacing 5 ] <|
+        , column [ spacing 5, height fill ] <|
             if hasUsers then
                 [ el [ Font.underline ] <| text "Users"
-                , column [ UI.allowUserSelect ]
+                , column
+                    [ UI.allowUserSelect
+                    , height (fill |> Element.maximum 200)
+                    , Element.scrollbarY
+                    ]
                     (model.users
                         |> List.map getUserData
                         |> List.filterMap identity
