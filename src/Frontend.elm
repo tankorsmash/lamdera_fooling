@@ -1439,9 +1439,8 @@ viewPlayers model userData personalityType =
                 column
                     [ alignTop
                     , UI.allowUserSelect
-                    , height (fill |> Element.maximum 500)
                     , width fill
-                    , Element.scrollbarY
+                    , height fill
                     ]
                 <|
                     [ teamHeader
@@ -1451,12 +1450,19 @@ viewPlayers model userData personalityType =
                                     |> .groups
                                     |> List.map viewGroup
                                )
+                    , column
+                        [ width fill
+                        , height (fill |> Element.maximum 500)
+                        , Element.clip
+                        , Element.scrollbarY
+                        ]
+                      <|
+                        (names
+                            |> List.sortBy .clicks
+                            |> List.reverse
+                            |> List.map viewUserInSidebar
+                        )
                     ]
-                        ++ (names
-                                |> List.sortBy .clicks
-                                |> List.reverse
-                                |> List.map viewUserInSidebar
-                           )
            )
 
 
