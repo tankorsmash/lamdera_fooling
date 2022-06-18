@@ -1378,6 +1378,22 @@ viewPlayers model userData personalityType =
                             )
             in
             row [] [ el usernameAttrs usernameText, clicksContent ]
+
+        totalScoreText personalityType_ =
+            let
+                ( totalTeamPoints, personalityTypeString ) =
+                    case personalityType_ of
+                        Realistic ->
+                            ( model.teamsFromBackend.realists.totalTeamPoints
+                            , "Realists"
+                            )
+
+                        Idealistic ->
+                            ( model.teamsFromBackend.idealists.totalTeamPoints
+                            , "Idealists"
+                            )
+            in
+            "The " ++ personalityTypeString ++ " (" ++ String.fromInt totalTeamPoints ++ " pts)"
     in
     model.teamsUserClicks
         |> (case personalityType of
@@ -1391,16 +1407,7 @@ viewPlayers model userData personalityType =
                 let
                     teamHeader =
                         el [ Font.underline, paddingXY 0 5 ] <|
-                            (text <|
-                                "The "
-                                    ++ (case personalityType of
-                                            Realistic ->
-                                                "Realists (" ++ String.fromInt model.teamsFromBackend.realists.totalTeamPoints ++ " pts)"
-
-                                            Idealistic ->
-                                                "Idealists (" ++ String.fromInt model.teamsFromBackend.idealists.totalTeamPoints ++ " pts)"
-                                       )
-                            )
+                            (text <| totalScoreText personalityType)
 
                     viewGroup : Types.Group -> Element FrontendMsg
                     viewGroup group =
