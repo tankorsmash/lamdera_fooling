@@ -71,7 +71,8 @@ app =
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
     Sub.batch
-        [ timelineAnimator |> Animator.toSubscription LocalTick model
+        [ Sub.none
+        , timelineAnimator |> Animator.toSubscription LocalTick model
         ]
 
 

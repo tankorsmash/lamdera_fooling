@@ -8,7 +8,9 @@ import Lamdera exposing (ClientId, SessionId)
 import List.Extra
 import Process
 import Random
+import Random.Char
 import Random.List
+import Random.String
 import Task
 import Test exposing (..)
 import Test.Html.Query as Query
@@ -1139,11 +1141,11 @@ updateFromAdminFrontend sessionId clientId msg model =
 
         AdminWantsToDownloadChatMessages ->
             let
-                usersToSend =
+                chatMessagesToSend =
                     model.allChatMessages
             in
             ( model
-            , usersToSend
+            , chatMessagesToSend
                 |> DownloadedChatMessages
                 |> NewToAdminFrontend
                 |> Lamdera.sendToFrontend clientId
@@ -1168,6 +1170,64 @@ updateFromAdminFrontend sessionId clientId msg model =
                 |> DownloadedUsers
                 |> NewToAdminFrontend
                 |> Lamdera.sendToFrontend clientId
+            )
+
+        AdminWantsToAddDummyChatMessages numChatMessages ->
+            let
+                ( newMessages, newSeed ) =
+                    -- (newMessages) =
+                    model.globalSeed
+                        |> Random.step
+                            (Random.map2
+                                (\partialChatMessages userDatas ->
+                                    List.Extra.zip partialChatMessages userDatas
+                                        |> List.map
+                                            (\( partial, userData ) ->
+                                                partial userData
+                                            )
+                                )
+                                (generateChatMessage
+                                    |> Random.list numChatMessages
+                                )
+                                (model.users
+                                    |> List.filterMap getUserData
+                                    |> Debug.log "filtered userData"
+                                    |> Random.List.shuffle
+                                    |> Random.map (List.Extra.cycle numChatMessages)
+                                )
+                                |> Random.map
+                                    (\newMessages_ ->
+                                        newMessages_ ++ model.allChatMessages
+                                    )
+                            )
+
+                -- |> Random.andThen
+                --     (\partialChatMessages ->
+                --         List.map
+                --     )
+            in
+            ( { model | allChatMessages = newMessages, globalSeed = newSeed }
+            , newMessages
+                |> DownloadedChatMessages
+                |> NewToAdminFrontend
+                |> Lamdera.sendToFrontend clientId
+            )
+
+
+generateChatMessage : Random.Generator (UserData -> ChatMessage)
+generateChatMessage =
+    Random.String.rangeLengthString
+        3
+        8
+        Random.Char.english
+        |> Random.map
+            (\message ->
+                \ud ->
+                    { userData = ud
+                    , message = message
+                    , uuid = generateUuid message
+                    , date = ""
+                    }
             )
 
 

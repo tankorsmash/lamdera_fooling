@@ -36,6 +36,9 @@ update msg model =
         AddDummyUsers numUsers ->
             ( model, adminSendToBackend <| AdminWantsToAddDummyUsers numUsers )
 
+        AddDummyChatMessages numChatMessages ->
+            ( model, adminSendToBackend <| AdminWantsToAddDummyChatMessages numChatMessages )
+
 
 updateFromBackend : ToAdminFrontend -> Model -> ( Model, Cmd Msg )
 updateFromBackend msg model =
@@ -99,7 +102,7 @@ view model =
              else
                 "Refresh Users"
             )
-        , column [ spacing 5, height fill, width fill ] <|
+        , column [ spacing 5, height (fill |> Element.minimum 100), width fill ] <|
             if hasUsers then
                 [ el [ Font.underline ] <| text "Users"
                 , column
@@ -118,10 +121,10 @@ view model =
             else
                 []
         , button DownloadAllChatMessages "Download Chat Messages"
-        , column [ spacing 5, height fill, width fill ] <|
+        , column [ spacing 5, height (fill |> Element.minimum 100), width fill ] <|
             if hasChatMessages then
                 [ el [ Font.underline ] <| text "Chat Messages"
-                , column [ UI.allowUserSelect ]
+                , column [ UI.allowUserSelect, height fill, width fill, Element.scrollbarY ]
                     (model.allChatMessages
                         |> List.map
                             (\chatMessage ->
@@ -133,4 +136,5 @@ view model =
             else
                 []
         , button (AddDummyUsers 5) "Add Dummy Users x5"
+        , button (AddDummyChatMessages 5) "Add Dummy Messages x5"
         ]
