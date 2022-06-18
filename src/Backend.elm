@@ -1152,17 +1152,19 @@ updateFromAdminFrontend sessionId clientId msg model =
         AdminWantsToAddDummyUsers numUsers ->
             let
                 ( newUsers, newSeed ) =
-                    Random.step
-                        (Random.list numUsers (Random.map FullUser generateDummyUser))
-                        model.globalSeed
-
-                usersToSend =
-                    model.users ++ newUsers
+                    model.globalSeed
+                        |> Random.step
+                            (generateDummyUser
+                                |> Random.map FullUser
+                                |> Random.list numUsers
+                            )
+                        |> Tuple.mapFirst
+                            ((++) model.users)
             in
             ( model
                 |> setGlobalSeed newSeed
                 |> setUsers newUsers
-            , usersToSend
+            , newUsers
                 |> DownloadedUsers
                 |> NewToAdminFrontend
                 |> Lamdera.sendToFrontend clientId
