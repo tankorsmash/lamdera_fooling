@@ -1218,10 +1218,20 @@ updateFromAdminFrontend sessionId clientId msg model =
 
 generateChatMessage : Random.Generator (UserData -> ChatMessage)
 generateChatMessage =
-    Random.String.rangeLengthString
-        3
-        8
-        Random.Char.english
+    let
+        generateWord =
+            Random.String.rangeLengthString
+                3
+                8
+                Random.Char.english
+    in
+    Random.int 2 10
+        |> Random.andThen
+            ((\numWords ->
+                Random.list numWords generateWord
+             )
+                >> Random.map (String.join " ")
+            )
         |> Random.map
             (\message ->
                 \ud ->
