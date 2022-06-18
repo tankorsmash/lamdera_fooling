@@ -33,6 +33,9 @@ update msg model =
         DownloadAllChatMessages ->
             ( model, adminSendToBackend AdminWantsToDownloadChatMessages )
 
+        AddDummyUsers numUsers ->
+            (model, adminSendToBackend <| AdminWantsToAddDummyUsers numUsers)
+
 
 updateFromBackend : ToAdminFrontend -> Model -> ( Model, Cmd Msg )
 updateFromBackend msg model =
@@ -124,4 +127,5 @@ view model =
 
             else
                 []
+        , button (AddDummyUsers 5) "Add Dummy Users x5"
         ]

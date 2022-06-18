@@ -7,6 +7,8 @@ import Expect
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
 import Process
+import Random
+import Random.List
 import Task
 import Test exposing (..)
 import Test.Html.Query as Query
@@ -462,7 +464,7 @@ upgradeUserCurrentLevels : Model -> SessionId -> ClientId -> UpgradeType -> { a 
 upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
     let
         updateWithNewUser newUsers =
-            ( setUsers model newUsers
+            ( setUsersTo model newUsers
             , getUserBySessionId newUsers sessionId
                 |> Maybe.map (\newUser -> Lamdera.sendToFrontend clientId <| NewUser newUser)
                 |> Maybe.withDefault Cmd.none
@@ -799,7 +801,7 @@ updateFromFrontend sessionId clientId msg model =
                         -- if user exists, replace it
                         Just user ->
                             mapUserBySessionId model.users (always toCreate) sessionId
-                                |> setUsers model
+                                |> setUsersTo model
 
                         -- otherwise add it
                         Nothing ->
@@ -825,7 +827,7 @@ updateFromFrontend sessionId clientId msg model =
                         promoteUser sessionId_ personalityType =
                             --promote to full user
                             FullUser <|
-                                createUserData sessionId username personalityType
+                                createUserData (Just sessionId) username personalityType
 
                         replaceUser existingUserData =
                             FullUser
@@ -925,7 +927,7 @@ updateFromFrontend sessionId clientId msg model =
                                     FullUser { userData | sessionId = Nothing, isOnline = False }
                         )
                         sessionId
-                        |> setUsers model
+                        |> setUsersTo model
             in
             ( newModel
             , Cmd.batch
@@ -1147,6 +1149,74 @@ updateFromAdminFrontend sessionId clientId msg model =
                 |> Lamdera.sendToFrontend clientId
             )
 
+        AdminWantsToAddDummyUsers numUsers ->
+            let
+                ( newUsers, newSeed ) =
+                    Random.step
+                        (Random.list numUsers (Random.map FullUser generateDummyUser))
+                        model.globalSeed
+
+                usersToSend =
+                    model.users ++ newUsers
+            in
+            ( model
+                |> setGlobalSeed newSeed
+                |> setUsers newUsers
+            , usersToSend
+                |> DownloadedUsers
+                |> NewToAdminFrontend
+                |> Lamdera.sendToFrontend clientId
+            )
+
+
+setGlobalSeed : Random.Seed -> Model -> Model
+setGlobalSeed newSeed model =
+    { model | globalSeed = newSeed }
+
+
+dummyNames : List String
+dummyNames =
+    [ "Micheal", "José", "Alex", "Becca", "Charlie", "Debrah", "Elise", "Frank", "Gabrielle", "Liam", "Noah", "Oliver", "Elijah", "William", "James", "Benjamin", "Lucas", "Henry", "Alexander", "Mason", "Michael", "Ethan", "Daniel", "Jacob", "Logan", "Jackson", "Levi", "Sebastian", "Mateo", "Jack", "Owen", "Theodore", "Aiden", "Samuel", "Joseph", "John", "David", "Wyatt", "Matthew", "Luke", "Asher", "Carter", "Julian", "Grayson", "Leo", "Jayden", "Gabriel", "Isaac", "Lincoln", "Anthony", "Hudson", "Dylan", "Ezra", "Thomas", "Charles", "Christopher", "Jaxon", "Maverick", "Josiah", "Isaiah", "Andrew", "Elias", "Joshua", "Nathan", "Caleb", "Ryan", "Adrian", "Miles", "Eli", "Nolan", "Christian", "Aaron", "Cameron", "Ezekiel", "Colton", "Luca", "Landon", "Hunter", "Jonathan", "Santiago", "Axel", "Easton", "Cooper", "Jeremiah", "Angel", "Roman", "Connor", "Jameson", "Robert", "Greyson", "Jordan", "Ian", "Carson", "Jaxson", "Leonardo", "Nicholas", "Dominic", "Austin", "Everett", "Brooks", "Xavier", "Kai", "Jose", "Parker", "Adam", "Jace", "Wesley", "Kayden", "Silas" ]
+
+
+generateDummyUser : Random.Generator UserData
+generateDummyUser =
+    let
+        generateName : Random.Generator String
+        generateName =
+            Random.List.choose
+                dummyNames
+                |> Random.map
+                    (Tuple.first
+                        >> Maybe.withDefault "ImpossibleName"
+                    )
+
+        generatePersonalityType : Random.Generator PersonalityType
+        generatePersonalityType =
+            Random.List.choose
+                [ Realistic, Idealistic ]
+                |> Random.map
+                    (Tuple.first
+                        >> Maybe.withDefault Realistic
+                    )
+
+        generateExtraNumber : Random.Generator String
+        generateExtraNumber =
+            Random.int 0 1000
+                |> Random.map
+                    (String.fromInt >> (++) " ")
+    in
+    Random.map3
+        (\name personalityType extraNumber ->
+            createUserData
+                Nothing
+                (name ++ extraNumber)
+                personalityType
+        )
+        generateName
+        generatePersonalityType
+        generateExtraNumber
+
 
 setTeamGroups : Team -> List Group -> Team
 setTeamGroups team newUserGroups =
@@ -1189,8 +1259,13 @@ processChatMessages users allChatMessages =
             )
 
 
-setUsers : Model -> List User -> Model
-setUsers model users =
+setUsers : List User -> Model -> Model
+setUsers users model =
+    { model | users = users }
+
+
+setUsersTo : Model -> List User -> Model
+setUsersTo model users =
     { model | users = users }
 
 
@@ -1291,7 +1366,7 @@ suite =
             "Testy McTesterson Jr."
 
         testUserData =
-            createUserData "TEST_SESSION_ID" testUsername Realistic
+            createUserData Nothing testUsername Realistic
 
         testFullUser =
             FullUser testUserData

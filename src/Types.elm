@@ -1,5 +1,6 @@
 module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
+import Random
 import Browser exposing (UrlRequest)
 import Browser.Dom
 import Browser.Navigation exposing (Key)
@@ -31,16 +32,23 @@ type alias UserData =
     }
 
 
-createUserData : SessionId -> String -> PersonalityType -> UserData
-createUserData sessionId username personalityType =
-    { sessionId = Just sessionId
+createUserData : Maybe SessionId -> String -> PersonalityType -> UserData
+createUserData maybeSessionId username personalityType =
+    { sessionId = maybeSessionId
     , username = username
     , personalityType = personalityType
     , userClicks = 0
     , isOnline = True
     , xp = 0
     , groupId = Nothing
-    , userId = generateUuid (username ++ sessionId)
+    , userId =
+        case maybeSessionId of
+            Just sessionId ->
+                generateUuid (username ++ sessionId)
+
+            Nothing ->
+                --hope this doesn't cause problems
+                generateUuid username
     , currentLevels =
         { clickCap = CurrentLevel (Level 0) Nothing
         , discuss = CurrentLevel (Level 0) Nothing
@@ -225,7 +233,6 @@ type alias ChatMessage =
     }
 
 
-
 type alias UserClickData =
     { username : String, clicks : Int, isOnline : Bool }
 
@@ -288,6 +295,7 @@ initBackendModel =
     , users = []
     , allChatMessages = []
     , lastTick = Time.millisToPosix 0
+    , globalSeed = Random.initialSeed 0
     }
 
 
@@ -342,6 +350,7 @@ type alias BackendModel =
     , users : List User
     , allChatMessages : List ChatMessage
     , lastTick : Time.Posix
+    , globalSeed : Random.Seed
     }
 
 
@@ -374,12 +383,14 @@ type AdminFrontendMsg
     = NoOpAdminFrontend
     | DownloadUsers
     | DownloadAllChatMessages
+    | AddDummyUsers Int
 
 
 type AdminToBackend
     = NoOpAdminToBackend
     | AdminWantsToDownloadUsers
     | AdminWantsToDownloadChatMessages
+    | AdminWantsToAddDummyUsers Int
 
 
 type FrontendMsg
