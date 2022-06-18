@@ -228,7 +228,6 @@ update msg model =
                         , Lamdera.sendToBackend UserGainedAClick
                         )
                     )
-
                 |> Maybe.withDefault noop
 
         Discuss ->
@@ -531,22 +530,6 @@ forceLabelValueToInt labelValue =
 nbsp : String
 nbsp =
     "\u{00A0}"
-
--- viewAnimatedNewDigit =
---     String.fromChar
---         >> text
---         >> el [ Element.moveDown (moveDistance - moveBy) ]
-
-
-
-add1 : Int -> Int
-add1 x = x + 1
-
-sub10 : Int -> Int
-sub10 x = x - 10
-
-myValue : Int -> Int
-myValue = add1 >> sub10
 
 
 viewCyclingNumber : CyclingTimeline -> Element FrontendMsg
@@ -1395,86 +1378,86 @@ viewPlayers model userData personalityType =
                             )
             in
             row [] [ el usernameAttrs usernameText, clicksContent ]
-
-        viewUsersInPersonalityType =
-            model.teamsUserClicks
-                |> (case personalityType of
-                        Realistic ->
-                            .realists
-
-                        Idealistic ->
-                            .idealists
-                   )
-                |> (\names ->
-                        let
-                            teamHeader =
-                                el [ Font.underline, paddingXY 0 5 ] <|
-                                    (text <|
-                                        "The "
-                                            ++ (case personalityType of
-                                                    Realistic ->
-                                                        "Realists (" ++ String.fromInt model.teamsFromBackend.realists.totalTeamPoints ++ " pts)"
-
-                                                    Idealistic ->
-                                                        "Idealists (" ++ String.fromInt model.teamsFromBackend.idealists.totalTeamPoints ++ " pts)"
-                                               )
-                                    )
-
-                            viewGroup : Types.Group -> Element FrontendMsg
-                            viewGroup group =
-                                let
-                                    ( headerColor, onClickMsg ) =
-                                        maybeUserGroupId
-                                            |> Maybe.map
-                                                (\userGroupId ->
-                                                    if userGroupId == group.groupId then
-                                                        ( Font.color <| UI.convertColor <| Color.lightBlue, TryToLeaveGroup )
-
-                                                    else
-                                                        ( UI.noopAttr, TryToJoinGroup group.groupId )
-                                                )
-                                            |> Maybe.withDefault ( UI.noopAttr, TryToJoinGroup group.groupId )
-                                in
-                                column [ UI.scaled_font 1, paddingXY 0 5 ]
-                                    [ el
-                                        ([ Font.italic
-                                         , headerColor
-                                         ]
-                                            ++ (if personalityType == userData.personalityType then
-                                                    [ Element.pointer
-                                                    , Events.onClick onClickMsg
-                                                    ]
-
-                                                else
-                                                    []
-                                               )
-                                        )
-                                      <|
-                                        (text <| group.name)
-                                    , text <| String.fromInt (List.length group.members) ++ " members"
-                                    ]
-                        in
-                        column
-                            [ alignTop
-                            , UI.allowUserSelect
-                            ]
-                        <|
-                            [ teamHeader
-                            , column [ paddingXY 0 10 ] <|
-                                text "Groups"
-                                    :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
-                                            |> .groups
-                                            |> List.map viewGroup
-                                       )
-                            ]
-                                ++ (names
-                                        |> List.sortBy .clicks
-                                        |> List.reverse
-                                        |> List.map viewUserInSidebar
-                                   )
-                   )
     in
-    viewUsersInPersonalityType
+    model.teamsUserClicks
+        |> (case personalityType of
+                Realistic ->
+                    .realists
+
+                Idealistic ->
+                    .idealists
+           )
+        |> (\names ->
+                let
+                    teamHeader =
+                        el [ Font.underline, paddingXY 0 5 ] <|
+                            (text <|
+                                "The "
+                                    ++ (case personalityType of
+                                            Realistic ->
+                                                "Realists (" ++ String.fromInt model.teamsFromBackend.realists.totalTeamPoints ++ " pts)"
+
+                                            Idealistic ->
+                                                "Idealists (" ++ String.fromInt model.teamsFromBackend.idealists.totalTeamPoints ++ " pts)"
+                                       )
+                            )
+
+                    viewGroup : Types.Group -> Element FrontendMsg
+                    viewGroup group =
+                        let
+                            ( headerColor, onClickMsg ) =
+                                maybeUserGroupId
+                                    |> Maybe.map
+                                        (\userGroupId ->
+                                            if userGroupId == group.groupId then
+                                                ( Font.color <| UI.convertColor <| Color.lightBlue, TryToLeaveGroup )
+
+                                            else
+                                                ( UI.noopAttr, TryToJoinGroup group.groupId )
+                                        )
+                                    |> Maybe.withDefault ( UI.noopAttr, TryToJoinGroup group.groupId )
+                        in
+                        column [ UI.scaled_font 1, paddingXY 0 5 ]
+                            [ el
+                                ([ Font.italic
+                                 , headerColor
+                                 ]
+                                    ++ (if personalityType == userData.personalityType then
+                                            [ Element.pointer
+                                            , Events.onClick onClickMsg
+                                            ]
+
+                                        else
+                                            []
+                                       )
+                                )
+                              <|
+                                (text <| group.name)
+                            , text <| String.fromInt (List.length group.members) ++ " members"
+                            ]
+                in
+                column
+                    [ alignTop
+                    , UI.allowUserSelect
+                    , height (fill |> Element.maximum 500)
+                    , width fill
+                    , Element.scrollbarY
+                    ]
+                <|
+                    [ teamHeader
+                    , column [ paddingXY 0 10 ] <|
+                        text "Groups"
+                            :: (Types.getTeamByPersonality model.teamsFromBackend personalityType
+                                    |> .groups
+                                    |> List.map viewGroup
+                               )
+                    ]
+                        ++ (names
+                                |> List.sortBy .clicks
+                                |> List.reverse
+                                |> List.map viewUserInSidebar
+                           )
+           )
 
 
 viewGamePage : Model -> Types.UserData -> Element FrontendMsg
@@ -1489,7 +1472,7 @@ viewGamePage model ({ personalityType, xp } as userData) =
         , column [ width fill ]
             [ row [ width fill ]
                 [ viewPlayers model userData Realistic
-                , el [ centerX ] <|
+                , el [ centerX, alignTop ] <|
                     actionArea model.lastTick xp numGroupMembers userData.currentLevels model.timelines
                 , viewPlayers model userData Idealistic
                 ]
