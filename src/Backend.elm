@@ -11,6 +11,7 @@ import Random
 import Random.Char
 import Random.List
 import Random.String
+import String.Extra
 import Task
 import Test exposing (..)
 import Test.Html.Query as Query
@@ -1219,18 +1220,33 @@ updateFromAdminFrontend sessionId clientId msg model =
 generateChatMessage : Random.Generator (UserData -> ChatMessage)
 generateChatMessage =
     let
+        --generate a word between 3 and 8 characters long
         generateWord =
-            Random.String.rangeLengthString
-                3
-                8
-                Random.Char.english
+            Random.String.rangeLengthString 3 8 Random.Char.lowerCaseLatin
     in
     Random.int 2 10
         |> Random.andThen
-            ((\numWords ->
+            ((--generate numWords worth of words in a list
+              \numWords ->
                 Random.list numWords generateWord
              )
-                >> Random.map (String.join " ")
+                >> Random.map
+                    -- join the list together with a space
+                    (String.join " "
+                        >> --capitalize first letter
+                           String.Extra.toSentenceCase
+                    )
+                >> Random.andThen
+                    (\sentence ->
+                        Random.map
+                            --add the punctuation to the sentence
+                            ((++) sentence)
+                            -- generate punctuation, with 70% chance of period
+                            (Random.weighted
+                                ( 70, "." )
+                                [ ( 15, "!" ), ( 15, "?" ) ]
+                            )
+                    )
             )
         |> Random.map
             (\message ->
