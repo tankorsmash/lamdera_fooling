@@ -23,6 +23,7 @@ import Interface as UI
 import Lamdera
 import List.Extra
 import Process
+import String.Extra
 import Task
 import Time
 import Types
@@ -1355,7 +1356,8 @@ viewPlayers model userData personalityType =
                         |> ClickPricing.basicBonuses.clickCap.clickBonus
 
                 usernameText =
-                    text username
+                    el [ Element.htmlAttribute <| Attr.title username ] <|
+                        text (username |> String.Extra.ellipsis 15)
 
                 clicksContent =
                     if username /= userData.username then
