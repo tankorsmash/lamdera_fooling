@@ -6,6 +6,7 @@ import Element.Font as Font
 import Interface as UI
 import Lamdera
 import Types exposing (..)
+import UUID
 import Url
 
 
@@ -91,6 +92,20 @@ view model =
 
         hasChatMessages =
             not <| List.isEmpty model.allChatMessages
+
+        viewChatMessage chatMessage =
+            paragraph []
+                [ el [ UI.scaled_font 1 ] <|
+                    text chatMessage.userData.username
+                , text " "
+                , el [ UI.scaled_font 1, UI.font_grey ] <|
+                    text <|
+                        "["
+                            ++ (UUID.toString chatMessage.uuid |> String.toList |> List.take 5 |> String.fromList)
+                            ++ "]"
+                , text " "
+                , text chatMessage.message
+                ]
     in
     column [ width fill, spacing 5, height fill ] <|
         [ text "New Admin Page"
@@ -132,10 +147,7 @@ view model =
                 [ el [ Font.underline ] <| text "Chat Messages"
                 , column [ UI.allowUserSelect, height fill, width fill, Element.scrollbarY ]
                     (model.allChatMessages
-                        |> List.map
-                            (\chatMessage ->
-                                text chatMessage.message
-                            )
+                        |> List.map viewChatMessage
                     )
                 ]
 
