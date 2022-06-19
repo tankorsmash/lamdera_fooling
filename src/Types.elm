@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -226,15 +226,26 @@ initFrontendModel url key =
     }
 
 
-type alias ChatMessageId = UUID.UUID
+type alias ChatMessageId =
+    UUID.UUID
+
 
 type alias ChatMessage =
     { --TODO use userId instead of tracking the entire user
       userData : UserData
     , message : String
-    , date : String
+    , date : Time.Posix
     , uuid : ChatMessageId
     }
+
+
+buildChatMessageUuuid : String -> String -> Time.Posix -> UUID.UUID
+buildChatMessageUuuid username message timestamp =
+    timestamp
+        |> Time.posixToMillis
+        |> String.fromInt
+        |> (++) (message ++ username)
+        |> generateUuid
 
 
 type alias UserClickData =

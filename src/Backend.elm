@@ -18,6 +18,7 @@ import Test.Html.Query as Query
 import Test.Html.Selector as Selector
 import Time
 import Types exposing (..)
+import UUID
 
 
 type alias Model =
@@ -951,9 +952,8 @@ updateFromFrontend sessionId clientId msg model =
                             newMessage =
                                 { userData = userData
                                 , message = chatContent
-                                , --TODO date
-                                  date = ""
-                                , uuid = generateUuid (userData.username ++ chatContent)
+                                , date = model.lastTick
+                                , uuid = buildChatMessageUuuid userData.username chatContent model.lastTick
                                 }
 
                             newAllChatMessages =
@@ -962,6 +962,7 @@ updateFromFrontend sessionId clientId msg model =
                         ( { model | allChatMessages = newAllChatMessages }
                         , Cmd.batch
                             [ Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
+
                             -- TODO figure out if broadcasting to everyone is a good idea, or if there's away to register admins who are listening
                             , Lamdera.broadcast <| NewToAdminFrontend <| DownloadedChatMessages <| newAllChatMessages
                             ]
@@ -1188,8 +1189,8 @@ updateFromAdminFrontend sessionId clientId msg model =
                                 (\partialChatMessages userDatas ->
                                     List.Extra.zip partialChatMessages userDatas
                                         |> List.map
-                                            (\( partial, userData ) ->
-                                                partial userData
+                                            (\( chatMessageBuilder, userData ) ->
+                                                chatMessageBuilder userData model.lastTick
                                             )
                                 )
                                 (generateChatMessage
@@ -1233,12 +1234,20 @@ updateFromAdminFrontend sessionId clientId msg model =
             )
 
 
-generateChatMessage : Random.Generator (UserData -> ChatMessage)
+generateChatMessage : Random.Generator (UserData -> Time.Posix -> ChatMessage)
 generateChatMessage =
     let
         --generate a word between 3 and 8 characters long
         generateWord =
             Random.String.rangeLengthString 3 8 Random.Char.lowerCaseLatin
+
+        messageFactory : String -> UserData -> Time.Posix -> ChatMessage
+        messageFactory message userData timestamp =
+            { userData = userData
+            , message = message
+            , uuid = buildChatMessageUuuid userData.username message timestamp
+            , date = timestamp
+            }
     in
     Random.int 2 20
         |> Random.andThen
@@ -1264,15 +1273,7 @@ generateChatMessage =
                             )
                     )
             )
-        |> Random.map
-            (\message ->
-                \ud ->
-                    { userData = ud
-                    , message = message
-                    , uuid = generateUuid message
-                    , date = ""
-                    }
-            )
+        |> Random.map messageFactory
 
 
 setGlobalSeed : Random.Seed -> Model -> Model
