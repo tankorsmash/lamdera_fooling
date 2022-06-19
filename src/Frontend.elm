@@ -1091,6 +1091,21 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
         --         |> Maybe.withDefault 10
         flyingLabel =
             viewFlyingLabel timelines.userClicksTimeline
+
+        actionButton msg txt =
+            UI.button <|
+                UI.TextParams
+                    { buttonType = UI.Outline
+                    , customAttrs =
+                        [ centerX
+                        , width Element.shrink
+                        , UI.scaled_font 3
+                        ]
+                    , onPressMsg = msg
+                    , textLabel = txt
+                    , colorTheme = UI.BrightTheme
+                    }
+
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -1295,32 +1310,10 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
         , spacer
         , -- convert Xp to clicks
           el [ centerX, Font.underline ] <| text "Spend your clicks"
-        , UI.button <|
-            UI.TextParams
-                { buttonType = UI.Outline
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , UI.scaled_font 3
-                    ]
-                , onPressMsg = SendWantsToSpendToBackend
-                , textLabel = "Spend -3 clicks to reduce theirs by -1"
-                , colorTheme = UI.BrightTheme
-                }
+        , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
         , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
-        , UI.button <|
-            UI.TextParams
-                { buttonType = UI.Outline
-                , customAttrs =
-                    [ centerX
-                    , width Element.shrink
-                    , Font.size 24
-                    ]
-                , onPressMsg = SendClickToBackend
-                , textLabel = "WIP"
-                , colorTheme = UI.BrightTheme
-                }
+        , actionButton SendClickToBackend "WIP"
         ]
 
 
