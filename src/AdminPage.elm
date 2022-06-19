@@ -95,13 +95,16 @@ view model =
     column [ width fill, spacing 5, height fill ] <|
         [ text "New Admin Page"
         , link "/" "Back"
-        , button DownloadUsers
-            (if not hasUsers then
-                "Get All Users"
+        , row [ width fill, spacing 10 ]
+            [ button DownloadUsers
+                (if not hasUsers then
+                    "Get All Users"
 
-             else
-                "Refresh Users"
-            )
+                 else
+                    "Refresh Users"
+                )
+            , button (AddDummyUsers 5) "Add Dummy Users x5"
+            ]
         , column [ spacing 5, height (fill |> Element.minimum 100), width fill ] <|
             if hasUsers then
                 [ el [ Font.underline ] <| text "Users"
@@ -120,7 +123,10 @@ view model =
 
             else
                 []
-        , button DownloadAllChatMessages "Download Chat Messages"
+        , row [ width fill, spacing 10 ]
+            [ button DownloadAllChatMessages "Download Chat Messages"
+            , button (AddDummyChatMessages 5) "Add Dummy Messages x5"
+            ]
         , column [ spacing 5, height (fill |> Element.minimum 100), width fill ] <|
             if hasChatMessages then
                 [ el [ Font.underline ] <| text "Chat Messages"
@@ -135,6 +141,4 @@ view model =
 
             else
                 []
-        , button (AddDummyUsers 5) "Add Dummy Users x5"
-        , button (AddDummyChatMessages 5) "Add Dummy Messages x5"
         ]
