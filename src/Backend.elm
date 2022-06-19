@@ -960,7 +960,11 @@ updateFromFrontend sessionId clientId msg model =
                                 newMessage :: model.allChatMessages
                         in
                         ( { model | allChatMessages = newAllChatMessages }
-                        , Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
+                        , Cmd.batch
+                            [ Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
+                            -- TODO figure out if broadcasting to everyone is a good idea, or if there's away to register admins who are listening
+                            , Lamdera.broadcast <| NewToAdminFrontend <| DownloadedChatMessages <| newAllChatMessages
+                            ]
                         )
                     )
                 |> Maybe.withDefault noop
@@ -1178,7 +1182,6 @@ updateFromAdminFrontend sessionId clientId msg model =
         AdminWantsToAddDummyChatMessages numChatMessages ->
             let
                 ( newMessages, newSeed ) =
-                    -- (newMessages) =
                     model.globalSeed
                         |> Random.step
                             (Random.map2
@@ -1203,17 +1206,30 @@ updateFromAdminFrontend sessionId clientId msg model =
                                         newMessages_ ++ model.allChatMessages
                                     )
                             )
-
-                -- |> Random.andThen
-                --     (\partialChatMessages ->
-                --         List.map
-                --     )
             in
             ( { model | allChatMessages = newMessages, globalSeed = newSeed }
-            , newMessages
-                |> DownloadedChatMessages
-                |> NewToAdminFrontend
-                |> Lamdera.sendToFrontend clientId
+            , Cmd.batch
+                [ newMessages
+                    |> DownloadedChatMessages
+                    |> NewToAdminFrontend
+                    |> Lamdera.sendToFrontend clientId
+                , Lamdera.broadcast (NewAllChatMessages newMessages)
+                ]
+            )
+
+        AdminWantsToDeleteChatMessage chatMessageId ->
+            let
+                newMessages =
+                    List.Extra.filterNot (.uuid >> (==) chatMessageId) model.allChatMessages
+            in
+            ( { model | allChatMessages = newMessages }
+            , Cmd.batch
+                [ newMessages
+                    |> DownloadedChatMessages
+                    |> NewToAdminFrontend
+                    |> Lamdera.sendToFrontend clientId
+                , Lamdera.broadcast (NewAllChatMessages newMessages)
+                ]
             )
 
 
@@ -1224,7 +1240,7 @@ generateChatMessage =
         generateWord =
             Random.String.rangeLengthString 3 8 Random.Char.lowerCaseLatin
     in
-    Random.int 2 10
+    Random.int 2 20
         |> Random.andThen
             ((--generate numWords worth of words in a list
               \numWords ->

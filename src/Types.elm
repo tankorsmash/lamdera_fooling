@@ -199,6 +199,7 @@ initAdminFrontendModel url key =
     , key = key
     , users = []
     , allChatMessages = []
+    , selectedChatMessageUuid = Nothing
     }
 
 
@@ -225,12 +226,14 @@ initFrontendModel url key =
     }
 
 
+type alias ChatMessageId = UUID.UUID
+
 type alias ChatMessage =
     { --TODO use userId instead of tracking the entire user
       userData : UserData
     , message : String
     , date : String
-    , uuid : UUID.UUID
+    , uuid : ChatMessageId
     }
 
 
@@ -377,6 +380,7 @@ type alias AdminFrontendModel =
     , key : Key
     , users : List User
     , allChatMessages : List ChatMessage
+    , selectedChatMessageUuid : Maybe UUID.UUID
     }
 
 
@@ -386,6 +390,8 @@ type AdminFrontendMsg
     | DownloadAllChatMessages
     | AddDummyUsers Int
     | AddDummyChatMessages Int
+    | SelectChatMessage (Maybe ChatMessageId)
+    | DeleteSelectedMessage ChatMessageId
 
 
 type AdminToBackend
@@ -394,6 +400,7 @@ type AdminToBackend
     | AdminWantsToDownloadChatMessages
     | AdminWantsToAddDummyUsers Int
     | AdminWantsToAddDummyChatMessages Int
+    | AdminWantsToDeleteChatMessage ChatMessageId
 
 
 type FrontendMsg
