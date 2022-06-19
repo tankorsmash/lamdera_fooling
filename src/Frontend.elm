@@ -1486,10 +1486,10 @@ viewGamePage model ({ personalityType, xp } as userData) =
         [ scoreboard model personalityType
         , column [ width fill ]
             [ row [ width fill ]
-                [ viewPlayers model userData Realistic
+                [ el [alignLeft] <| viewPlayers model userData Realistic
                 , el [ centerX, alignTop ] <|
                     actionArea model.lastTick xp numGroupMembers userData.currentLevels model.timelines
-                , viewPlayers model userData Idealistic
+                , el [alignRight] <| viewPlayers model userData Idealistic
                 ]
             ]
         , bottomBar model.userChatMessage model.allChatMessages model.user personalityType
