@@ -1198,7 +1198,6 @@ updateFromAdminFrontend sessionId clientId msg model =
                                 )
                                 (model.users
                                     |> List.filterMap getUserData
-                                    |> Debug.log "filtered userData"
                                     |> Random.List.shuffle
                                     |> Random.map (List.Extra.cycle numChatMessages)
                                 )
