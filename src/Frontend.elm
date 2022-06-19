@@ -1301,10 +1301,10 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
                 , customAttrs =
                     [ centerX
                     , width Element.shrink
-                    , Font.size 24
+                    , UI.scaled_font 3
                     ]
                 , onPressMsg = SendWantsToSpendToBackend
-                , textLabel = "Spend -3 to reduce theirs by -1"
+                , textLabel = "Spend -3 clicks to reduce theirs by -1"
                 , colorTheme = UI.BrightTheme
                 }
         , spacer
