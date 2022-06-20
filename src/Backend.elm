@@ -580,14 +580,24 @@ updateFromFrontend sessionId clientId msg model =
     let
         noop =
             ( model, Cmd.none )
+
+        getCurrentUserData : Maybe UserData
+        getCurrentUserData =
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+
+        mapCurrentUserData : (UserData -> ( Model, Cmd BackendMsg )) -> ( Model, Cmd BackendMsg )
+        mapCurrentUserData callback =
+            getCurrentUserData
+                |> Maybe.map callback
+                |> Maybe.withDefault noop
     in
     case msg of
         NoOpToBackend ->
             noop
 
         UserGainedAClick ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
+            getCurrentUserData
                 |> Maybe.map (userGainedAClick model)
                 |> Maybe.map
                     (\newModel ->
@@ -601,8 +611,7 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserDiscussed ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
+            getCurrentUserData
                 |> Maybe.map (userDiscussed model)
                 |> Maybe.map
                     (\newModel ->
@@ -616,8 +625,7 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserArgued ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
+            getCurrentUserData
                 |> Maybe.map (userArgued model)
                 |> Maybe.map
                     (\newModel ->
@@ -631,8 +639,8 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserEnergized ->
-            let
-                withUserData userData =
+            mapCurrentUserData <|
+                \userData ->
                     let
                         currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
                         currentLevelUpdater currentLevels energizeCurrentLevel =
@@ -732,19 +740,13 @@ updateFromFrontend sessionId clientId msg model =
                         , sendNewUserAfterClicksGained newModel sessionId clientId
                         ]
                     )
-            in
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
-                |> Maybe.map withUserData
-                |> Maybe.withDefault noop
 
         UserWantsToSpend ->
             let
                 clickCost =
                     3
             in
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
+            getCurrentUserData
                 |> --kinda hackily make sure they can afford this by returning nothing. not sure if this is elm style
                    Maybe.andThen
                     (\userData ->
@@ -972,36 +974,32 @@ updateFromFrontend sessionId clientId msg model =
             )
 
         UserSentMessage chatContent ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            newMessage : ChatMessage
-                            newMessage =
-                                { userData = userData
-                                , message = chatContent
-                                , date = model.lastTick
-                                , uuid = buildChatMessageUuuid userData.username chatContent model.lastTick
-                                }
+            mapCurrentUserData
+                (\userData ->
+                    let
+                        newMessage : ChatMessage
+                        newMessage =
+                            { userData = userData
+                            , message = chatContent
+                            , date = model.lastTick
+                            , uuid = buildChatMessageUuuid userData.username chatContent model.lastTick
+                            }
 
-                            newAllChatMessages =
-                                newMessage :: model.allChatMessages
-                        in
-                        ( { model | allChatMessages = newAllChatMessages }
-                        , Cmd.batch
-                            [ Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
+                        newAllChatMessages =
+                            newMessage :: model.allChatMessages
+                    in
+                    ( { model | allChatMessages = newAllChatMessages }
+                    , Cmd.batch
+                        [ Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
 
-                            -- TODO figure out if broadcasting to everyone is a good idea, or if there's away to register admins who are listening
-                            , Lamdera.broadcast <| NewToAdminFrontend <| DownloadedChatMessages <| newAllChatMessages
-                            ]
-                        )
+                        -- TODO figure out if broadcasting to everyone is a good idea, or if there's away to register admins who are listening
+                        , Lamdera.broadcast <| NewToAdminFrontend <| DownloadedChatMessages <| newAllChatMessages
+                        ]
                     )
-                |> Maybe.withDefault noop
+                )
 
         UserWantsToBuyUpgrade upgradeType ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
+            getCurrentUserData
                 |> Maybe.andThen
                     (upgradeUserCurrentLevels
                         model
@@ -1012,105 +1010,97 @@ updateFromFrontend sessionId clientId msg model =
                 |> Maybe.withDefault noop
 
         UserWantsToJoinGroup groupUuid ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
-                |> Maybe.andThen
-                    (\userData ->
-                        userData.personalityType
-                            |> Types.getTeamByPersonality model.teams
-                            |> .groups
-                            |> List.Extra.find (.groupId >> (==) groupUuid)
-                            |> -- if there's a matching group, join it
-                               Maybe.map
-                                (\validGroup ->
-                                    let
-                                        --  update user's groupid
-                                        newUsers =
-                                            updateFullUserByUsername
-                                                model.users
-                                                (\ud -> { ud | groupId = Just validGroup.groupId })
-                                                userData.username
+            mapCurrentUserData
+                (\userData ->
+                    userData.personalityType
+                        |> Types.getTeamByPersonality model.teams
+                        |> .groups
+                        |> List.Extra.find (.groupId >> (==) groupUuid)
+                        |> -- if there's a matching group, join it
+                           Maybe.map
+                            (\validGroup ->
+                                let
+                                    --  update user's groupid
+                                    newUsers =
+                                        updateFullUserByUsername
+                                            model.users
+                                            (\ud -> { ud | groupId = Just validGroup.groupId })
+                                            userData.username
 
-                                        --  update group to contain user
-                                        addToGroup : Team -> Team
-                                        addToGroup team =
-                                            team
-                                                |> .groups
-                                                |> --remove user from all groups
-                                                   removeUserFromAllGroups userData
-                                                |> --add the new user
-                                                   List.Extra.updateIf
-                                                    (.groupId >> (==) validGroup.groupId)
-                                                    (\group -> { group | members = userData.userId :: group.members })
-                                                |> setTeamGroups team
+                                    --  update group to contain user
+                                    addToGroup : Team -> Team
+                                    addToGroup team =
+                                        team
+                                            |> .groups
+                                            |> --remove user from all groups
+                                               removeUserFromAllGroups userData
+                                            |> --add the new user
+                                               List.Extra.updateIf
+                                                (.groupId >> (==) validGroup.groupId)
+                                                (\group -> { group | members = userData.userId :: group.members })
+                                            |> setTeamGroups team
 
-                                        newTeams : Teams
-                                        newTeams =
-                                            model.teams
-                                                |> updateTeamInTeams .realists setRealistTeam addToGroup
-                                                |> updateTeamInTeams .idealists setIdealistTeam addToGroup
-                                    in
-                                    ( { model | users = newUsers, teams = newTeams }
-                                    , -- broadcast user joining a new group
-                                      Cmd.batch
-                                        [ Lamdera.broadcast <| NewTeams newTeams
-                                        , getUserByUsername newUsers userData.username
-                                            |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
-                                            |> Maybe.withDefault Cmd.none
-                                        ]
-                                    )
+                                    newTeams : Teams
+                                    newTeams =
+                                        model.teams
+                                            |> (\teams -> updateRealists teams addToGroup)
+                                            |> (\teams -> updateIdealists teams addToGroup)
+                                in
+                                ( { model | users = newUsers, teams = newTeams }
+                                , -- broadcast user joining a new group
+                                  Cmd.batch
+                                    [ Lamdera.broadcast <| NewTeams newTeams
+                                    , getUserByUsername newUsers userData.username
+                                        |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                                        |> Maybe.withDefault Cmd.none
+                                    ]
                                 )
-                    )
-                |> Maybe.withDefault noop
+                            )
+                        |> Maybe.withDefault noop
+                )
 
         UserWantsToLeaveGroup ->
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
-                |> Maybe.map
-                    (\userData ->
-                        let
-                            newUsers =
-                                --  update user's groupid to Nothing
-                                updateFullUserByUsername
-                                    model.users
-                                    (\ud -> { ud | groupId = Nothing })
-                                    userData.username
+            mapCurrentUserData
+                (\userData ->
+                    let
+                        newUsers =
+                            --  update user's groupid to Nothing
+                            updateFullUserByUsername
+                                model.users
+                                (\ud -> { ud | groupId = Nothing })
+                                userData.username
 
-                            removeFromGroup : Team -> Team
-                            removeFromGroup team =
-                                team
-                                    |> .groups
-                                    |> removeUserFromAllGroups userData
-                                    |> setTeamGroups team
+                        removeFromGroup : Team -> Team
+                        removeFromGroup team =
+                            team
+                                |> .groups
+                                |> removeUserFromAllGroups userData
+                                |> setTeamGroups team
 
-                            newTeams : Teams
-                            newTeams =
-                                model.teams
-                                    |> updateTeamInTeams .realists setRealistTeam removeFromGroup
-                                    |> updateTeamInTeams .idealists setIdealistTeam removeFromGroup
-                        in
-                        ( { model | users = newUsers, teams = newTeams }
-                        , -- broadcast user joining a new group
-                          Cmd.batch
-                            [ Lamdera.broadcast <| NewTeams newTeams
-                            , getUserByUsername newUsers userData.username
-                                |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
-                                |> Maybe.withDefault Cmd.none
-                            ]
-                        )
+                        newTeams : Teams
+                        newTeams =
+                            model.teams
+                                |> (\teams -> updateRealists teams removeFromGroup)
+                                |> (\teams -> updateIdealists teams removeFromGroup)
+                    in
+                    ( { model | users = newUsers, teams = newTeams }
+                    , -- broadcast user joining a new group
+                      Cmd.batch
+                        [ Lamdera.broadcast <| NewTeams newTeams
+                        , getUserByUsername newUsers userData.username
+                            |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                            |> Maybe.withDefault Cmd.none
+                        ]
                     )
-                |> Maybe.withDefault noop
+                )
 
         AdminSendingToBackend adminToBackend ->
             updateFromAdminFrontend sessionId clientId adminToBackend model
 
         UserWantsToCraftXp ->
             -- TODO subtract 5 clicks to
+            -- ( model, Cmd.none )
             Debug.todo "subtract 5 clicks to make 1 XP"
-
-
-
--- ( model, Cmd.none )
 
 
 updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )
