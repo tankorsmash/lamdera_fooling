@@ -373,6 +373,9 @@ update msg model =
             , Cmd.map GotAdminFrontendMsg adminCmd
             )
 
+        SendWantsToCraftXp ->
+            ( model, Lamdera.sendToBackend Types.UserWantsToCraftXp)
+
 
 
 -- end of update
@@ -1311,6 +1314,7 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
         , -- convert Xp to clicks
           el [ centerX, Font.underline ] <| text "Spend your clicks"
         , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
+        , actionButton SendWantsToCraftXp "Craft XP"
         , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , actionButton SendClickToBackend "WIP"

@@ -1124,6 +1124,11 @@ updateFromFrontend sessionId clientId msg model =
         AdminSendingToBackend adminToBackend ->
             updateFromAdminFrontend sessionId clientId adminToBackend model
 
+        UserWantsToCraftXp ->
+            -- TODO subtract 5 clicks to 
+            -- ( model, Cmd.none )
+            Debug.todo "subtract 5 clicks to make 1 XP"
+
 
 updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromAdminFrontend sessionId clientId msg model =

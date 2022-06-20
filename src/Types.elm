@@ -440,6 +440,7 @@ type FrontendMsg
     | ChatInputSent
     | FocusError (Result Browser.Dom.Error ())
     | GotAdminFrontendMsg AdminFrontendMsg
+    | SendWantsToCraftXp
 
 
 type ToBackend
@@ -456,6 +457,7 @@ type ToBackend
     | UserWantsToBuyUpgrade UpgradeType
     | UserWantsToJoinGroup UUID.UUID
     | UserWantsToLeaveGroup
+    | UserWantsToCraftXp
     | AdminSendingToBackend AdminToBackend
 
 
