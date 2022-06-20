@@ -174,16 +174,6 @@ updateTeamByPersonalityType teams personalityType updater =
             updateIdealists teams updater
 
 
-updateRealists : Teams -> (Team -> Team) -> Teams
-updateRealists teams updater =
-    { teams | realists = updater teams.realists }
-
-
-updateIdealists : Teams -> (Team -> Team) -> Teams
-updateIdealists teams updater =
-    { teams | idealists = updater teams.idealists }
-
-
 setUserClicks : Int -> UserData -> UserData
 setUserClicks newClicks userData =
     { userData | userClicks = newClicks }
@@ -265,6 +255,24 @@ sendNewUserAfterClicksGained model sessionId clientId =
                 )
             |> Maybe.withDefault Cmd.none
         ]
+
+
+updateTeamInTeams : (Teams -> Team) -> (Teams -> Team -> Teams) -> (Team -> Team) -> Teams -> Teams
+updateTeamInTeams teamGetter teamSetter teamUpdater teams =
+    teams
+        |> teamGetter
+        |> teamUpdater
+        |> teamSetter teams
+
+
+updateRealists : Teams -> (Team -> Team) -> Teams
+updateRealists teams updater =
+    updateTeamInTeams .realists setRealistTeam updater teams
+
+
+updateIdealists : Teams -> (Team -> Team) -> Teams
+updateIdealists teams updater =
+    updateTeamInTeams .idealists setIdealistTeam updater teams
 
 
 updateWithNewClicksGained : Teams -> List User -> PersonalityType -> String -> Int -> ( Teams, List User )
@@ -565,7 +573,6 @@ removeUserFromAllGroups userData groups =
                             |> Tuple.second
                 }
             )
-
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -1069,8 +1076,8 @@ updateFromFrontend sessionId clientId msg model =
                                     (\ud -> { ud | groupId = Nothing })
                                     userData.username
 
-                            removeFromTeam : Team -> Team
-                            removeFromTeam team =
+                            removeFromGroup : Team -> Team
+                            removeFromGroup team =
                                 team
                                     |> .groups
                                     |> removeUserFromAllGroups userData
@@ -1079,8 +1086,8 @@ updateFromFrontend sessionId clientId msg model =
                             newTeams : Teams
                             newTeams =
                                 model.teams
-                                    |> updateTeamInTeams .realists setRealistTeam removeFromTeam
-                                    |> updateTeamInTeams .idealists setIdealistTeam removeFromTeam
+                                    |> updateTeamInTeams .realists setRealistTeam removeFromGroup
+                                    |> updateTeamInTeams .idealists setIdealistTeam removeFromGroup
                         in
                         ( { model | users = newUsers, teams = newTeams }
                         , -- broadcast user joining a new group
