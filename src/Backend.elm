@@ -985,70 +985,65 @@ updateFromFrontend sessionId clientId msg model =
         UserWantsToJoinGroup groupUuid ->
             getUserBySessionId model.users sessionId
                 |> Maybe.andThen getUserData
-                |> Maybe.map
+                |> Maybe.andThen
                     (\userData ->
-                        let
-                            team : Team
-                            team =
-                                Types.getTeamByPersonality model.teams userData.personalityType
+                        userData.personalityType
+                            |> Types.getTeamByPersonality model.teams
+                            |> .groups
+                            |> List.Extra.find (.groupId >> (==) groupUuid)
+                            |> -- if there's a matching group, join it
+                               Maybe.map
+                                (\validGroup ->
+                                    let
+                                        --  update user's groupid
+                                        newUsers =
+                                            updateFullUserByUsername
+                                                model.users
+                                                (\ud -> { ud | groupId = Just validGroup.groupId })
+                                                userData.username
 
-                            maybeGroup =
-                                List.Extra.find (.groupId >> (==) groupUuid) team.groups
-                        in
-                        case maybeGroup of
-                            Nothing ->
-                                noop
+                                        --  update group to contain user
+                                        newUserGroups : List Group -> List Group
+                                        newUserGroups groups =
+                                            groups
+                                                |> --remove user from all groups
+                                                   List.Extra.updateIf
+                                                    (.members >> List.member userData.userId)
+                                                    (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
+                                                |> --add the new user
+                                                   List.Extra.updateIf
+                                                    (.groupId >> (==) validGroup.groupId)
+                                                    (\group -> { group | members = userData.userId :: group.members })
 
-                            Just validGroup ->
-                                let
-                                    --  update user's groupid
-                                    newUsers =
-                                        updateFullUserByUsername
-                                            model.users
-                                            (\ud -> { ud | groupId = Just validGroup.groupId })
-                                            userData.username
+                                        newRealistTeams : Team
+                                        newRealistTeams =
+                                            model.teams.realists
+                                                |> .groups
+                                                |> newUserGroups
+                                                |> setTeamGroups model.teams.realists
 
-                                    --  update group to contain user
-                                    newUserGroups : List Group -> List Group
-                                    newUserGroups groups =
-                                        groups
-                                            |> --remove user from all groups
-                                               List.Extra.updateIf
-                                                (.members >> List.member userData.userId)
-                                                (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
-                                            |> --add the new user
-                                               List.Extra.updateIf
-                                                (.groupId >> (==) validGroup.groupId)
-                                                (\group -> { group | members = userData.userId :: group.members })
+                                        newIdealistTeams : Team
+                                        newIdealistTeams =
+                                            model.teams.idealists
+                                                |> .groups
+                                                |> newUserGroups
+                                                |> setTeamGroups model.teams.idealists
 
-                                    newRealistTeams : Team
-                                    newRealistTeams =
-                                        model.teams.realists
-                                            |> .groups
-                                            |> newUserGroups
-                                            |> setTeamGroups model.teams.realists
-
-                                    newIdealistTeams : Team
-                                    newIdealistTeams =
-                                        model.teams.idealists
-                                            |> .groups
-                                            |> newUserGroups
-                                            |> setTeamGroups model.teams.idealists
-
-                                    newTeams : Teams
-                                    newTeams =
-                                        model.teams
-                                            |> (\teams -> setRealistTeam teams newRealistTeams)
-                                            |> (\teams -> setIdealistTeam teams newIdealistTeams)
-                                in
-                                ( { model | users = newUsers, teams = newTeams }
-                                , -- broadcast user joining a new group
-                                  Cmd.batch
-                                    [ Lamdera.broadcast <| NewTeams newTeams
-                                    , getUserByUsername newUsers userData.username
-                                        |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
-                                        |> Maybe.withDefault Cmd.none
-                                    ]
+                                        newTeams : Teams
+                                        newTeams =
+                                            model.teams
+                                                |> (\teams -> setRealistTeam teams newRealistTeams)
+                                                |> (\teams -> setIdealistTeam teams newIdealistTeams)
+                                    in
+                                    ( { model | users = newUsers, teams = newTeams }
+                                    , -- broadcast user joining a new group
+                                      Cmd.batch
+                                        [ Lamdera.broadcast <| NewTeams newTeams
+                                        , getUserByUsername newUsers userData.username
+                                            |> Maybe.map (Lamdera.sendToFrontend sessionId << NewUser)
+                                            |> Maybe.withDefault Cmd.none
+                                        ]
+                                    )
                                 )
                     )
                 |> Maybe.withDefault noop
@@ -1067,8 +1062,8 @@ updateFromFrontend sessionId clientId msg model =
                                     userData.username
 
                             --  remove user from all groups
-                            newUserGroups : List Group -> List Group
-                            newUserGroups groups =
+                            removeUserFromGroups : List Group -> List Group
+                            removeUserFromGroups groups =
                                 groups
                                     |> --remove user from all groups
                                        List.Extra.updateIf
@@ -1083,25 +1078,19 @@ updateFromFrontend sessionId clientId msg model =
                                             }
                                         )
 
-                            newRealistTeams : Team
-                            newRealistTeams =
-                                model.teams.realists
-                                    |> .groups
-                                    |> newUserGroups
-                                    |> setTeamGroups model.teams.realists
-
-                            newIdealistTeams : Team
-                            newIdealistTeams =
-                                model.teams.idealists
-                                    |> .groups
-                                    |> newUserGroups
-                                    |> setTeamGroups model.teams.idealists
+                            removeFromTeam : (Teams -> Team) -> (Teams -> Team -> Teams) -> Teams -> Teams
+                            removeFromTeam teamGetter teamSetter teams =
+                                teams
+                                    |> (teamGetter >> .groups)
+                                    |> removeUserFromGroups
+                                    |> setTeamGroups (teamGetter teams)
+                                    |> teamSetter teams
 
                             newTeams : Teams
                             newTeams =
                                 model.teams
-                                    |> (\teams -> setRealistTeam teams newRealistTeams)
-                                    |> (\teams -> setIdealistTeam teams newIdealistTeams)
+                                    |> removeFromTeam .realists setRealistTeam
+                                    |> removeFromTeam .idealists setIdealistTeam
                         in
                         ( { model | users = newUsers, teams = newTeams }
                         , -- broadcast user joining a new group
