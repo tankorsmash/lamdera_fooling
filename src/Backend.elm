@@ -168,10 +168,10 @@ updateTeamByPersonalityType : Teams -> PersonalityType -> (Team -> Team) -> Team
 updateTeamByPersonalityType teams personalityType updater =
     case personalityType of
         Realistic ->
-            updateRealists teams updater
+            updateRealists updater teams
 
         Idealistic ->
-            updateIdealists teams updater
+            updateIdealists updater teams
 
 
 setUserClicks : Int -> UserData -> UserData
@@ -265,13 +265,13 @@ updateTeamInTeams teamGetter teamSetter teamUpdater teams =
         |> teamSetter teams
 
 
-updateRealists : Teams -> (Team -> Team) -> Teams
-updateRealists teams updater =
+updateRealists : (Team -> Team) -> Teams -> Teams
+updateRealists updater teams =
     updateTeamInTeams .realists setRealistTeam updater teams
 
 
-updateIdealists : Teams -> (Team -> Team) -> Teams
-updateIdealists teams updater =
+updateIdealists : (Team -> Team) -> Teams -> Teams
+updateIdealists updater teams =
     updateTeamInTeams .idealists setIdealistTeam updater teams
 
 
@@ -1043,8 +1043,8 @@ updateFromFrontend sessionId clientId msg model =
                                     newTeams : Teams
                                     newTeams =
                                         model.teams
-                                            |> (\teams -> updateRealists teams addToGroup)
-                                            |> (\teams -> updateIdealists teams addToGroup)
+                                            |> updateRealists addToGroup
+                                            |> updateIdealists addToGroup
                                 in
                                 ( { model | users = newUsers, teams = newTeams }
                                 , -- broadcast user joining a new group
@@ -1080,8 +1080,8 @@ updateFromFrontend sessionId clientId msg model =
                         newTeams : Teams
                         newTeams =
                             model.teams
-                                |> (\teams -> updateRealists teams removeFromGroup)
-                                |> (\teams -> updateIdealists teams removeFromGroup)
+                                |> updateRealists removeFromGroup
+                                |> updateIdealists removeFromGroup
                     in
                     ( { model | users = newUsers, teams = newTeams }
                     , -- broadcast user joining a new group
