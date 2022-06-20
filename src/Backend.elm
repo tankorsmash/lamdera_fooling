@@ -546,6 +546,27 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
         Nothing
 
 
+
+--  remove user from all groups
+
+
+removeUserFromGroups : UserData -> List Group -> List Group
+removeUserFromGroups userData groups =
+    groups
+        |> --remove user from all groups
+           List.Extra.updateIf
+            (.members >> List.member userData.userId)
+            (\group ->
+                { group
+                    | members =
+                        List.partition
+                            ((==) userData.userId)
+                            group.members
+                            |> Tuple.second
+                }
+            )
+
+
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     let
@@ -1007,9 +1028,7 @@ updateFromFrontend sessionId clientId msg model =
                                         newUserGroups groups =
                                             groups
                                                 |> --remove user from all groups
-                                                   List.Extra.updateIf
-                                                    (.members >> List.member userData.userId)
-                                                    (\group -> { group | members = List.partition ((==) userData.userId) group.members |> Tuple.second })
+                                                   removeUserFromGroups userData
                                                 |> --add the new user
                                                    List.Extra.updateIf
                                                     (.groupId >> (==) validGroup.groupId)
@@ -1061,28 +1080,11 @@ updateFromFrontend sessionId clientId msg model =
                                     (\ud -> { ud | groupId = Nothing })
                                     userData.username
 
-                            --  remove user from all groups
-                            removeUserFromGroups : List Group -> List Group
-                            removeUserFromGroups groups =
-                                groups
-                                    |> --remove user from all groups
-                                       List.Extra.updateIf
-                                        (.members >> List.member userData.userId)
-                                        (\group ->
-                                            { group
-                                                | members =
-                                                    List.partition
-                                                        ((==) userData.userId)
-                                                        group.members
-                                                        |> Tuple.second
-                                            }
-                                        )
-
                             removeFromTeam : (Teams -> Team) -> (Teams -> Team -> Teams) -> Teams -> Teams
                             removeFromTeam teamGetter teamSetter teams =
                                 teams
                                     |> (teamGetter >> .groups)
-                                    |> removeUserFromGroups
+                                    |> removeUserFromGroups userData
                                     |> setTeamGroups (teamGetter teams)
                                     |> teamSetter teams
 
