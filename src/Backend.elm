@@ -304,6 +304,8 @@ updateWithNewClicksGained teams users personalityType username clicksToAdd =
     ( newTeams, newUsers )
 
 
+{-| Only does anything if the clicks were gained. do not use this to update data otherwise
+-}
 registerUserGainedAClick : Int -> UpdateData a -> UserData -> UpdateData a
 registerUserGainedAClick clicksToAdd ({ teams, users, totalClicks } as updateData) userData =
     let
@@ -331,10 +333,10 @@ registerUserGainedAClick clicksToAdd ({ teams, users, totalClicks } as updateDat
         newUsers =
             updateFullUserByUsername
                 users
-                (\ud ->
-                    { ud
-                        | userClicks = modifyClicks ud.userClicks |> min clickCap
-                        , xp = ud.xp + 1
+                (\_ ->
+                    { userData
+                        | userClicks = modifyClicks userData.userClicks |> min clickCap
+                        , xp = userData.xp + 1
                     }
                 )
                 userData.username
@@ -684,57 +686,32 @@ updateFromFrontend sessionId clientId msg model =
             mapCurrentUserData <|
                 \userData ->
                     let
-                        -- diffs between the new user's userdata and original userData
-                        modifyClicks existingClicks =
-                            let
-                                newClicks =
-                                    (maybeNewUser
-                                        |> Maybe.andThen getUserData
-                                        |> Maybe.map .userClicks
-                                        |> Maybe.withDefault userData.userClicks
-                                    )
-                                        - userData.userClicks
-                            in
-                            existingClicks
-                                + newClicks
-
-                        newTeams =
-                            updateTeamByPersonalityType
-                                model.teams
-                                userData.personalityType
-                                (modifyTeamClicks modifyClicks >> accumulateTeamPoints)
-
-                        newUsers =
-                            updateFullUserByUsername
-                                model.users
-                                (\ud ->
-                                    let
-                                        ( newCurrentLevels, maybeClicksGained ) =
-                                            claimOrStartEnergize
-                                                model.lastTick
-                                                ud.currentLevels.energize
-                                                ud.currentLevels.energizeCycleCap
-                                                |> Tuple.mapFirst
-                                                    (\newEng -> setEnergize newEng ud.currentLevels)
-                                    in
-                                    { ud
-                                        | currentLevels = newCurrentLevels
-                                        , userClicks = Maybe.withDefault 0 maybeClicksGained + ud.userClicks
-                                        , xp = ud.xp + 1
-                                    }
-                                )
-                                userData.username
-
-                        newModel : Model
                         newModel =
-                            { model
-                                | totalClicks = modifyClicks model.totalClicks
-                                , users = newUsers
-                                , teams = newTeams
-                            }
+                            let
+                                ( newCurrentLevels, clicksGained ) =
+                                    claimOrStartEnergize
+                                        model.lastTick
+                                        userData.currentLevels.energize
+                                        userData.currentLevels.energizeCycleCap
+                                        |> Tuple.mapBoth
+                                            (\newEng -> setEnergize newEng userData.currentLevels)
+                                            (\mbClicks -> mbClicks |> Maybe.withDefault 0 |> Debug.log "clicks gained")
 
-                        maybeNewUser =
-                            getUserBySessionId newUsers sessionId
+                                newUserData : UserData
+                                newUserData =
+                                    setCurrentLevels newCurrentLevels userData
+
+                                newUsers : List User
+                                newUsers =
+                                    updateFullUserByUsername
+                                        model.users
+                                        (always newUserData)
+                                        userData.username
+                            in
+                            registerUserGainedAClick
+                                clicksGained
+                                { model | users = newUsers }
+                                newUserData
                     in
                     ( newModel
                     , Cmd.batch
