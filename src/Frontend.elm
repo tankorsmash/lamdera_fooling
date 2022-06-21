@@ -374,7 +374,7 @@ update msg model =
             )
 
         SendWantsToCraftXp ->
-            ( model, Lamdera.sendToBackend Types.UserWantsToCraftXp)
+            ( model, Lamdera.sendToBackend Types.UserWantsToCraftXp )
 
 
 
@@ -1108,7 +1108,6 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
                     , textLabel = txt
                     , colorTheme = UI.BrightTheme
                     }
-
     in
     column [ centerX, width fill, spacing 10 ]
         [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
@@ -1513,7 +1512,10 @@ scoreboard model personalityType =
             , viewCountFromPersonality Realistic model.teamsFromBackend.realists
             ]
         , paragraph [ centerX, Font.center ]
-            [ text <| "You've contributed " ++ String.fromInt model.userClicksFromBackend ++ " clicks towards being better than those other guys."
+            [ text <| "You've contributed "
+            , el [ Font.underline ] <|
+                text (String.fromInt model.userClicksFromBackend)
+            , text " clicks towards being better than those other guys."
             ]
         , paragraph [] [ el [ UI.scaled_font 1 ] <| text <| "Every 100 clicks from your team earns the team 1 point. Spend the points on upgrades to make your clicks worth more." ]
         ]
