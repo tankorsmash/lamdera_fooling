@@ -1519,7 +1519,7 @@ scoreboard model personalityType =
     in
     column [ width fill ]
         [ row [ centerX, width fill, Font.center ]
-            [ el [ centerX ] <| text <| "All clicks: "
+            [ el [ centerX ] <| text <| "Worldwide clicks: "
             , el [ centerX ] <| viewCyclingNumber model.timelines.cyclingNumberTimeline
             ]
         , row [ centerX, spacing 50 ] <|
