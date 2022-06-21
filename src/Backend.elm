@@ -645,23 +645,22 @@ updateFromFrontend sessionId clientId msg model =
                         currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
                         currentLevelUpdater currentLevels energizeCurrentLevel =
                             let
-                                energizeCapCurrentLevel =
-                                    userData.currentLevels.energizeCycleCap
-
                                 energizeCycleCap =
-                                    basicBonuses.energize.cycleCap
-                                        (ClickPricing.getCurrentLevelLevel energizeCapCurrentLevel)
+                                    userData.currentLevels
+                                        |> .energizeCycleCap
+                                        |> getCurrentLevelLevel
+                                        |> basicBonuses.energize.cycleCap
 
                                 energizeDuration =
-                                    basicBonuses.energize.durationMs <|
-                                        ClickPricing.getCurrentLevelLevel energizeCurrentLevel
+                                    energizeCurrentLevel
+                                        |> ClickPricing.getCurrentLevelLevel
+                                        |> basicBonuses.energize.durationMs
 
                                 addClickBonusToAvailableCycles =
-                                    \availableCycles ->
-                                        availableCycles
-                                            * basicBonuses.energize.clickBonus
-                                                -- FIXME? should this use the energizeCurrentLevel inside the tuple that its currently ignoring?
-                                                (ClickPricing.getCurrentLevelLevel energizeCurrentLevel)
+                                    energizeCurrentLevel
+                                        |> ClickPricing.getCurrentLevelLevel
+                                        |> basicBonuses.argue.clickBonus
+                                        |> (*)
 
                                 ( newCurrentLevel, gained ) =
                                     case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
