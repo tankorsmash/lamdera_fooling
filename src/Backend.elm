@@ -189,18 +189,18 @@ setCurrentLevels newCurrentLevels userData =
     { userData | currentLevels = newCurrentLevels }
 
 
-setDiscuss : CurrentLevels -> CurrentLevel -> CurrentLevels
-setDiscuss currentLevels newDiscuss =
+setDiscuss : CurrentLevel -> CurrentLevels -> CurrentLevels
+setDiscuss newDiscuss currentLevels =
     { currentLevels | discuss = newDiscuss }
 
 
-setArgue : CurrentLevels -> CurrentLevel -> CurrentLevels
-setArgue currentLevels newArgue =
+setArgue : CurrentLevel -> CurrentLevels -> CurrentLevels
+setArgue newArgue currentLevels =
     { currentLevels | argue = newArgue }
 
 
-setEnergize : CurrentLevels -> CurrentLevel -> CurrentLevels
-setEnergize currentLevels newEnergize =
+setEnergize : CurrentLevel -> CurrentLevels -> CurrentLevels
+setEnergize newEnergize currentLevels =
     { currentLevels | energize = newEnergize }
 
 
@@ -405,7 +405,7 @@ userDiscussed model userData =
                                 model.lastTick
                                 basicBonuses.discuss
                     in
-                    setDiscuss currentLevels_ restartedDiscuss
+                    setDiscuss restartedDiscuss currentLevels_
                 )
                 currentLevels
 
@@ -419,7 +419,7 @@ userDiscussed model userData =
                 userData.username
     in
     registerUserGainedAClick clicksToAdd model userData
-        |> (\model_ -> mapUsers model_ restartDiscuss)
+        |> mapUsers restartDiscuss
 
 
 userArgued : Model -> UserData -> Model
@@ -443,7 +443,7 @@ userArgued model userData =
                                 model.lastTick
                                 basicBonuses.argue
                     in
-                    setArgue currentLevels_ restartedArgue
+                    setArgue restartedArgue currentLevels_
                 )
                 currentLevels
 
@@ -457,17 +457,17 @@ userArgued model userData =
                 userData.username
     in
     registerUserGainedAClick clicksToAdd model userData
-        |> (\model_ -> mapUsers model_ restartArgue)
+        |> mapUsers restartArgue
 
 
-mapUsers : Model -> (List User -> List User) -> Model
-mapUsers model func =
+mapUsers : (List User -> List User) -> Model -> Model
+mapUsers func model =
     { model | users = func model.users }
 
 
 type alias LevelManager =
     { getter : CurrentLevels -> CurrentLevel
-    , setter : CurrentLevels -> CurrentLevel -> CurrentLevels
+    , setter : CurrentLevel -> CurrentLevels -> CurrentLevels
     , upgradeCost : Int
     }
 
@@ -482,9 +482,9 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
                 |> Maybe.withDefault Cmd.none
             )
 
-        setNextLevel : (CurrentLevels -> CurrentLevel -> CurrentLevels) -> CurrentLevels -> (CurrentLevel -> CurrentLevels)
+        setNextLevel : (CurrentLevel -> CurrentLevels -> CurrentLevels) -> CurrentLevels -> (CurrentLevel -> CurrentLevels)
         setNextLevel levelSetter currentLevels =
-            nextCurrentLevel >> levelSetter currentLevels
+            nextCurrentLevel >> (\cl -> levelSetter cl currentLevels)
 
         upgradeCurrentLevel : LevelManager -> CurrentLevels -> CurrentLevels
         upgradeCurrentLevel levelManager_ cls =
@@ -535,14 +535,14 @@ upgradeUserCurrentLevels model sessionId clientId upgradeType userData =
 
                 Types.EnergizeCap level ->
                     { getter = .energizeCycleCap
-                    , setter = \cls nl -> { cls | energizeCycleCap = nl }
+                    , setter = \nl cls -> { cls | energizeCycleCap = nl }
                     , upgradeCost =
                         ClickPricing.basicBonuses.energize.cycleCapUpgradeCost level
                     }
 
                 Types.ClickCap level ->
                     { getter = .clickCap
-                    , setter = \cls nl -> { cls | clickCap = nl }
+                    , setter = \nl cls -> { cls | clickCap = nl }
                     , upgradeCost =
                         ClickPricing.xpCost ClickPricing.basicBonuses.clickCap level
                     }
@@ -573,6 +573,48 @@ removeUserFromAllGroups userData groups =
                             |> Tuple.second
                 }
             )
+
+
+claimOrStartEnergize : Time.Posix -> CurrentLevel -> CurrentLevel -> ( CurrentLevel, Maybe Int )
+claimOrStartEnergize lastTick energizeCurrentLevel energizeCycleCapCurrentLevel =
+    let
+        energizeCycleCap =
+            energizeCycleCapCurrentLevel
+                |> getCurrentLevelLevel
+                |> basicBonuses.energize.cycleCap
+
+        energizeDuration =
+            energizeCurrentLevel
+                |> ClickPricing.getCurrentLevelLevel
+                |> basicBonuses.energize.durationMs
+
+        addClickBonusToAvailableCycles =
+            energizeCurrentLevel
+                |> ClickPricing.getCurrentLevelLevel
+                |> basicBonuses.argue.clickBonus
+                |> (*)
+
+        ( newCurrentLevel, gained ) =
+            case getCurrentLevelProgress energizeCurrentLevel lastTick of
+                NotStarted ->
+                    -- start the ticker
+                    ( ClickPricing.currentLevelTimedStarter
+                        energizeCurrentLevel
+                        lastTick
+                        basicBonuses.argue
+                    , Nothing
+                    )
+
+                _ ->
+                    -- otherwise collect it
+                    ClickPricing.collectCurrentLevel
+                        energizeCurrentLevel
+                        lastTick
+                        energizeDuration
+                        energizeCycleCap
+                        |> Tuple.mapSecond (Maybe.map addClickBonusToAvailableCycles)
+    in
+    ( newCurrentLevel, gained )
 
 
 updateFromFrontend : SessionId -> SessionId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -642,48 +684,6 @@ updateFromFrontend sessionId clientId msg model =
             mapCurrentUserData <|
                 \userData ->
                     let
-                        currentLevelUpdater : CurrentLevels -> CurrentLevel -> ( CurrentLevels, Maybe Int )
-                        currentLevelUpdater currentLevels energizeCurrentLevel =
-                            let
-                                energizeCycleCap =
-                                    userData.currentLevels
-                                        |> .energizeCycleCap
-                                        |> getCurrentLevelLevel
-                                        |> basicBonuses.energize.cycleCap
-
-                                energizeDuration =
-                                    energizeCurrentLevel
-                                        |> ClickPricing.getCurrentLevelLevel
-                                        |> basicBonuses.energize.durationMs
-
-                                addClickBonusToAvailableCycles =
-                                    energizeCurrentLevel
-                                        |> ClickPricing.getCurrentLevelLevel
-                                        |> basicBonuses.argue.clickBonus
-                                        |> (*)
-
-                                ( newCurrentLevel, gained ) =
-                                    case getCurrentLevelProgress energizeCurrentLevel model.lastTick of
-                                        NotStarted ->
-                                            -- start the ticker
-                                            ( ClickPricing.currentLevelTimedStarter
-                                                energizeCurrentLevel
-                                                model.lastTick
-                                                basicBonuses.argue
-                                            , Nothing
-                                            )
-
-                                        _ ->
-                                            -- otherwise collect it
-                                            ClickPricing.collectCurrentLevel
-                                                energizeCurrentLevel
-                                                model.lastTick
-                                                energizeDuration
-                                                energizeCycleCap
-                                                |> Tuple.mapSecond (Maybe.map addClickBonusToAvailableCycles)
-                            in
-                            ( setEnergize currentLevels newCurrentLevel, gained )
-
                         -- diffs between the new user's userdata and original userData
                         modifyClicks existingClicks =
                             let
@@ -710,9 +710,12 @@ updateFromFrontend sessionId clientId msg model =
                                 (\ud ->
                                     let
                                         ( newCurrentLevels, maybeClicksGained ) =
-                                            currentLevelUpdater
-                                                ud.currentLevels
+                                            claimOrStartEnergize
+                                                model.lastTick
                                                 ud.currentLevels.energize
+                                                ud.currentLevels.energizeCycleCap
+                                                |> Tuple.mapFirst
+                                                    (\newEng -> setEnergize newEng ud.currentLevels)
                                     in
                                     { ud
                                         | currentLevels = newCurrentLevels
