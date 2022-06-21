@@ -150,6 +150,7 @@ type alias Bonuses =
     , discuss : TimedBonus
     , argue : TimedBonus
     , energize : CycleBonus
+    , craftXp : FlatBonus
     }
 
 
@@ -158,7 +159,7 @@ type alias Bonuses =
 basicBonuses : Bonuses
 basicBonuses =
     { clickCap =
-        { clickBonus = \(Level level ) -> (1 + level) * 10
+        { clickBonus = \(Level level) -> (1 + level) * 10
         , xpCost = \(Level level) -> level * 5
         }
     , discuss =
@@ -177,6 +178,10 @@ basicBonuses =
         , durationMs = always <| Duration.seconds 45
         , cycleCap = \(Level level) -> 10 + (level * 10)
         , cycleCapUpgradeCost = \(Level level) -> level * 15
+        }
+    , craftXp =
+        { clickBonus = always 2
+        , xpCost = always 5
         }
     }
 

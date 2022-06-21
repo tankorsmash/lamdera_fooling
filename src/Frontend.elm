@@ -1083,8 +1083,8 @@ viewFlyingLabel timeline =
         text labelText
 
 
-actionArea : Time.Posix -> Int -> Int -> CurrentLevels -> Timelines -> Element FrontendMsg
-actionArea lastTick xp numGroupMembers currentLevels timelines =
+actionArea : Time.Posix -> Int -> Int -> UserData -> Timelines -> Element FrontendMsg
+actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines =
     let
         spacer =
             el [ padding 5 ] <| Element.none
@@ -1096,6 +1096,9 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
             viewFlyingLabel timelines.userClicksTimeline
 
         actionButton msg txt =
+            actionButtonWithAttrs [] msg txt
+
+        actionButtonWithAttrs attrs msg txt =
             UI.button <|
                 UI.TextParams
                     { buttonType = UI.Outline
@@ -1104,6 +1107,7 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
                         , width Element.shrink
                         , UI.scaled_font 3
                         ]
+                            ++ attrs
                     , onPressMsg = msg
                     , textLabel = txt
                     , colorTheme = UI.BrightTheme
@@ -1313,7 +1317,19 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
         , -- convert Xp to clicks
           el [ centerX, Font.underline ] <| text "Spend your clicks"
         , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
-        , actionButton SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
+        , -- craft xp
+          let
+            canAfford =
+                userData.userClicks >= basicBonuses.craftXp.xpCost (Level 0)
+
+            buttonTextColor =
+                if not canAfford then
+                    Font.color UI.color_danger_dark
+
+                else
+                    UI.noopAttr
+          in
+            actionButtonWithAttrs [buttonTextColor] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
         , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , actionButton SendClickToBackend "WIP"
@@ -1484,7 +1500,7 @@ viewGamePage model ({ personalityType, xp } as userData) =
             [ row [ width fill ]
                 [ el [ alignLeft, height fill ] <| viewPlayers model userData Realistic
                 , el [ centerX, alignTop ] <|
-                    actionArea model.lastTick xp numGroupMembers userData.currentLevels model.timelines
+                    actionArea model.lastTick xp numGroupMembers userData model.timelines
                 , el [ alignRight, height fill ] <| viewPlayers model userData Idealistic
                 ]
             ]

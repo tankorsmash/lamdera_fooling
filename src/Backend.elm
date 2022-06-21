@@ -1102,10 +1102,10 @@ updateFromFrontend sessionId clientId msg model =
                 (\userData ->
                     let
                         clickCost =
-                            5
+                            basicBonuses.craftXp.xpCost (Level 0)
 
                         xpGained =
-                            2
+                            basicBonuses.craftXp.clickBonus (Level 0)
                     in
                     if userData.userClicks >= clickCost then
                         let
