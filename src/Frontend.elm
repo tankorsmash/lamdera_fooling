@@ -1314,7 +1314,7 @@ actionArea lastTick xp numGroupMembers currentLevels timelines =
         , -- convert Xp to clicks
           el [ centerX, Font.underline ] <| text "Spend your clicks"
         , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
-        , actionButton SendWantsToCraftXp "Craft XP"
+        , actionButton SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
         , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , actionButton SendClickToBackend "WIP"

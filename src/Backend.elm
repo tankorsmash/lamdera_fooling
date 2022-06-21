@@ -1098,9 +1098,42 @@ updateFromFrontend sessionId clientId msg model =
             updateFromAdminFrontend sessionId clientId adminToBackend model
 
         UserWantsToCraftXp ->
-            -- TODO subtract 5 clicks to
-            -- ( model, Cmd.none )
-            Debug.todo "subtract 5 clicks to make 1 XP"
+            mapCurrentUserData
+                (\userData ->
+                    let
+                        clickCost =
+                            5
+
+                        xpGained =
+                            2
+                    in
+                    if userData.userClicks >= clickCost then
+                        let
+                            newUserData =
+                                { userData
+                                    | userClicks = userData.userClicks - clickCost
+                                    , xp = userData.xp + xpGained
+                                }
+
+                            newUsers =
+                                updateFullUserByUsername
+                                    model.users
+                                    (always newUserData)
+                                    userData.username
+
+                            newModel =
+                                setUsers newUsers model
+                        in
+                        ( newModel
+                        , Cmd.batch
+                            [ broadcastNewGlobalClicksAndSummaries newModel
+                            , sendNewUserAfterClicksGained newModel sessionId clientId
+                            ]
+                        )
+
+                    else
+                        noop
+                )
 
 
 updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )
