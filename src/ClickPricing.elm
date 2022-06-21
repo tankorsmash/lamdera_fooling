@@ -173,7 +173,7 @@ basicBonuses =
         , durationMs = always <| Duration.seconds 30
         }
     , energize =
-        { clickBonus = \(Level level) -> level * 2
+        { clickBonus = \(Level level) -> level * 2 + 1
         , xpCost = \(Level level) -> level * 25
         , durationMs = always <| Duration.seconds 45
         , cycleCap = \(Level level) -> 10 + (level * 10)
