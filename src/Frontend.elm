@@ -1328,7 +1328,7 @@ actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines
                 else
                     UI.noopAttr
           in
-            actionButtonWithAttrs [buttonTextColor] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
+          actionButtonWithAttrs [ buttonTextColor ] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
         , spacer
         , el [ centerX, Font.underline ] <| text "Spend your team's points"
         , actionButton SendClickToBackend "WIP"
@@ -1515,16 +1515,16 @@ scoreboard model personalityType =
                 text <| "Clicks from your people: " ++ String.fromInt team.totalTeamClicks
 
             else
-                text <| "Clicks from the other guys: " ++ String.fromInt team.totalTeamClicks
+                text <| "Clicks from the others: " ++ String.fromInt team.totalTeamClicks
     in
     column [ width fill ]
         [ row [ centerX, width fill, Font.center ]
             [ el [ centerX ] <| text <| "All clicks: "
             , el [ centerX ] <| viewCyclingNumber model.timelines.cyclingNumberTimeline
             ]
-        , row [ centerX, spacing 10 ] <|
-            [ viewCountFromPersonality Idealistic model.teamsFromBackend.idealists
-            , viewCountFromPersonality Realistic model.teamsFromBackend.realists
+        , row [ centerX, spacing 50 ] <|
+            [ viewCountFromPersonality personalityType model.teamsFromBackend.idealists
+            , viewCountFromPersonality (Types.otherPersonalityType personalityType) model.teamsFromBackend.realists
             ]
         , paragraph [ centerX, Font.center ]
             [ text <| "You've contributed "
