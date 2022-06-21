@@ -591,7 +591,7 @@ claimOrStartEnergize lastTick energizeCurrentLevel energizeCycleCapCurrentLevel 
         addClickBonusToAvailableCycles =
             energizeCurrentLevel
                 |> ClickPricing.getCurrentLevelLevel
-                |> basicBonuses.argue.clickBonus
+                |> basicBonuses.energize.clickBonus
                 |> (*)
 
         ( newCurrentLevel, gained ) =
