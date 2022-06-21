@@ -1526,7 +1526,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
     let
         viewChatMessage : ChatMessage -> Element FrontendMsg
         viewChatMessage chatMessage =
-            paragraph [ Element.width (fill |> Element.maximum 500) ]
+            paragraph [ centerX, Element.width (fill |> Element.maximum 800) ]
                 [ el
                     ((if chatMessage.userData.isOnline then
                         [ Font.color <| UI.convertColor Color.lightGreen ]
@@ -1542,13 +1542,14 @@ bottomBar userChatMessage allChatMessages user personalityType =
                 , el [ centerY, Font.center, height fill ] <| text <| chatMessage.message
                 ]
     in
-    column [ centerX, alignBottom, spacing 5 ]
+    column [ width fill, centerX, alignBottom, spacing 5 ]
         [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
             text <|
                 (getUsername user
                     |> Maybe.withDefault ""
                 )
-        , row []
+        , --chat entry
+          row [ centerX ]
             [ Input.text [ UI.onEnter ChatInputSent, UI.defineHtmlId "chat-message-input" ]
                 { label = Input.labelHidden "chat message input"
                 , onChange = ChatInputChanged << Just
@@ -1568,7 +1569,14 @@ bottomBar userChatMessage allChatMessages user personalityType =
                     , colorTheme = UI.BrightTheme
                     }
             ]
-        , column [] <|
+        , --chat log
+          column
+            [ width Element.shrink
+            , height (fill |> Element.minimum 200)
+            , Element.scrollbarY
+            , centerX
+            ]
+          <|
             (allChatMessages
                 |> List.take 5
                 |> List.map viewChatMessage
