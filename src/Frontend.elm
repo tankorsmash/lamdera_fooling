@@ -1268,7 +1268,6 @@ actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines
                         { buttonType = UI.Outline
                         , customAttrs =
                             [ centerX
-                            , width Element.shrink
                             , UI.scaled_font 2
                             , Element.alpha <|
                                 if xp >= xpCost basicBonuses.energize (nextLevel energizeLevel) then
