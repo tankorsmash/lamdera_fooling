@@ -1322,11 +1322,7 @@ actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines
                 userData.userClicks >= basicBonuses.craftXp.xpCost (Level 0)
 
             buttonTextColor =
-                if not canAfford then
-                    Font.color UI.color_danger_dark
-
-                else
-                    UI.noopAttr
+                UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
           in
           actionButtonWithAttrs [ buttonTextColor ] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
         , spacer
@@ -1376,11 +1372,8 @@ viewPlayers model userData personalityType =
 
                     else
                         el
-                            [ if clicks >= maxClicks then
-                                Font.color <| UI.convertColor <| Color.lightRed
-
-                              else
-                                UI.noopAttr
+                            [ UI.optionalAttr (clicks >= maxClicks)
+                                (Font.color <| UI.convertColor <| Color.lightRed)
                             ]
                             (text
                                 (" x"
@@ -1435,22 +1428,23 @@ viewPlayers model userData personalityType =
                                             else
                                                 ( UI.noopAttr, TryToJoinGroup group.groupId )
                                         )
-                                    |> Maybe.withDefault ( UI.noopAttr, TryToJoinGroup group.groupId )
+                                    |> Maybe.withDefault
+                                        ( UI.noopAttr, TryToJoinGroup group.groupId )
                         in
-                        column [ UI.scaled_font 1, paddingXY 0 5 ]
+                        column
+                            ([ UI.scaled_font 1
+                             , paddingXY 0 5
+                             ]
+                                ++ UI.optionalAttrs
+                                    (personalityType == userData.personalityType)
+                                    [ Element.pointer
+                                    , Events.onClick onClickMsg
+                                    ]
+                            )
                             [ el
-                                ([ Font.italic
-                                 , headerColor
-                                 ]
-                                    ++ (if personalityType == userData.personalityType then
-                                            [ Element.pointer
-                                            , Events.onClick onClickMsg
-                                            ]
-
-                                        else
-                                            []
-                                       )
-                                )
+                                [ Font.italic
+                                , headerColor
+                                ]
                               <|
                                 (text <| group.name)
                             , List.length group.members
