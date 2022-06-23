@@ -1453,7 +1453,9 @@ viewPlayers model userData personalityType =
                                 )
                               <|
                                 (text <| group.name)
-                            , text <| String.fromInt (List.length group.members) ++ " members"
+                            , List.length group.members
+                                |> String.Extra.pluralize "member" "members"
+                                |> text
                             ]
                 in
                 column
