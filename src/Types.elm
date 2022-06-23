@@ -5,6 +5,7 @@ import Browser.Dom
 import Browser.Navigation exposing (Key)
 import ClickPricing exposing (..)
 import Dict exposing (Dict)
+import Element
 import External.Animator.Animator as Animator
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
@@ -217,6 +218,7 @@ initFrontendModel : Url -> Key -> FrontendModel
 initFrontendModel url key =
     { key = key
     , url = url
+    , device = Nothing
     , message = "Now this is different"
     , totalClicksFromBackend = 0
     , teamsFromBackend = initTeams
@@ -269,6 +271,7 @@ type alias TeamsUserClicks =
 type alias FrontendModel =
     { key : Key
     , url : Url.Url
+    , device : Maybe Element.Device
     , message : String
     , totalClicksFromBackend : Int
     , teamsFromBackend : Teams
@@ -429,6 +432,7 @@ type FrontendMsg
     | UrlChanged Url
     | NoOpFrontendMsg
     | LocalTick Time.Posix
+    | OnWindowResize Int Int
       -- onboarding
     | TryingOutPersonalityType (Maybe PersonalityType)
     | ResetPersonalityType

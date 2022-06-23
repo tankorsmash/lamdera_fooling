@@ -3,6 +3,7 @@ module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
+import Browser.Events
 import Browser.Navigation as Nav
 import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
 import Color
@@ -74,6 +75,7 @@ subscriptions model =
     Sub.batch
         [ Sub.none
         , timelineAnimator |> Animator.toSubscription LocalTick model
+        , Browser.Events.onResize OnWindowResize
         ]
 
 
@@ -108,7 +110,13 @@ timelineAnimator =
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
 init url key =
     ( initFrontendModel url key
-    , Cmd.none
+    , Task.perform
+        (\viewport ->
+            OnWindowResize
+                (floor viewport.viewport.width)
+                (floor viewport.viewport.height)
+        )
+        Browser.Dom.getViewport
     )
 
 
@@ -167,6 +175,11 @@ update msg model =
         LocalTick time ->
             ( { model | lastTick = time }
                 |> Animator.update time timelineAnimator
+            , Cmd.none
+            )
+
+        OnWindowResize width height ->
+            ( { model | device = Just <| Element.classifyDevice { width = width, height = height } }
             , Cmd.none
             )
 
