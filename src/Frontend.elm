@@ -1096,8 +1096,8 @@ viewFlyingLabel timeline =
         text labelText
 
 
-actionArea : Time.Posix -> Int -> Int -> UserData -> Timelines -> Element FrontendMsg
-actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines =
+actionArea : Element.DeviceClass -> Time.Posix -> Int -> Int -> UserData -> Timelines -> Element FrontendMsg
+actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userData) timelines =
     let
         spacer =
             el [ padding 5 ] <| Element.none
@@ -1125,180 +1125,65 @@ actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines
                     , textLabel = txt
                     , colorTheme = UI.BrightTheme
                     }
-    in
-    column [ centerX, width fill, spacing 10 ]
-        [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
-        , row
-            [ width fill, centerX, spacing 10 ]
-            [ UI.button <|
-                UI.CustomParams
-                    { buttonType = UI.Outline
-                    , customAttrs =
-                        [ centerX
-                        , width Element.shrink
-                        , UI.scaled_font 2
-                        , Element.above <| flyingLabel
-                        ]
-                    , onPressMsg = SendClickToBackend
-                    , customLabel =
-                        row []
-                            [ paragraph
-                                [ centerY
-                                , height fill
-                                ]
-                                [ text "Contribute +1" ]
-                            , el
-                                [ UI.scaled_font 2
-                                , Font.color <| UI.convertColor <| Color.lightBlue
-                                ]
-                              <|
-                                text <|
-                                    if groupMemberClickBonus numGroupMembers > 0 then
-                                        " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
 
-                                    else
-                                        ""
-                            ]
-                    , colorTheme = UI.BrightTheme
-                    }
-            , let
-                clickCapLevel =
-                    currentLevels.clickCap
-                        |> getCurrentLevelLevel
+        rowOrColumn =
+            case deviceClass of
+                Element.Phone ->
+                    column
 
-                upgradeXpCost =
-                    basicBonuses.clickCap.xpCost (nextLevel clickCapLevel)
+                Element.Tablet ->
+                    column
 
-                clickCap =
-                    basicBonuses.clickCap.clickBonus (nextLevel clickCapLevel)
-              in
-              UI.button <|
-                UI.TextParams
-                    { buttonType = UI.Outline
-                    , customAttrs =
-                        [ centerX
-                        , width Element.shrink
-                        , UI.scaled_font 2
-                        , Element.alpha <|
-                            if xp >= upgradeXpCost then
-                                1.0
+                Element.Desktop ->
+                    row
 
-                            else
-                                0.25
-                        ]
-                    , onPressMsg = SendBuyUpgrade (Types.ClickCap <| nextLevel clickCapLevel)
-                    , textLabel =
-                        "+Limit ["
-                            ++ (clickCap |> String.fromInt)
-                            ++ "] ("
-                            ++ String.fromInt upgradeXpCost
-                            ++ "xp)"
-                    , colorTheme = UI.BrightTheme
-                    }
-            ]
-        , spacer
-        , -- discuss
-          let
-            discussionLevel =
-                currentLevels.discuss |> getCurrentLevelLevel
-          in
-          showIf (xp >= 10 || getLevel discussionLevel > 0) <|
-            column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (basicBonuses.discuss.clickBonus discussionLevel) ( "Discuss", Discuss )
+                Element.BigDesktop ->
+                    row
+
+        contributeRow =
+            row [ width fill, centerX, spacing 10 ]
+                [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
                 , UI.button <|
-                    UI.TextParams
+                    UI.CustomParams
                         { buttonType = UI.Outline
                         , customAttrs =
                             [ centerX
                             , width Element.shrink
                             , UI.scaled_font 2
-                            , Element.alpha <|
-                                if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
-                                    1.0
-
-                                else
-                                    0.25
+                            , Element.above <| flyingLabel
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.Discussion <| nextLevel discussionLevel)
-                        , textLabel = "Discussion +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
-                        , colorTheme = UI.BrightTheme
-                        }
-                ]
-        , -- argue
-          let
-            argueLevel =
-                currentLevels.argue |> getCurrentLevelLevel
-          in
-          showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
-            column [ centerX, width fill, spacing 10 ]
-                [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (basicBonuses.argue.clickBonus argueLevel) ( "Argue", Argue )
-                , UI.button <|
-                    UI.TextParams
-                        { buttonType = UI.Outline
-                        , customAttrs =
-                            [ centerX
-                            , width Element.shrink
-                            , UI.scaled_font 2
-                            , Element.alpha <|
-                                if xp >= xpCost basicBonuses.argue (nextLevel argueLevel) then
-                                    1.0
+                        , onPressMsg = SendClickToBackend
+                        , customLabel =
+                            row []
+                                [ paragraph
+                                    [ centerY
+                                    , height fill
+                                    ]
+                                    [ text "Contribute +1" ]
+                                , el
+                                    [ UI.scaled_font 2
+                                    , Font.color <| UI.convertColor <| Color.lightBlue
+                                    ]
+                                  <|
+                                    text <|
+                                        if groupMemberClickBonus numGroupMembers > 0 then
+                                            " +" ++ String.fromInt (groupMemberClickBonus numGroupMembers)
 
-                                else
-                                    0.25
-                            ]
-                        , onPressMsg = SendBuyUpgrade (Types.Argumentation <| nextLevel argueLevel)
-                        , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
-                        , colorTheme = UI.BrightTheme
-                        }
-                ]
-        , let
-            energizeLevel =
-                currentLevels.energize |> getCurrentLevelLevel
-
-            energizeCycleCapLevel =
-                currentLevels.energizeCycleCap |> getCurrentLevelLevel
-          in
-          column [ centerX, width fill, spacing 10 ]
-            [ viewCycleButton
-                (ClickPricing.getCurrentLevelCycleProgress
-                    currentLevels.energize
-                    lastTick
-                    (basicBonuses.energize.durationMs energizeLevel)
-                )
-                (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
-                    lastTick
-                    (basicBonuses.energize.durationMs energizeLevel)
-                    |> Maybe.map
-                        (min <|
-                            basicBonuses.energize.cycleCap energizeCycleCapLevel
-                        )
-                    |> Maybe.withDefault 0
-                )
-                ( "Energize", CollectEnergize )
-            , row [ centerX, width fill, spacing 10 ]
-                [ UI.button <|
-                    UI.TextParams
-                        { buttonType = UI.Outline
-                        , customAttrs =
-                            [ centerX
-                            , UI.scaled_font 2
-                            , Element.alpha <|
-                                if xp >= xpCost basicBonuses.energize (nextLevel energizeLevel) then
-                                    1.0
-
-                                else
-                                    0.25
-                            ]
-                        , onPressMsg = SendBuyUpgrade (Types.Energization <| nextLevel energizeLevel)
-                        , textLabel = "Energization +1 (" ++ String.fromInt (xpCost basicBonuses.energize (addToLevel energizeLevel 1)) ++ "xp)"
+                                        else
+                                            ""
+                                ]
                         , colorTheme = UI.BrightTheme
                         }
                 , let
-                    upgradeXpCost =
-                        basicBonuses.energize.cycleCapUpgradeCost (nextLevel energizeCycleCapLevel)
+                    clickCapLevel =
+                        currentLevels.clickCap
+                            |> getCurrentLevelLevel
 
-                    energizeCycleCap =
-                        basicBonuses.energize.cycleCap energizeCycleCapLevel
+                    upgradeXpCost =
+                        basicBonuses.clickCap.xpCost (nextLevel clickCapLevel)
+
+                    clickCap =
+                        basicBonuses.clickCap.clickBonus (nextLevel clickCapLevel)
                   in
                   UI.button <|
                     UI.TextParams
@@ -1314,33 +1199,184 @@ actionArea lastTick xp numGroupMembers ({ currentLevels } as userData) timelines
                                 else
                                     0.25
                             ]
-                        , onPressMsg = SendBuyUpgrade (Types.EnergizeCap <| nextLevel energizeCycleCapLevel)
+                        , onPressMsg = SendBuyUpgrade (Types.ClickCap <| nextLevel clickCapLevel)
                         , textLabel =
-                            "Increase Cap to "
-                                ++ (energizeCycleCap |> String.fromInt)
-                                ++ " ("
+                            "+Limit ["
+                                ++ (clickCap |> String.fromInt)
+                                ++ "] ("
                                 ++ String.fromInt upgradeXpCost
                                 ++ "xp)"
                         , colorTheme = UI.BrightTheme
                         }
                 ]
-            ]
-        , spacer
-        , -- convert Xp to clicks
-          el [ centerX, Font.underline ] <| text "Spend your clicks"
-        , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
-        , -- craft xp
-          let
-            canAfford =
-                userData.userClicks >= basicBonuses.craftXp.xpCost (Level 0)
 
-            buttonTextColor =
-                UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
-          in
-          actionButtonWithAttrs [ buttonTextColor ] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
-        , spacer
-        , el [ centerX, Font.underline ] <| text "Spend your team's points"
-        , actionButton SendClickToBackend "WIP"
+        discussRow =
+            -- discuss
+            let
+                discussionLevel =
+                    currentLevels.discuss |> getCurrentLevelLevel
+            in
+            showIf (xp >= 10 || getLevel discussionLevel > 0) <|
+                column [ centerX, width fill, spacing 10 ]
+                    [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (basicBonuses.discuss.clickBonus discussionLevel) ( "Discuss", Discuss )
+                    , UI.button <|
+                        UI.TextParams
+                            { buttonType = UI.Outline
+                            , customAttrs =
+                                [ centerX
+                                , width Element.shrink
+                                , UI.scaled_font 2
+                                , Element.alpha <|
+                                    if xp >= xpCost basicBonuses.discuss (nextLevel discussionLevel) then
+                                        1.0
+
+                                    else
+                                        0.25
+                                ]
+                            , onPressMsg = SendBuyUpgrade (Types.Discussion <| nextLevel discussionLevel)
+                            , textLabel = "Discussion +1 (" ++ String.fromInt (xpCost basicBonuses.discuss (addToLevel discussionLevel 1)) ++ "xp)"
+                            , colorTheme = UI.BrightTheme
+                            }
+                    ]
+
+        argueRow =
+            -- argue
+            let
+                argueLevel =
+                    currentLevels.argue |> getCurrentLevelLevel
+            in
+            showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
+                column [ centerX, width fill, spacing 10 ]
+                    [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (basicBonuses.argue.clickBonus argueLevel) ( "Argue", Argue )
+                    , UI.button <|
+                        UI.TextParams
+                            { buttonType = UI.Outline
+                            , customAttrs =
+                                [ centerX
+                                , width Element.shrink
+                                , UI.scaled_font 2
+                                , Element.alpha <|
+                                    if xp >= xpCost basicBonuses.argue (nextLevel argueLevel) then
+                                        1.0
+
+                                    else
+                                        0.25
+                                ]
+                            , onPressMsg = SendBuyUpgrade (Types.Argumentation <| nextLevel argueLevel)
+                            , textLabel = "Argumentation +1 (" ++ String.fromInt (xpCost basicBonuses.argue (addToLevel argueLevel 1)) ++ "xp)"
+                            , colorTheme = UI.BrightTheme
+                            }
+                    ]
+
+        energizeRow =
+            let
+                energizeLevel =
+                    currentLevels.energize |> getCurrentLevelLevel
+
+                energizeCycleCapLevel =
+                    currentLevels.energizeCycleCap |> getCurrentLevelLevel
+            in
+            column [ centerX, width fill, spacing 10 ]
+                [ viewCycleButton
+                    (ClickPricing.getCurrentLevelCycleProgress
+                        currentLevels.energize
+                        lastTick
+                        (basicBonuses.energize.durationMs energizeLevel)
+                    )
+                    (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
+                        lastTick
+                        (basicBonuses.energize.durationMs energizeLevel)
+                        |> Maybe.map
+                            (min <|
+                                basicBonuses.energize.cycleCap energizeCycleCapLevel
+                            )
+                        |> Maybe.withDefault 0
+                    )
+                    ( "Energize", CollectEnergize )
+                , row [ centerX, width fill, spacing 10 ]
+                    [ UI.button <|
+                        UI.TextParams
+                            { buttonType = UI.Outline
+                            , customAttrs =
+                                [ centerX
+                                , UI.scaled_font 2
+                                , Element.alpha <|
+                                    if xp >= xpCost basicBonuses.energize (nextLevel energizeLevel) then
+                                        1.0
+
+                                    else
+                                        0.25
+                                ]
+                            , onPressMsg = SendBuyUpgrade (Types.Energization <| nextLevel energizeLevel)
+                            , textLabel = "Energization +1 (" ++ String.fromInt (xpCost basicBonuses.energize (addToLevel energizeLevel 1)) ++ "xp)"
+                            , colorTheme = UI.BrightTheme
+                            }
+                    , let
+                        upgradeXpCost =
+                            basicBonuses.energize.cycleCapUpgradeCost (nextLevel energizeCycleCapLevel)
+
+                        energizeCycleCap =
+                            basicBonuses.energize.cycleCap energizeCycleCapLevel
+                      in
+                      UI.button <|
+                        UI.TextParams
+                            { buttonType = UI.Outline
+                            , customAttrs =
+                                [ centerX
+                                , width Element.shrink
+                                , UI.scaled_font 2
+                                , Element.alpha <|
+                                    if xp >= upgradeXpCost then
+                                        1.0
+
+                                    else
+                                        0.25
+                                ]
+                            , onPressMsg = SendBuyUpgrade (Types.EnergizeCap <| nextLevel energizeCycleCapLevel)
+                            , textLabel =
+                                "Increase Cap to "
+                                    ++ (energizeCycleCap |> String.fromInt)
+                                    ++ " ("
+                                    ++ String.fromInt upgradeXpCost
+                                    ++ "xp)"
+                            , colorTheme = UI.BrightTheme
+                            }
+                    ]
+                ]
+
+        spendColumn =
+            column [ centerX, spacing 10 ]
+                [ el [ centerX, Font.underline ] <| text "Spend your clicks"
+                , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
+                , -- craft xp
+                  let
+                    canAfford =
+                        userData.userClicks >= basicBonuses.craftXp.xpCost (Level 0)
+
+                    buttonTextColor =
+                        UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
+                  in
+                  actionButtonWithAttrs [ buttonTextColor ] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
+                , spacer
+                , el [ centerX, Font.underline ] <| text "Spend your team's points"
+                , actionButton SendClickToBackend "WIP"
+                ]
+
+        actionsColumn =
+            column [ centerX, width fill ]
+                [ contributeRow
+                , spacer
+                , discussRow
+                , argueRow
+                , energizeRow
+                , spacer
+                ]
+    in
+    column [ centerX, width fill, spacing 10 ] <|
+        [ rowOrColumn [ centerX, width fill, spacing 40 ] <|
+            [ actionsColumn
+            , spendColumn
+            ]
         ]
 
 
@@ -1501,14 +1537,19 @@ viewGamePage model ({ personalityType, xp } as userData) =
         numGroupMembers =
             Types.getGroupNumGroupMembers model.teamsFromBackend userData
                 |> Maybe.withDefault 0
+
+        deviceClass =
+            model.device
+                |> Maybe.map .class
+                |> Maybe.withDefault Element.Desktop
     in
     column [ width fill, height fill, spacing 10 ]
         [ scoreboard model personalityType
-        , column [ width fill ]
-            [ row [ width fill ]
+        , row [ width fill ]
+            [ row [ width fill, spacing 10 ]
                 [ el [ alignLeft, height fill ] <| viewPlayers model userData Realistic
                 , el [ centerX, alignTop ] <|
-                    actionArea model.lastTick xp numGroupMembers userData model.timelines
+                    actionArea deviceClass model.lastTick xp numGroupMembers userData model.timelines
                 , el [ alignRight, height fill ] <| viewPlayers model userData Idealistic
                 ]
             ]
