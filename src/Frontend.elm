@@ -1,5 +1,6 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
+import PlayerDashboard as Dashboard
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -386,8 +387,18 @@ update msg model =
             , Cmd.map GotAdminFrontendMsg adminCmd
             )
 
+        GotPlayerDashboardMsg dashboardMsg ->
+            let
+                ( newDashboardModel, dashboardCmd ) =
+                    Dashboard.update dashboardMsg model.dashboardModel
+            in
+            ( { model | dashboardModel = newDashboardModel }
+            , Cmd.map GotPlayerDashboardMsg dashboardCmd
+            )
+
         SendWantsToCraftXp numXp ->
             ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
+
 
 
 
@@ -508,8 +519,17 @@ view model =
 
                         AdminPage ->
                             viewAdminPage model userData
+
+                        PlayerDashboardPage ->
+                            viewPlayerDashboardPage model userData
         ]
     }
+
+
+viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
+viewPlayerDashboardPage model userData =
+    Element.map GotPlayerDashboardMsg <|
+        Dashboard.view model.dashboardModel
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg
@@ -521,6 +541,7 @@ viewAdminPage model userData =
 type Route
     = GamePage
     | AdminPage
+    | PlayerDashboardPage
 
 
 routeParser : Parser (Route -> a) a
@@ -528,6 +549,7 @@ routeParser =
     Parser.oneOf
         [ Parser.map GamePage Parser.top
         , Parser.map AdminPage (Parser.s "ules")
+        , Parser.map PlayerDashboardPage (Parser.s "dashboard")
         ]
 
 

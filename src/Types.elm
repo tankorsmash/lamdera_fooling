@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -204,6 +204,11 @@ type alias Timelines =
     }
 
 
+initDashboardModel : Url -> Key -> DashboardModel
+initDashboardModel url key =
+    { url = url, key = key }
+
+
 initAdminFrontendModel : Url -> Key -> AdminFrontendModel
 initAdminFrontendModel url key =
     { url = url
@@ -235,6 +240,7 @@ initFrontendModel url key =
         , cyclingNumberTimeline = ( Animator.init 1, 0 )
         }
     , adminFrontendModel = initAdminFrontendModel url key
+    , dashboardModel = initDashboardModel url key
     }
 
 
@@ -268,6 +274,12 @@ type alias TeamsUserClicks =
     { realists : List UserClickData, idealists : List UserClickData }
 
 
+type alias DashboardModel =
+    { key : Key
+    , url : Url.Url
+    }
+
+
 type alias FrontendModel =
     { key : Key
     , url : Url.Url
@@ -285,6 +297,7 @@ type alias FrontendModel =
     , lastTick : Time.Posix
     , timelines : Timelines
     , adminFrontendModel : AdminFrontendModel
+    , dashboardModel : DashboardModel
     }
 
 
@@ -408,6 +421,14 @@ type alias AdminFrontendModel =
     }
 
 
+type DashboardMsg
+    = NoOpDashboardFrontend
+
+
+type DashboardToBackend
+    = NoOpDashboardToBackend
+
+
 type AdminFrontendMsg
     = NoOpAdminFrontend
     | DownloadUsers
@@ -454,6 +475,7 @@ type FrontendMsg
     | ChatInputSent
     | FocusError (Result Browser.Dom.Error ())
     | GotAdminFrontendMsg AdminFrontendMsg
+    | GotPlayerDashboardMsg DashboardMsg
     | SendWantsToCraftXp Int
 
 
