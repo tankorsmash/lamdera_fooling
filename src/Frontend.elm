@@ -1604,7 +1604,7 @@ scoreboard model personalityType =
                 text (String.fromInt model.userClicksFromBackend)
             , text " clicks towards being better than those other guys."
             ]
-        , paragraph [] [ el [ UI.scaled_font 1 ] <| text <| "Every 100 clicks from your team earns the team 1 point. Spend the points on upgrades to make your clicks worth more." ]
+        , paragraph [ centerX, Font.center ] [ el [ UI.scaled_font 1 ] <| text <| "Every 100 clicks from your team earns the team 1 point. Spend the points on upgrades to make your clicks worth more." ]
         ]
 
 
