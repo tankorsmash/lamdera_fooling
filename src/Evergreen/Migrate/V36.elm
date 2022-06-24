@@ -165,7 +165,8 @@ migrateFrontendModel : Old.FrontendModel -> New.FrontendModel
 migrateFrontendModel old =
     { key = old.key
     , url = old.url
-    , device = Debug.todo "Can't handle this"
+    , --TODO use old.device next time
+      device = Nothing
     , message = old.message
     , totalClicksFromBackend = old.totalClicksFromBackend
     , teamsFromBackend = migrateTeams old.teamsFromBackend
@@ -297,7 +298,7 @@ migrateToBackend old =
             New.UserWantsToLeaveGroup
 
         Old.AdminSendingToBackend adminToBackend ->
-            Debug.todo "branch 'AdminSendingToBackend _' not implemented"
+            New.AdminSendingToBackend <| migrateAdminSendingToBackend adminToBackend
 
 
 migrateFrontendMsg : Old.FrontendMsg -> New.FrontendMsg
