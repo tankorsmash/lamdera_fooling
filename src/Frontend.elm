@@ -1630,7 +1630,7 @@ bottomBar userChatMessage allChatMessages user personalityType =
                 , el [ centerY, Font.center, height fill ] <| text <| chatMessage.message
                 ]
     in
-    column [ width fill, centerX, alignBottom, spacing 5 ]
+    column [ width fill, centerX, alignBottom, spacing 5, UI.allowUserSelect ]
         [ el [ centerX, UI.scaled_font 1, Font.color <| UI.color_light_grey ] <|
             text <|
                 (getUsername user
