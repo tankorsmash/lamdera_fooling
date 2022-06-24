@@ -1142,8 +1142,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
 
         contributeRow =
             row [ width fill, centerX, spacing 10 ]
-                [ el [ centerX, Font.underline ] <| text <| "Take action (" ++ String.fromInt xp ++ "xp)"
-                , UI.button <|
+                [ UI.button <|
                     UI.CustomParams
                         { buttonType = UI.Outline
                         , customAttrs =
@@ -1371,7 +1370,6 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
             in
             column [ centerX, spacing 10 ]
                 [ el [ centerX, Font.underline ] <| text "Spend your clicks"
-                , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
                 , -- craft xp
                   row [ width fill, spacing 10 ]
                     [ text "Craft... "
@@ -1380,13 +1378,16 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                     , buildCraftXpButton 10
                     ]
                 , spacer
+                , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
                 , el [ centerX, Font.underline ] <| text "Spend your team's points"
                 , actionButton SendClickToBackend "WIP"
                 ]
 
         actionsColumn =
-            column [ centerX, width fill ]
-                [ contributeRow
+            column [ centerX, width fill, spacing 10 ]
+                [ el [ centerX, Font.underline ] <| text "Take action"
+                , el [centerX] <| text <| (String.fromInt xp ++ "xp")
+                , contributeRow
                 , spacer
                 , discussRow
                 , argueRow
