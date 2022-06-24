@@ -1345,34 +1345,40 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                 ]
 
         spendColumn =
+            let
+                buildCraftXpButton numXp =
+                    let
+                        level =
+                            Level numXp
+
+                        canAfford =
+                            userData.userClicks >= basicBonuses.craftXp.xpCost level
+
+                        buttonTextColor =
+                            UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
+
+                        clickCost =
+                            basicBonuses.craftXp.xpCost level
+
+                        xpGained =
+                            basicBonuses.craftXp.clickBonus level
+                    in
+                    actionButtonWithAttrs [ buttonTextColor ] (SendWantsToCraftXp numXp) <|
+                        String.fromInt xpGained
+                            ++ "xp (-"
+                            ++ String.fromInt clickCost
+                            ++ " clicks)"
+            in
             column [ centerX, spacing 10 ]
                 [ el [ centerX, Font.underline ] <| text "Spend your clicks"
                 , actionButton SendWantsToSpendToBackend "Spend -3 clicks to reduce theirs by -1"
                 , -- craft xp
-                  let
-                    canAfford =
-                        userData.userClicks >= basicBonuses.craftXp.xpCost (Level 0)
-
-                    buttonTextColor =
-                        UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
-
-                    numXp =
-                        1
-
-                    clickCost =
-                        basicBonuses.craftXp.xpCost (Level numXp)
-
-                    xpGained =
-                        basicBonuses.craftXp.clickBonus (Level numXp)
-                  in
-                  actionButtonWithAttrs [ buttonTextColor ]
-                    (SendWantsToCraftXp numXp)
-                  <|
-                    "Craft "
-                        ++ String.fromInt xpGained
-                        ++ " XP (-"
-                        ++ String.fromInt clickCost
-                        ++ " clicks)"
+                  row [ width fill, spacing 10 ]
+                    [ text "Craft... "
+                    , buildCraftXpButton 1
+                    , buildCraftXpButton 5
+                    , buildCraftXpButton 10
+                    ]
                 , spacer
                 , el [ centerX, Font.underline ] <| text "Spend your team's points"
                 , actionButton SendClickToBackend "WIP"
