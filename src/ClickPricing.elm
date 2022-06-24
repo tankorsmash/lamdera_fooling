@@ -180,8 +180,8 @@ basicBonuses =
         , cycleCapUpgradeCost = \(Level level) -> level * 15
         }
     , craftXp =
-        { clickBonus = always 2
-        , xpCost = always 5
+        { clickBonus = \(Level level) -> (level + 1) * 2
+        , xpCost = \(Level level) -> (level + 1) * 3
         }
     }
 

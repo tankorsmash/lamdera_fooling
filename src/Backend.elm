@@ -1076,15 +1076,15 @@ updateFromFrontend sessionId clientId msg model =
         AdminSendingToBackend adminToBackend ->
             updateFromAdminFrontend sessionId clientId adminToBackend model
 
-        UserWantsToCraftXp ->
+        UserWantsToCraftXp numXp ->
             mapCurrentUserData
                 (\userData ->
                     let
                         clickCost =
-                            basicBonuses.craftXp.xpCost (Level 0)
+                            basicBonuses.craftXp.xpCost (Level numXp)
 
                         xpGained =
-                            basicBonuses.craftXp.clickBonus (Level 0)
+                            basicBonuses.craftXp.clickBonus (Level numXp)
                     in
                     if userData.userClicks >= clickCost then
                         let

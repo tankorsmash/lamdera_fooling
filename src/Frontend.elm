@@ -386,8 +386,8 @@ update msg model =
             , Cmd.map GotAdminFrontendMsg adminCmd
             )
 
-        SendWantsToCraftXp ->
-            ( model, Lamdera.sendToBackend Types.UserWantsToCraftXp )
+        SendWantsToCraftXp numXp ->
+            ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
 
 
 
@@ -1355,8 +1355,24 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
 
                     buttonTextColor =
                         UI.optionalAttr (not canAfford) (Font.color UI.color_danger_dark)
+
+                    numXp =
+                        1
+
+                    clickCost =
+                        basicBonuses.craftXp.xpCost (Level numXp)
+
+                    xpGained =
+                        basicBonuses.craftXp.clickBonus (Level numXp)
                   in
-                  actionButtonWithAttrs [ buttonTextColor ] SendWantsToCraftXp "Craft 2 XP (-5 clicks)"
+                  actionButtonWithAttrs [ buttonTextColor ]
+                    (SendWantsToCraftXp numXp)
+                  <|
+                    "Craft "
+                        ++ String.fromInt xpGained
+                        ++ " XP (-"
+                        ++ String.fromInt clickCost
+                        ++ " clicks)"
                 , spacer
                 , el [ centerX, Font.underline ] <| text "Spend your team's points"
                 , actionButton SendClickToBackend "WIP"
