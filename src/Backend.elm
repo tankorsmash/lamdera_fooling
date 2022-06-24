@@ -695,7 +695,7 @@ updateFromFrontend sessionId clientId msg model =
                                         userData.currentLevels.energizeCycleCap
                                         |> Tuple.mapBoth
                                             (\newEng -> setEnergize newEng userData.currentLevels)
-                                            (\mbClicks -> mbClicks |> Maybe.withDefault 0 |> Debug.log "clicks gained")
+                                            (Maybe.withDefault 0)
 
                                 newUserData : UserData
                                 newUserData =
