@@ -156,13 +156,35 @@ textColor =
     UI.hex_to_color "837F98"
 
 
+borderColor : Element.Color
+borderColor =
+    UI.hex_to_color "DFDFE1"
+
+
 viewChat : Model -> Element Msg
 viewChat model =
-    column [ width fill, height fill, paddingXY 20 10 ]
-        [ row [ width fill ]
+    column [ width fill, height fill, paddingXY 20 10, spacing 20 ]
+        [ --header
+          row [ width fill ]
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamily "Poppins" "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap" ] <| text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
+        , -- search bar
+          Input.text [ Border.rounded 30, Border.color borderColor, Background.color offWhiteBackgroundColor, padding 7 ]
+            { onChange = always NoOpDashboardFrontend
+            , text = ""
+            , placeholder =
+                Just
+                    (Input.placeholder
+                        [ Font.color borderColor
+                        , UI.scaled_font 1
+                        , Element.moveRight 7
+                        ]
+                     <|
+                        paragraph [ centerY ] [ text "Search" ]
+                    )
+            , label = Input.labelHidden "search chat"
+            }
         , el [ Font.color textColor ] <| text "Chat"
         ]
 
