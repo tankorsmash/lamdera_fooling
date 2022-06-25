@@ -1391,7 +1391,7 @@ getUserByUsername users username =
         |> List.filter
             (\u ->
                 mapUserData u .username
-                    |> Maybe.map ((==) username)
+                    |> Maybe.map (String.toLower >> (==) username)
                     |> Maybe.withDefault False
             )
         |> List.head
@@ -1403,7 +1403,7 @@ mapUserByUsername users updater username =
         |> List.Extra.updateIf
             (\u ->
                 getUsername u
-                    |> Maybe.map ((==) username)
+                    |> Maybe.map (String.toLower >> (==) username)
                     |> Maybe.withDefault False
             )
             updater
