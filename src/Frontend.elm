@@ -527,7 +527,7 @@ view model =
 viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
 viewPlayerDashboardPage model userData =
     Element.map GotPlayerDashboardMsg <|
-        Dashboard.view model.dashboardModel
+        Dashboard.view model model.dashboardModel
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg

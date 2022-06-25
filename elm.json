@@ -28,7 +28,8 @@
             "lamdera/core": "1.0.0",
             "lattyware/elm-fontawesome": "6.0.0",
             "mdgriffith/elm-ui": "1.1.8",
-            "noahzgordon/elm-color-extra": "1.0.2"
+            "noahzgordon/elm-color-extra": "1.0.2",
+            "ryannhg/date-format": "2.3.0"
         },
         "indirect": {
             "TSFoster/elm-bytes-extra": "1.3.0",

@@ -9,6 +9,7 @@ import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(.
 import Color
 import Color.Convert
 import Color.Manipulate
+import DateFormat.Relative exposing (relativeTime)
 import Dict
 import Duration
 import Easings
@@ -161,12 +162,46 @@ borderColor =
     UI.hex_to_color "DFDFE1"
 
 
-viewChat : Model -> Element Msg
-viewChat model =
-    column [ width fill, height fill, paddingXY 20 10, spacing 20 ]
+fontFamilyPoppins : Element.Attribute msg
+fontFamilyPoppins =
+    fontFamily
+        "Poppins"
+        "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap"
+
+
+viewChat : Model -> List Types.ChatMessage -> Time.Posix -> Element Msg
+viewChat model allChatMessages lastTick =
+    let
+        viewChatMessage : ChatMessage -> Element Msg
+        viewChatMessage chatMessage =
+            row [ width fill, spacing 10, UI.scaled_font 1 ]
+                [ --profile pic
+                  el
+                    [ Background.color <| UI.hex_to_color "E4E5E7"
+                    , width (px 48)
+                    , height (px 48)
+                    , Border.rounded 100
+                    ]
+                  <|
+                    text " "
+                , --chat content
+                  column [ width fill ]
+                    [ --user image
+                      paragraph [ Font.color darkHeaderColor, fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
+                    , -- chat text
+                      paragraph [ width fill ] [ text <| chatMessage.message ]
+                    ]
+                , --date
+                  column []
+                    [ --NOTE not paragraph because we dont want the text to wrap
+                      el [ centerY, Font.size 10 ] <| text <| relativeTime lastTick chatMessage.date
+                    ]
+                ]
+    in
+    column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ --header
-          row [ width fill ]
-            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamily "Poppins" "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap" ] <| text "All Chat"
+          row [ width fill, padding 10 ]
+            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <| text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
         , -- search bar
@@ -185,12 +220,13 @@ viewChat model =
                     )
             , label = Input.labelHidden "search chat"
             }
-        , el [ Font.color textColor ] <| text "Chat"
+        , column [ Font.color textColor, spacing 10 ] <|
+            List.map viewChatMessage allChatMessages
         ]
 
 
-view : DashboardModel -> Element Msg
-view model =
+view : FrontendModel -> DashboardModel -> Element Msg
+view tempFrontendModel model =
     let
         actualView =
             row
@@ -200,8 +236,8 @@ view model =
                 , padding 20
                 , Font.color textColor
                 ]
-                [ el [ width (fillPortion 1), height fill ] <| viewSidebar model
-                , el [ width (fillPortion 5), height fill ] <| viewChat model
+                [ el [ height fill, paddingXY 10 0 ] <| viewSidebar model
+                , el [ width (fillPortion 5), height fill ] <| viewChat model tempFrontendModel.allChatMessages tempFrontendModel.lastTick
                 , el [ width (fillPortion 6), height fill ] <| text "Dashboard"
                 ]
     in
