@@ -19,6 +19,10 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import External.Animator.Animator as Animator
+import FontAwesome as FA
+import FontAwesome.Layering
+import FontAwesome.Regular as FAR
+import FontAwesome.Styles
 import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
@@ -110,13 +114,31 @@ viewSidebar model =
             ]
           <|
             text "Clikr"
+        , el [ centerY, centerX ] <|
+            exampleFontAwesomeLayeredIcon
         ]
+
+
+exampleFontAwesomeLayeredIcon : Element msg
+exampleFontAwesomeLayeredIcon =
+    Element.html <|
+        FontAwesome.Layering.layers []
+            [ FA.view FAR.bell
+            , FontAwesome.Layering.counter []
+                "austin"
+            ]
+
+
+fontAwesome : FA.Icon a -> Element msg
+fontAwesome =
+    FA.view >> Element.html
 
 
 view : DashboardModel -> Element Msg
 view model =
     row [ width fill, height fill ]
-        [ viewSidebar model
+        [ Element.html <| FontAwesome.Styles.css
+        , viewSidebar model
         , text "Dashboard"
         ]
 
