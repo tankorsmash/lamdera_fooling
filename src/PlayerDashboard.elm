@@ -20,8 +20,10 @@ import Element.Font as Font
 import Element.Input as Input
 import External.Animator.Animator as Animator
 import FontAwesome as FA
+import FontAwesome.Attributes as FAA
 import FontAwesome.Layering
 import FontAwesome.Regular as FAR
+import FontAwesome.Solid as FAS
 import FontAwesome.Styles
 import Html exposing (div, span)
 import Html.Attributes as Attr
@@ -94,6 +96,9 @@ viewSidebar model =
                 |> Color.Manipulate.lighten 0.15
                 |> Color.toRgba
                 |> UI.rgbaToColor
+
+        offWhiteColor =
+            UI.hex_to_color "F4F6FD"
     in
     column
         [ Background.color <| purpleColor
@@ -106,26 +111,29 @@ viewSidebar model =
             , blur = 11
             , color = lightPurpleColor
             }
+        , Element.spaceEvenly
+        , Font.color <| offWhiteColor
         ]
         [ el
-            [ alignTop
-            , fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap"
-            , Font.color <| UI.hex_to_color "F4F6FD"
+            [ fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap"
             ]
           <|
             text "Clikr"
-        , el [ centerY, centerX ] <|
-            exampleFontAwesomeLayeredIcon
+        , el [ centerX, height (px 32) ] <|
+            fontAwesome FAR.hand
+        , el [ centerX, height (px 32) ] <|
+            fontAwesome FAR.circleUp
+        , el [ centerX, height (px 32) ] <|
+            fontAwesome FAR.faceGrinBeamSweat
         ]
 
 
 exampleFontAwesomeLayeredIcon : Element msg
 exampleFontAwesomeLayeredIcon =
     Element.html <|
-        FontAwesome.Layering.layers []
-            [ FA.view FAR.bell
-            , FontAwesome.Layering.counter []
-                "austin"
+        FontAwesome.Layering.layers [ FAA.lg ]
+            [ FA.view FAS.checkToSlot
+            , FontAwesome.Layering.counter [] "123"
             ]
 
 
