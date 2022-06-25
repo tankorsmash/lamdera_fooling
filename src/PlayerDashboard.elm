@@ -74,11 +74,11 @@ type alias Msg =
 
 
 fontFamily : String -> String -> Element.Attribute msg
-fontFamily a b =
+fontFamily fontName fontUrl =
     Font.family
         [ Font.external
-            { name = a
-            , url = b
+            { name = fontName
+            , url = fontUrl
             }
         , Font.sansSerif
         ]
@@ -150,7 +150,7 @@ viewChat : Model -> Element Msg
 viewChat model =
     column [ width fill, height fill, paddingXY 20 10 ]
         [ row [ width fill ]
-            [ el [ alignLeft ] <| text "All Chat"
+            [ el [ alignLeft, Font.bold, fontFamily "Poppins" "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap" ] <| text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
         , text "Chat"
