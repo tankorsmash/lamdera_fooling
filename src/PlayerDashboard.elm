@@ -7,10 +7,12 @@ import Browser.Events
 import Browser.Navigation as Nav
 import ClickPricing exposing (CurrentLevel, CurrentLevels, Level(..), Progress(..), addToLevel, basicBonuses, getCurrentLevelLevel, getCurrentLevelProgress, getLevel, groupMemberClickBonus, mapCurrentLevels, nextLevel, xpCost)
 import Color
+import Color.Convert
+import Color.Manipulate
 import Dict
 import Duration
 import Easings
-import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
+import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, px, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -61,9 +63,45 @@ type alias Model =
     DashboardModel
 
 
-view : DashboardModel -> Element DashboardMsg
+type alias Msg =
+    DashboardMsg
+
+
+viewSidebar : Model -> Element Msg
+viewSidebar model =
+    let
+        purpleColor =
+            UI.hex_to_color "6363FC"
+
+        lightPurpleColor =
+            Color.Convert.hexToColor "6363FC"
+                |> Result.withDefault Color.red
+                |> Color.Manipulate.lighten 0.15
+                |> Color.toRgba
+                |> UI.rgbaToColor
+    in
+    column
+        [ Background.color <| purpleColor
+        , height fill
+        , padding 20
+        , Border.rounded 30
+        , Border.shadow
+            { offset = ( 0, 6 )
+            , size = 0
+            , blur = 11
+            , color = lightPurpleColor
+            }
+        ]
+        [ text "sidebar"
+        ]
+
+
+view : DashboardModel -> Element Msg
 view model =
-    text "Dashboard"
+    row [ width fill, height fill ]
+        [ viewSidebar model
+        , text "Dashboard"
+        ]
 
 
 update : Types.DashboardMsg -> Model -> ( Model, Cmd c )
