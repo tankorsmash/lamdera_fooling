@@ -210,31 +210,54 @@ viewChat model allChatMessages lastTick =
                       el [ centerY, Font.size 10 ] <| text <| relativeTime lastTick chatMessage.date
                     ]
                 ]
+
+        chatDivider =
+            row [ width fill, padding 5 ]
+                [ el [ width <| fillPortion 1 ] <| text ""
+                , el
+                    [ width <| fillPortion 8
+                    , UI.border_bottom 1
+                    , paddingXY 10 0
+                    , centerX
+                    , Border.color borderColor
+                    ]
+                  <|
+                    text ""
+                , el [ width <| fillPortion 1 ] <| text ""
+                ]
     in
-    column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
+    column [ width fill, height fill, paddingXY 0 10 ]
         [ --header
           row [ width fill, padding 10 ]
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <| text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
         , -- search bar
-          Input.text [ Border.rounded 30, Border.color borderColor, Background.color offWhiteBackgroundColor, padding 7 ]
-            { onChange = always NoOpDashboardFrontend
-            , text = ""
-            , placeholder =
-                Just
-                    (Input.placeholder
-                        [ Font.color borderColor
-                        , UI.scaled_font 1
-                        , Element.moveRight 7
-                        ]
-                     <|
-                        paragraph [ centerY ] [ text "Search" ]
-                    )
-            , label = Input.labelHidden "search chat"
-            }
-        , column [ Font.color textColor, spacing 10 ] <|
-            List.map viewChatMessage allChatMessages
+          el [ padding 5, width fill ] <|
+            Input.text
+                [ Border.rounded 30
+                , Border.color borderColor
+                , Background.color offWhiteBackgroundColor
+                , padding 3
+                , width fill
+                ]
+                { onChange = always NoOpDashboardFrontend
+                , text = ""
+                , placeholder =
+                    Just
+                        (Input.placeholder
+                            [ Font.color borderColor
+                            , UI.scaled_font 1
+                            , Element.moveRight 7
+                            ]
+                         <|
+                            paragraph [ centerY ] [ text "Search" ]
+                        )
+                , label = Input.labelHidden "search chat"
+                }
+        , column [ Font.color textColor, spacing 10, padding 10 ] <|
+            List.intersperse chatDivider <|
+                List.map viewChatMessage allChatMessages
         ]
 
 
