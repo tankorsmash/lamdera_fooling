@@ -871,17 +871,6 @@ viewAnon model maybePersonalityType =
         ]
 
 
-{-| Only show an element if the bool is true
--}
-showIf : Bool -> Element msg -> Element msg
-showIf condition element =
-    if condition then
-        element
-
-    else
-        Element.none
-
-
 viewProgressButton : Progress -> Int -> ( String, FrontendMsg ) -> Element FrontendMsg
 viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
@@ -1235,7 +1224,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                 discussionLevel =
                     currentLevels.discuss |> getCurrentLevelLevel
             in
-            showIf (xp >= 10 || getLevel discussionLevel > 0) <|
+            UI.showIf (xp >= 10 || getLevel discussionLevel > 0) <|
                 column [ centerX, width fill, spacing 10 ]
                     [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (basicBonuses.discuss.clickBonus discussionLevel) ( "Discuss", Discuss )
                     , UI.button <|
@@ -1264,7 +1253,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                 argueLevel =
                     currentLevels.argue |> getCurrentLevelLevel
             in
-            showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
+            UI.showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
                 column [ centerX, width fill, spacing 10 ]
                     [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (basicBonuses.argue.clickBonus argueLevel) ( "Argue", Argue )
                     , UI.button <|

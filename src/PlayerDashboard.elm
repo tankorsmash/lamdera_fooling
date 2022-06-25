@@ -181,6 +181,19 @@ viewChat model allChatMessages lastTick =
                     , width (px 48)
                     , height (px 48)
                     , Border.rounded 100
+                    , --online dot
+                      Element.inFront <|
+                        UI.showIf chatMessage.userData.isOnline <|
+                            el
+                                [ width (px 16)
+                                , height (px 16)
+                                , Background.color <| UI.color_pastel_green_4
+                                , Border.rounded 100
+                                , alignBottom
+                                , alignRight
+                                ]
+                            <|
+                                text " "
                     ]
                   <|
                     text " "
