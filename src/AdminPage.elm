@@ -142,7 +142,7 @@ view ({ users, allChatMessages, selectedChatMessageUuid } as model) =
                 , text chatMessage.message
                 ]
     in
-    column [ width fill, spacing 5, height fill ] <|
+    column [ width fill, spacing 5, padding 20, height fill ] <|
         [ text "New Admin Page"
         , link "/" "Back"
         , row [ width fill, spacing 10 ]

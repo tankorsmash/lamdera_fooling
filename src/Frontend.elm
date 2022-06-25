@@ -1,6 +1,5 @@
 module Frontend exposing (Model, app, init, update, updateFromBackend, view)
 
-import PlayerDashboard as Dashboard
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -24,6 +23,7 @@ import Html.Events
 import Interface as UI
 import Lamdera
 import List.Extra
+import PlayerDashboard as Dashboard
 import Process
 import String.Extra
 import Task
@@ -401,7 +401,6 @@ update msg model =
 
 
 
-
 -- end of update
 
 
@@ -494,7 +493,6 @@ view model =
             }
             [ width fill
             , height fill
-            , padding 20
             , Element.htmlAttribute <| Attr.id "elm_ui_layout"
             , centerX
             , UI.noUserSelect
@@ -1408,7 +1406,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
         actionsColumn =
             column [ centerX, width fill, spacing 10 ]
                 [ el [ centerX, Font.underline ] <| text "Take action"
-                , el [centerX] <| text <| (String.fromInt xp ++ "xp")
+                , el [ centerX ] <| text <| (String.fromInt xp ++ "xp")
                 , contributeRow
                 , spacer
                 , discussRow
@@ -1588,7 +1586,7 @@ viewGamePage model ({ personalityType, xp } as userData) =
                 |> Maybe.map .class
                 |> Maybe.withDefault Element.Desktop
     in
-    column [ width fill, height fill, spacing 10 ]
+    column [ width fill, height fill, spacing 10, padding 20 ]
         [ scoreboard model personalityType
         , row [ width fill ]
             [ row [ width fill, spacing 10 ]

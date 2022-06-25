@@ -141,12 +141,40 @@ fontAwesome =
     FA.view >> Element.html
 
 
+offWhiteBackgroundColor : Element.Color
+offWhiteBackgroundColor =
+    UI.hex_to_color "F8FAFB"
+
+
+viewChat : Model -> Element Msg
+viewChat model =
+    column [ width fill, height fill, paddingXY 20 10 ]
+        [ row [ width fill ]
+            [ el [ alignLeft ] <| text "All Chat"
+            , el [ alignRight ] <| fontAwesome FAR.comment
+            ]
+        , text "Chat"
+        ]
+
+
 view : DashboardModel -> Element Msg
 view model =
+    let
+        actualView =
+            row
+                [ width fill
+                , height fill
+                , Background.color offWhiteBackgroundColor
+                , padding 20
+                ]
+                [ el [ width (fillPortion 1), height fill ] <| viewSidebar model
+                , el [ width (fillPortion 3), height fill ] <| viewChat model
+                , el [ width (fillPortion 6), height fill ] <| text "Dashboard"
+                ]
+    in
     row [ width fill, height fill ]
         [ Element.html <| FontAwesome.Styles.css
-        , viewSidebar model
-        , text "Dashboard"
+        , actualView
         ]
 
 
