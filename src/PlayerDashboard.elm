@@ -146,14 +146,24 @@ offWhiteBackgroundColor =
     UI.hex_to_color "F8FAFB"
 
 
+darkHeaderColor : Element.Color
+darkHeaderColor =
+    UI.hex_to_color "191449"
+
+
+textColor : Element.Color
+textColor =
+    UI.hex_to_color "837F98"
+
+
 viewChat : Model -> Element Msg
 viewChat model =
     column [ width fill, height fill, paddingXY 20 10 ]
         [ row [ width fill ]
-            [ el [ alignLeft, Font.bold, fontFamily "Poppins" "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap" ] <| text "All Chat"
+            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamily "Poppins" "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap" ] <| text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
-        , text "Chat"
+        , el [ Font.color textColor ] <| text "Chat"
         ]
 
 
@@ -166,9 +176,10 @@ view model =
                 , height fill
                 , Background.color offWhiteBackgroundColor
                 , padding 20
+                , Font.color textColor
                 ]
                 [ el [ width (fillPortion 1), height fill ] <| viewSidebar model
-                , el [ width (fillPortion 3), height fill ] <| viewChat model
+                , el [ width (fillPortion 5), height fill ] <| viewChat model
                 , el [ width (fillPortion 6), height fill ] <| text "Dashboard"
                 ]
     in
