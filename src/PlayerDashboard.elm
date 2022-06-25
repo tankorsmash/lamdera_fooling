@@ -229,7 +229,8 @@ viewChat model allChatMessages lastTick =
     column [ width fill, height fill, paddingXY 0 10 ]
         [ --header
           row [ width fill, padding 10 ]
-            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <| text "All Chat"
+            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+                text "All Chat"
             , el [ alignRight ] <| fontAwesome FAR.comment
             ]
         , -- search bar
@@ -261,6 +262,20 @@ viewChat model allChatMessages lastTick =
         ]
 
 
+verticalDivider : Element msg
+verticalDivider =
+    column [ height fill, width fill, paddingXY 5 0 ]
+        [ el
+            [ height fill
+            , UI.border_right 1
+            , centerX
+            , Border.color borderColor
+            ]
+          <|
+            text " "
+        ]
+
+
 view : FrontendModel -> DashboardModel -> Element Msg
 view tempFrontendModel model =
     let
@@ -269,17 +284,31 @@ view tempFrontendModel model =
                 [ width fill
                 , height fill
                 , Background.color offWhiteBackgroundColor
-                , padding 20
                 , Font.color textColor
                 ]
-                [ el [ height fill, paddingXY 10 0 ] <| viewSidebar model
-                , el [ width (fillPortion 5), height fill ] <| viewChat model tempFrontendModel.allChatMessages tempFrontendModel.lastTick
-                , el [ width (fillPortion 6), height fill ] <| text "Dashboard"
+                [ el [ height fill, paddingXY 30 20 ] <|
+                    viewSidebar model
+                , el [ width (fillPortion 5), height fill, paddingXY 0 20 ] <|
+                    viewChat model tempFrontendModel.allChatMessages tempFrontendModel.lastTick
+                , el [ height fill, padding 15 ] <|
+                    verticalDivider
+                , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
+                    viewActions model
                 ]
     in
     row [ width fill, height fill ]
         [ Element.html <| FontAwesome.Styles.css
         , actualView
+        ]
+
+
+viewActions : DashboardModel -> Element Msg
+viewActions model =
+    column [ width fill, height fill, paddingXY 0 10 ]
+        [ row [ width fill, padding 10 ]
+            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+                text "Actions"
+            ]
         ]
 
 
