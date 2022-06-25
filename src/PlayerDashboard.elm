@@ -198,14 +198,14 @@ viewChat model allChatMessages lastTick =
                   <|
                     text " "
                 , --chat content
-                  column [ width fill ]
+                  column [ width fill, spacing 5 ]
                     [ --user image
                       paragraph [ Font.color darkHeaderColor, fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
                     , -- chat text
                       paragraph [ width fill ] [ text <| chatMessage.message ]
                     ]
                 , --date
-                  column []
+                  column [ alignTop ]
                     [ --NOTE not paragraph because we dont want the text to wrap
                       el [ centerY, Font.size 10 ] <| text <| relativeTime lastTick chatMessage.date
                     ]
