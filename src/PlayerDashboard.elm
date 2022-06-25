@@ -104,6 +104,7 @@ viewSidebar model =
         [ Background.color <| purpleColor
         , height fill
         , padding 20
+        , spacing 40
         , Border.rounded 30
         , Border.shadow
             { offset = ( 0, 6 )
@@ -111,20 +112,18 @@ viewSidebar model =
             , blur = 11
             , color = lightPurpleColor
             }
-        , Element.spaceEvenly
         , Font.color <| offWhiteColor
         ]
-        [ el
-            [ fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap"
-            ]
-          <|
+        [ el [ fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" ] <|
             text "Clikr"
-        , el [ centerX, height (px 32) ] <|
-            fontAwesome FAR.hand
-        , el [ centerX, height (px 32) ] <|
-            fontAwesome FAR.circleUp
-        , el [ centerX, height (px 32) ] <|
-            fontAwesome FAR.faceGrinBeamSweat
+        , column [ alignTop, centerX, spacing 20 ]
+            [ el [ centerX, height (px 32) ] <|
+                fontAwesome FAR.hand
+            , el [ centerX, height (px 32) ] <|
+                fontAwesome FAR.circleUp
+            , el [ centerX, height (px 32) ] <|
+                fontAwesome FAR.faceGrinBeamSweat
+            ]
         ]
 
 
