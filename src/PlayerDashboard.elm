@@ -67,6 +67,17 @@ type alias Msg =
     DashboardMsg
 
 
+fontFamily : String -> String -> Element.Attribute msg
+fontFamily a b =
+    Font.family
+        [ Font.external
+            { name = a
+            , url = b
+            }
+        , Font.sansSerif
+        ]
+
+
 viewSidebar : Model -> Element Msg
 viewSidebar model =
     let
@@ -92,7 +103,13 @@ viewSidebar model =
             , color = lightPurpleColor
             }
         ]
-        [ text "sidebar"
+        [ el
+            [ alignTop
+            , fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap"
+            , Font.color <| UI.hex_to_color "F4F6FD"
+            ]
+          <|
+            text "Clikr"
         ]
 
 
