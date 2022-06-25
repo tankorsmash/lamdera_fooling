@@ -138,17 +138,17 @@ convertUsersToTeamsUserClicks users =
 
 
 userMatchesSessionId : SessionId -> User -> Bool
-userMatchesSessionId sessionId user =
-    Types.getSessionId user
-        |> Maybe.map ((==) sessionId)
-        |> Maybe.withDefault False
+userMatchesSessionId sessionId =
+    Types.getSessionId
+        >> Maybe.map ((==) sessionId)
+        >> Maybe.withDefault False
 
 
 userMatchesUsername : String -> User -> Bool
-userMatchesUsername username user =
-    Types.getUsername user
-        |> Maybe.map ((==) username)
-        |> Maybe.withDefault False
+userMatchesUsername username =
+    Types.getUsername
+        >> Maybe.map ((==) username)
+        >> Maybe.withDefault False
 
 
 userIsPrepping : User -> Bool
@@ -1377,23 +1377,14 @@ delay millis msg =
 getUserBySessionId : List User -> SessionId -> Maybe User
 getUserBySessionId users sessionId =
     users
-        |> List.filter
-            (getSessionId
-                >> Maybe.map ((==) sessionId)
-                >> Maybe.withDefault False
-            )
+        |> List.filter (userMatchesSessionId sessionId)
         |> List.head
 
 
 getUserByUsername : List User -> String -> Maybe User
 getUserByUsername users username =
     users
-        |> List.filter
-            (\u ->
-                mapUserData u .username
-                    |> Maybe.map (String.toLower >> (==) username)
-                    |> Maybe.withDefault False
-            )
+        |> List.filter (userMatchesUsername username)
         |> List.head
 
 
@@ -1401,11 +1392,7 @@ mapUserByUsername : List User -> (User -> User) -> String -> List User
 mapUserByUsername users updater username =
     users
         |> List.Extra.updateIf
-            (\u ->
-                getUsername u
-                    |> Maybe.map (String.toLower >> (==) username)
-                    |> Maybe.withDefault False
-            )
+            (userMatchesUsername username)
             updater
 
 
@@ -1413,11 +1400,7 @@ mapUserBySessionId : List User -> (User -> User) -> String -> List User
 mapUserBySessionId users updater sessionId =
     users
         |> List.Extra.updateIf
-            (\u ->
-                getSessionId u
-                    |> Maybe.map ((==) sessionId)
-                    |> Maybe.withDefault False
-            )
+            (userMatchesSessionId sessionId)
             updater
 
 
@@ -1425,11 +1408,7 @@ updateFullUserByUsername : List User -> (UserData -> UserData) -> String -> List
 updateFullUserByUsername users updater username =
     users
         |> List.Extra.updateIf
-            (\u ->
-                getUsername u
-                    |> Maybe.map ((==) username)
-                    |> Maybe.withDefault False
-            )
+            (userMatchesUsername username)
             (\oldUser ->
                 mapUserData oldUser
                     updater
@@ -1442,11 +1421,7 @@ updateFullUserBySessionId : List User -> SessionId -> (UserData -> UserData) -> 
 updateFullUserBySessionId users sessionId updater =
     users
         |> List.Extra.updateIf
-            (\u ->
-                getSessionId u
-                    |> Maybe.map ((==) sessionId)
-                    |> Maybe.withDefault False
-            )
+            (userMatchesSessionId sessionId)
             (\oldUser ->
                 mapUserData oldUser
                     updater
