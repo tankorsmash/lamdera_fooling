@@ -85,18 +85,28 @@ fontFamily fontName fontUrl =
         ]
 
 
+getRawColorFromHex : String -> Color.Color
+getRawColorFromHex hexStr =
+    Color.Convert.hexToColor hexStr
+        |> Result.withDefault (Color.rgb 1 0 1)
+
+
+rawPurpleColor =
+    getRawColorFromHex "6363FC"
+
+
+purpleColor =
+    rawPurpleColor
+        |> UI.convertColor
+
+
 viewSidebar : Model -> Element Msg
 viewSidebar model =
     let
-        purpleColor =
-            UI.hex_to_color "6363FC"
-
         lightPurpleColor =
-            Color.Convert.hexToColor "6363FC"
-                |> Result.withDefault Color.red
+            getRawColorFromHex "6363FC"
                 |> Color.Manipulate.lighten 0.15
-                |> Color.toRgba
-                |> UI.rgbaToColor
+                |> UI.convertColor
 
         offWhiteColor =
             UI.hex_to_color "F4F6FD"
@@ -302,16 +312,193 @@ view tempFrontendModel model =
         ]
 
 
+buttonPrimaryColor : Element.Color
+buttonPrimaryColor =
+    UI.hex_to_color "6F6AF8"
+
+
+buttonPrimaryHoveredColor =
+    Color.Convert.hexToColor "6F6AF8"
+        |> Result.withDefault Color.red
+        |> Color.Manipulate.lighten 0.05
+        |> Color.toRgba
+        |> UI.rgbaToColor
+
+
+actionButtonWithAttrs attrs msg txt =
+    button
+        ([ centerX
+         , width Element.shrink
+         , UI.scaled_font 1
+         , Background.color buttonPrimaryColor
+         ]
+            ++ attrs
+        )
+        msg
+        txt
+
+
+
+-- primaryButtonConfig : ButtonConfig
+
+
+primaryButtonConfig =
+    { font_color = offWhiteBackgroundColor
+    , button_color = buttonPrimaryColor
+    , hovered_button_color = buttonPrimaryHoveredColor
+    , hovered_font_color = UI.color_white
+    }
+
+
+
+-- common_button_attrs : ButtonConfig -> List (Element.Attribute msg)
+
+
+commonButtonAttrs { font_color, button_color, hovered_button_color, hovered_font_color } =
+    [ -- bs4-like values
+      Font.color font_color
+    , Font.size 16
+    , Font.center
+    , padding 6
+    , Background.color button_color
+    , Border.rounded 5
+    , Border.width 5
+    , Border.color button_color
+    , Element.mouseOver
+        [ Background.color <| hovered_button_color
+        , Border.color <| hovered_button_color
+        , Font.color <| hovered_font_color
+        ]
+    ]
+
+
+
+-- addButtonAttrs : ButtonType -> List (Element.Attribute msg) -> List (Element.Attribute msg)
+
+
+addButtonAttrs customAttrs =
+    commonButtonAttrs primaryButtonConfig
+        ++ customAttrs
+
+
+
+-- button : msg -> String ->  Element msg
+
+
+button customAttrs onPressMsg textLabel =
+    Input.button
+        (addButtonAttrs customAttrs)
+        { onPress = Just onPressMsg, label = text textLabel }
+
+
+viewProgressButton : Progress -> Int -> ( String, msg ) -> Element msg
+viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
+    row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
+        [ let
+            buttonWidth =
+                width (Element.px 90)
+          in
+          case progress of
+            Completed ->
+                actionButtonWithAttrs [] actionMsg actionText
+
+            NotStarted ->
+                actionButtonWithAttrs [] actionMsg actionText
+
+            Progress _ ->
+                el [ buttonWidth, centerX, Font.center, UI.scaled_font 2 ] <|
+                    text actionText
+        , row
+            [ width fill
+            , height (fill |> Element.minimum 40)
+            , padding 3
+            , Element.inFront <|
+                el
+                    [ centerX
+                    , centerY
+                    , Font.size 14
+                    , Background.color <|
+                        -- UI.convertColor <|
+                        case progress of
+                            Completed ->
+                                buttonPrimaryColor
+
+                            _ ->
+                                offWhiteBackgroundColor
+                    , Border.rounded 30
+                    , padding 5
+                    ]
+                <|
+                    text <|
+                        ("+" ++ (String.fromInt <| clicksOutput))
+            ]
+            (let
+                sharedAttrs =
+                    [ centerY, height fill ]
+
+                emptyColor =
+                    Background.color <| UI.convertColor <| Color.lightBlue
+
+                filledColor =
+                    Background.color <| UI.convertColor <| Color.darkBlue
+
+                completedColor =
+                    Background.color <| UI.convertColor <| Color.darkGreen
+             in
+             case progress of
+                NotStarted ->
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, emptyColor ]) <| Element.none
+                    ]
+
+                Progress p ->
+                    let
+                        filledIn =
+                            10000 * ClickPricing.getProgress progress
+
+                        empty =
+                            10000 - filledIn
+                    in
+                    [ el (sharedAttrs ++ [ UI.borderRoundedLeft 30, width (Element.fillPortion <| round filledIn), filledColor ]) <| Element.none
+                    , el (sharedAttrs ++ [ UI.borderRoundedRight 30, width (Element.fillPortion <| round empty), emptyColor ]) <| Element.none
+                    ]
+
+                Completed ->
+                    [ el (sharedAttrs ++ [ Border.rounded 3, width fill, completedColor ]) <| Element.none
+                    ]
+            )
+        ]
+
+
+discussAction : DashboardModel -> Element Msg
+discussAction model =
+    row [ width fill ]
+        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Discuss"
+        , viewProgressButton (ClickPricing.Progress 0.95) 123 ( "", NoOpDashboardFrontend )
+        ]
+
+
+argueAction : DashboardModel -> Element Msg
+argueAction model =
+    text "argue"
+
+
+energizeAction : DashboardModel -> Element Msg
+energizeAction model =
+    text "energize"
+
+
 viewActions : DashboardModel -> Element Msg
 viewActions model =
     column [ width fill, height fill, paddingXY 0 10 ]
-        [ row [ width fill, padding 10 ]
+        [ -- header row
+          row [ width fill, padding 10 ]
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
                 text "Actions"
             , -- profile dropdown
               el [ alignRight ] <|
                 row [ spacing 10 ]
-                    [ el
+                    [ --TODO show xp and clicks here
+                      el
                         [ Background.color <| UI.hex_to_color "E4E5E7"
                         , width (px 32)
                         , height (px 32)
@@ -322,6 +509,9 @@ viewActions model =
                     , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
                     ]
             ]
+        , discussAction model
+        , argueAction model
+        , energizeAction model
         ]
 
 
