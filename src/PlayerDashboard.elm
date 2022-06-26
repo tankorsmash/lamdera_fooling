@@ -102,17 +102,18 @@ purpleColor =
         |> UI.convertColor
 
 
+lightPurpleColor =
+    getRawColorFromHex "6363FC"
+        |> Color.Manipulate.lighten 0.15
+        |> UI.convertColor
+
+
+offWhiteColor =
+    UI.hex_to_color "F4F6FD"
+
+
 viewSidebar : Model -> Element Msg
 viewSidebar model =
-    let
-        lightPurpleColor =
-            getRawColorFromHex "6363FC"
-                |> Color.Manipulate.lighten 0.15
-                |> UI.convertColor
-
-        offWhiteColor =
-            UI.hex_to_color "F4F6FD"
-    in
     column
         [ Background.color <| purpleColor
         , height fill
@@ -376,6 +377,13 @@ commonButtonAttrs { font_color, button_color, hovered_button_color, hovered_font
         , Border.color <| hovered_button_color
         , Font.color <| hovered_font_color
         ]
+    , Border.shadow
+        { offset = ( 4, 4 )
+        , size = 0
+        , blur = 9
+        , color =
+            UI.color_very_light_grey
+        }
     ]
 
 
@@ -448,7 +456,24 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                     text ("+" ++ (String.fromInt <| clicksOutput))
             , Element.behindContent <|
                 -- show progress bar behind so the rounded inner bar has a background
-                el (sharedAttrs ++ [ Border.rounded 30, width fill, emptyColor ])
+                el
+                    (sharedAttrs
+                        ++ [ Border.rounded 30
+                           , width fill
+                           , emptyColor
+                           , Border.shadow
+                                { offset = ( 4, 4 )
+                                , size = 0
+                                , blur = 5
+                                , color =
+                                    UI.color_very_very_light_grey
+
+                                -- rawPurpleColor
+                                --     |> Color.Manipulate.lighten 0.25
+                                --     |> UI.convertColor
+                                }
+                           ]
+                    )
                 <|
                     Element.none
             ]
@@ -526,7 +551,7 @@ viewActions model =
                     , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
                     ]
             ]
-        , column [ width fill, padding 10, spacing 20 ]
+        , column [ width fill, Element.paddingEach { top = 0, right = 40, bottom = 10, left = 0 }, spacing 20 ]
             [ discussAction model
             , argueAction model
             , energizeAction model
