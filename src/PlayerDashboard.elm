@@ -312,9 +312,8 @@ view tempFrontendModel model =
                     verticalDivider
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
                     viewUpgrades model
-
-                -- , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
-                --     viewActions model
+                , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
+                    viewActions model
                 ]
     in
     row [ width fill, height fill ]
@@ -331,6 +330,8 @@ viewUpgrades model =
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
                 text "Upgrades"
             ]
+        , el [ alignLeft ] <|
+            actionButtonWithAttrs [ width (px 150) ] NoOpDashboardFrontend "Craft XP"
         ]
 
 
@@ -394,9 +395,9 @@ commonButtonAttrs { font_color, button_color, hovered_button_color, hovered_font
     , Border.shadow
         { offset = ( 4, 4 )
         , size = 0
-        , blur = 9
+        , blur = 5
         , color =
-            UI.color_very_light_grey
+            UI.color_very_very_very_light_grey
         }
     ]
 
@@ -480,7 +481,7 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                                 , size = 0
                                 , blur = 5
                                 , color =
-                                    UI.color_very_very_light_grey
+                                    UI.color_very_very_very_light_grey
                                 }
                            ]
                     )
