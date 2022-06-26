@@ -311,12 +311,26 @@ view tempFrontendModel model =
                 , el [ height fill, padding 15 ] <|
                     verticalDivider
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
-                    viewActions model
+                    viewUpgrades model
+
+                -- , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
+                --     viewActions model
                 ]
     in
     row [ width fill, height fill ]
         [ Element.html <| FontAwesome.Styles.css
         , actualView
+        ]
+
+
+viewUpgrades : DashboardModel -> Element Msg
+viewUpgrades model =
+    column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
+        [ -- header row
+          row [ width fill, padding 10 ]
+            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+                text "Upgrades"
+            ]
         ]
 
 
@@ -467,10 +481,6 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                                 , blur = 5
                                 , color =
                                     UI.color_very_very_light_grey
-
-                                -- rawPurpleColor
-                                --     |> Color.Manipulate.lighten 0.25
-                                --     |> UI.convertColor
                                 }
                            ]
                     )
