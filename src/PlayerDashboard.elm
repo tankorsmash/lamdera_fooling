@@ -252,7 +252,7 @@ viewChat model allChatMessages lastTick =
                             , Element.moveRight 7
                             ]
                          <|
-                            paragraph [ centerY ] [ text "Search" ]
+                            paragraph [ centerY ] [ text "Chat" ]
                         )
                 , label = Input.labelHidden "search chat"
                 }
@@ -308,6 +308,19 @@ viewActions model =
         [ row [ width fill, padding 10 ]
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
                 text "Actions"
+            , -- profile dropdown
+              el [ alignRight ] <|
+                row [ spacing 10 ]
+                    [ el
+                        [ Background.color <| UI.hex_to_color "E4E5E7"
+                        , width (px 32)
+                        , height (px 32)
+                        , Border.rounded 100
+                        ]
+                      <|
+                        text ""
+                    , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
+                    ]
             ]
         ]
 
