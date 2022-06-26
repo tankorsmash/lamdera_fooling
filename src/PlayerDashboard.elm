@@ -91,10 +91,12 @@ getRawColorFromHex hexStr =
         |> Result.withDefault (Color.rgb 1 0 1)
 
 
+rawPurpleColor : Color.Color
 rawPurpleColor =
     getRawColorFromHex "6363FC"
 
 
+purpleColor : Element.Color
 purpleColor =
     rawPurpleColor
         |> UI.convertColor
@@ -155,6 +157,11 @@ fontAwesome =
 offWhiteBackgroundColor : Element.Color
 offWhiteBackgroundColor =
     UI.hex_to_color "F8FAFB"
+
+
+whiteFontColor : Element.Color
+whiteFontColor =
+    UI.hex_to_color "F0F1FF"
 
 
 darkHeaderColor : Element.Color
@@ -328,8 +335,7 @@ buttonPrimaryHoveredColor =
 actionButtonWithAttrs attrs msg txt =
     button
         ([ centerX
-         , width Element.shrink
-         , UI.scaled_font 1
+         , Font.size 16
          , Background.color buttonPrimaryColor
          ]
             ++ attrs
@@ -343,7 +349,7 @@ actionButtonWithAttrs attrs msg txt =
 
 
 primaryButtonConfig =
-    { font_color = offWhiteBackgroundColor
+    { font_color = whiteFontColor
     , button_color = buttonPrimaryColor
     , hovered_button_color = buttonPrimaryHoveredColor
     , hovered_font_color = UI.color_white
@@ -360,8 +366,9 @@ commonButtonAttrs { font_color, button_color, hovered_button_color, hovered_font
     , Font.size 16
     , Font.center
     , padding 6
+    , width (fill |> Element.minimum 150)
     , Background.color button_color
-    , Border.rounded 5
+    , Border.rounded 15
     , Border.width 5
     , Border.color button_color
     , Element.mouseOver
@@ -372,19 +379,13 @@ commonButtonAttrs { font_color, button_color, hovered_button_color, hovered_font
     ]
 
 
-
--- addButtonAttrs : ButtonType -> List (Element.Attribute msg) -> List (Element.Attribute msg)
-
-
+addButtonAttrs : List (Element.Attribute msg) -> List (Element.Attribute msg)
 addButtonAttrs customAttrs =
     commonButtonAttrs primaryButtonConfig
         ++ customAttrs
 
 
-
--- button : msg -> String ->  Element msg
-
-
+button : List (Element.Attribute msg) -> msg -> String -> Element msg
 button customAttrs onPressMsg textLabel =
     Input.button
         (addButtonAttrs customAttrs)
@@ -393,8 +394,22 @@ button customAttrs onPressMsg textLabel =
 
 viewProgressButton : Progress -> Int -> ( String, msg ) -> Element msg
 viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
+    let
+        sharedAttrs =
+            [ centerY, height fill ]
+
+        emptyColor =
+            Background.color <| UI.convertColor <| Color.Manipulate.lighten 0.2 <| rawPurpleColor
+
+        filledColor =
+            Background.color <| UI.convertColor <| Color.Manipulate.desaturate 0.35 <| rawPurpleColor
+
+        completedColor =
+            Background.color <| UI.convertColor <| Color.darkGreen
+    in
     row [ width fill, spacing 10, height (fill |> Element.minimum 40) ]
-        [ let
+        [ -- start/claim button
+          let
             buttonWidth =
                 width (Element.px 90)
           in
@@ -418,7 +433,6 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                     , centerY
                     , Font.size 14
                     , Background.color <|
-                        -- UI.convertColor <|
                         case progress of
                             Completed ->
                                 buttonPrimaryColor
@@ -427,25 +441,19 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                                 offWhiteBackgroundColor
                     , Border.rounded 30
                     , padding 5
+                    , Font.color darkHeaderColor
+                    , fontFamilyPoppins
                     ]
                 <|
-                    text <|
-                        ("+" ++ (String.fromInt <| clicksOutput))
+                    text ("+" ++ (String.fromInt <| clicksOutput))
+            , Element.behindContent <|
+                -- show progress bar behind so the rounded inner bar has a background
+                el (sharedAttrs ++ [ Border.rounded 30, width fill, emptyColor ])
+                <|
+                    Element.none
             ]
-            (let
-                sharedAttrs =
-                    [ centerY, height fill ]
-
-                emptyColor =
-                    Background.color <| UI.convertColor <| Color.lightBlue
-
-                filledColor =
-                    Background.color <| UI.convertColor <| Color.darkBlue
-
-                completedColor =
-                    Background.color <| UI.convertColor <| Color.darkGreen
-             in
-             case progress of
+            -- render the progress bar
+            (case progress of
                 NotStarted ->
                     [ el (sharedAttrs ++ [ Border.rounded 3, width fill, emptyColor ]) <| Element.none
                     ]
@@ -458,7 +466,7 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                         empty =
                             10000 - filledIn
                     in
-                    [ el (sharedAttrs ++ [ UI.borderRoundedLeft 30, width (Element.fillPortion <| round filledIn), filledColor ]) <| Element.none
+                    [ el (sharedAttrs ++ [ Border.rounded 30, width (Element.fillPortion <| round filledIn), filledColor ]) <| Element.none
                     , el (sharedAttrs ++ [ UI.borderRoundedRight 30, width (Element.fillPortion <| round empty), emptyColor ]) <| Element.none
                     ]
 
@@ -471,25 +479,34 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
 
 discussAction : DashboardModel -> Element Msg
 discussAction model =
+    -- TODO use actual values
     row [ width fill ]
         [ actionButtonWithAttrs [] NoOpDashboardFrontend "Discuss"
-        , viewProgressButton (ClickPricing.Progress 0.95) 123 ( "", NoOpDashboardFrontend )
+        , viewProgressButton (ClickPricing.Progress 0.45) 99 ( "", NoOpDashboardFrontend )
         ]
 
 
 argueAction : DashboardModel -> Element Msg
 argueAction model =
-    text "argue"
+    -- TODO use actual values
+    row [ width fill ]
+        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Argue"
+        , viewProgressButton (ClickPricing.Progress 0.95) 12 ( "", NoOpDashboardFrontend )
+        ]
 
 
 energizeAction : DashboardModel -> Element Msg
 energizeAction model =
-    text "energize"
+    -- TODO use actual values
+    row [ width fill ]
+        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Energize"
+        , viewProgressButton (ClickPricing.Progress 0.25) 23 ( "", NoOpDashboardFrontend )
+        ]
 
 
 viewActions : DashboardModel -> Element Msg
 viewActions model =
-    column [ width fill, height fill, paddingXY 0 10 ]
+    column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ -- header row
           row [ width fill, padding 10 ]
             [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
@@ -509,9 +526,11 @@ viewActions model =
                     , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
                     ]
             ]
-        , discussAction model
-        , argueAction model
-        , energizeAction model
+        , column [ width fill, padding 10, spacing 20 ]
+            [ discussAction model
+            , argueAction model
+            , energizeAction model
+            ]
         ]
 
 
