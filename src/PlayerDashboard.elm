@@ -353,11 +353,7 @@ view tempFrontendModel model =
 viewUpgrades : DashboardModel -> Element Msg
 viewUpgrades model =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
-        [ -- header row
-          row [ width fill, padding 10 ]
-            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
-                text "Upgrades"
-            ]
+        [ sectionHeader "Upgrades"
         , el [ alignLeft ] <|
             actionButtonWithAttrs [ width (px 150) ] NoOpDashboardFrontend "Craft XP"
         ]
@@ -568,28 +564,33 @@ energizeAction model =
         ]
 
 
+sectionHeader : String -> Element msg
+sectionHeader headerTxt =
+    row [ width fill, padding 10 ]
+        [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+            text headerTxt
+        , -- profile dropdown
+          el [ alignRight ] <|
+            row [ spacing 10 ]
+                [ --TODO show xp and clicks here
+                  el
+                    [ Background.color <| UI.hex_to_color "E4E5E7"
+                    , width (px 32)
+                    , height (px 32)
+                    , Border.rounded 100
+                    ]
+                  <|
+                    text ""
+                , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
+                ]
+        ]
+
+
 viewActions : DashboardModel -> Element Msg
 viewActions model =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ -- header row
-          row [ width fill, padding 10 ]
-            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
-                text "Actions"
-            , -- profile dropdown
-              el [ alignRight ] <|
-                row [ spacing 10 ]
-                    [ --TODO show xp and clicks here
-                      el
-                        [ Background.color <| UI.hex_to_color "E4E5E7"
-                        , width (px 32)
-                        , height (px 32)
-                        , Border.rounded 100
-                        ]
-                      <|
-                        text ""
-                    , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
-                    ]
-            ]
+          sectionHeader "Actions"
         , column [ width fill, Element.paddingEach { top = 0, right = 40, bottom = 10, left = 0 }, spacing 20 ]
             [ discussAction model
             , argueAction model
