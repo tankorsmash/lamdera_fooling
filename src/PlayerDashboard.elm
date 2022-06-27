@@ -42,6 +42,7 @@ import Types
         , CyclingTimeline
         , DashboardModel
         , DashboardMsg(..)
+        , DashboardTabType(..)
         , DashboardToBackend(..)
         , FrontendModel
         , FrontendMsg(..)
@@ -112,6 +113,33 @@ offWhiteColor =
     UI.hex_to_color "F4F6FD"
 
 
+clickableSidebarIcon : FA.Icon a -> msg -> Element msg
+clickableSidebarIcon icon msg =
+    el
+        [ -- extra background size to click
+          Element.behindContent <|
+            el
+                [ Element.scale 2
+                , width fill
+                , height fill
+                , Element.pointer
+                , Events.onClick msg
+                ]
+            <|
+                Element.none
+        ]
+    <|
+        el
+            [ centerX
+            , width (px 32)
+            , height (px 32)
+            , Events.onClick msg
+            , Element.pointer
+            ]
+        <|
+            fontAwesome icon
+
+
 viewSidebar : Model -> Element Msg
 viewSidebar model =
     column
@@ -131,12 +159,9 @@ viewSidebar model =
         [ el [ fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" ] <|
             text "Clikr"
         , column [ alignTop, centerX, spacing 20 ]
-            [ el [ centerX, height (px 32) ] <|
-                fontAwesome FAR.hand
-            , el [ centerX, height (px 32) ] <|
-                fontAwesome FAR.circleUp
-            , el [ centerX, height (px 32) ] <|
-                fontAwesome FAR.faceGrinBeamSweat
+            [ clickableSidebarIcon FAR.hand (ChangeTab DashboardActionsTabType)
+            , clickableSidebarIcon FAR.circleUp (ChangeTab DashboardUpgradesTabType)
+            , clickableSidebarIcon FAR.faceFlushed NoOpDashboardFrontend
             ]
         ]
 
@@ -152,7 +177,7 @@ exampleFontAwesomeLayeredIcon =
 
 fontAwesome : FA.Icon a -> Element msg
 fontAwesome =
-    FA.view >> Element.html
+    FA.view >> Element.html >> el [ centerX, centerY, Font.center ]
 
 
 offWhiteBackgroundColor : Element.Color
@@ -311,9 +336,12 @@ view tempFrontendModel model =
                 , el [ height fill, padding 15 ] <|
                     verticalDivider
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
-                    viewUpgrades model
-                , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
-                    viewActions model
+                    case model.currentTabType of
+                        DashboardActionsTabType ->
+                            viewActions model
+
+                        DashboardUpgradesTabType ->
+                            viewUpgrades model
                 ]
     in
     row [ width fill, height fill ]
@@ -579,3 +607,6 @@ update msg model =
     case msg of
         NoOpDashboardFrontend ->
             noop
+
+        ChangeTab tabType ->
+            ( { model | currentTabType = tabType }, Cmd.none )

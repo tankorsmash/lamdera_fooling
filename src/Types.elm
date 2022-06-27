@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -204,11 +204,6 @@ type alias Timelines =
     }
 
 
-initDashboardModel : Url -> Key -> DashboardModel
-initDashboardModel url key =
-    { url = url, key = key }
-
-
 initAdminFrontendModel : Url -> Key -> AdminFrontendModel
 initAdminFrontendModel url key =
     { url = url
@@ -277,7 +272,13 @@ type alias TeamsUserClicks =
 type alias DashboardModel =
     { key : Key
     , url : Url.Url
+    , currentTabType : DashboardTabType
     }
+
+
+initDashboardModel : Url -> Key -> DashboardModel
+initDashboardModel url key =
+    { url = url, key = key, currentTabType = DashboardActionsTabType }
 
 
 type alias FrontendModel =
@@ -421,8 +422,14 @@ type alias AdminFrontendModel =
     }
 
 
+type DashboardTabType
+    = DashboardActionsTabType
+    | DashboardUpgradesTabType
+
+
 type DashboardMsg
     = NoOpDashboardFrontend
+    | ChangeTab DashboardTabType
 
 
 type DashboardToBackend
