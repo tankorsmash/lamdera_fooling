@@ -1,11 +1,32 @@
-module Password exposing (..)
+module Password exposing (compareHashes, generateHash, getHash)
 
 import Bytes exposing (Bytes)
 import Bytes.Encode as E
+import Env
 import Hex.Convert as Hex
 import HmacSha1
 import HmacSha1.Key as Key
 import PBKDF2 exposing (pbkdf2)
+
+
+type HashedPassword
+    = HashedPassword String
+
+
+getHash : HashedPassword -> String
+getHash (HashedPassword hash) =
+    hash
+
+
+compareHashes : HashedPassword -> HashedPassword -> Bool
+compareHashes (HashedPassword left) (HashedPassword right) =
+    left == right
+
+
+generateHash : String -> Result PBKDF2.Error HashedPassword
+generateHash password =
+    computeHash password Env.pbkdf2Salt
+        |> Result.map HashedPassword
 
 
 hmacSha1 : Bytes -> Bytes -> Bytes

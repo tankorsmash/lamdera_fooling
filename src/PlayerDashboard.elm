@@ -597,7 +597,7 @@ viewActions model =
             , argueAction model
             , energizeAction model
             ]
-        , text <| Debug.toString <| Password.computeHash "thisismypassword" "SALT"
+        , text <| Debug.toString <| Password.generateHash "thisismypassword"
         ]
 
 update : Types.DashboardMsg -> Model -> ( Model, Cmd c )
