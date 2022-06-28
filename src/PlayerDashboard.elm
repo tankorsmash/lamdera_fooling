@@ -65,12 +65,7 @@ import Types
 import UUID
 import Url
 import Url.Parser as Parser exposing ((</>), Parser)
-import Bytes exposing (Bytes)
-import Bytes.Encode as E
-import Hex.Convert as Hex
-import HmacSha1
-import HmacSha1.Key as Key
-import PBKDF2 exposing (pbkdf2)
+import Password
 
 
 type alias Model =
@@ -602,25 +597,8 @@ viewActions model =
             , argueAction model
             , energizeAction model
             ]
-        , text <| Debug.toString <| computeHash "thisismypassword" "SALT"
+        , text <| Debug.toString <| Password.computeHash "thisismypassword" "SALT"
         ]
-
-hmacSha1 : Bytes -> Bytes -> Bytes
-hmacSha1 key message =
-    HmacSha1.fromBytes (Key.fromBytes key) message
-        |> HmacSha1.toBytes
-
-computeHash : String -> String -> Result PBKDF2.Error String
-computeHash password salt =
-    let
-        p =
-            E.encode <| E.string password
-
-        s =
-            E.encode <| E.string salt
-    in
-    pbkdf2 (hmacSha1, 20) p s 4096 20
-        |> Result.map Hex.toString
 
 update : Types.DashboardMsg -> Model -> ( Model, Cmd c )
 update msg model =
