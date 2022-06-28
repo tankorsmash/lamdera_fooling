@@ -13,6 +13,7 @@ import Random
 import Time
 import UUID
 import Url exposing (Url)
+import Password
 
 
 type PersonalityType
@@ -34,6 +35,7 @@ type alias UserData =
     { personalityType : PersonalityType
     , sessionId : Maybe SessionId
     , username : String
+    , password : Maybe Password.HashedPassword
     , userClicks : Int
     , isOnline : Bool
     , xp : Int
@@ -48,6 +50,7 @@ createUserData maybeSessionId username personalityType =
     { sessionId = maybeSessionId
     , username = username
     , personalityType = personalityType
+    , password = Nothing
     , userClicks = 0
     , isOnline = False
     , xp = 0

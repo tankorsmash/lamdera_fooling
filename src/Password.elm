@@ -1,4 +1,4 @@
-module Password exposing (compareHashes, generateHash, getHash)
+module Password exposing (HashedPassword, compareHashes, generateHash, getHash)
 
 import Bytes exposing (Bytes)
 import Bytes.Encode as E

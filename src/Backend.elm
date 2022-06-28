@@ -849,6 +849,7 @@ updateFromFrontend sessionId clientId msg model =
                             FullUser
                                 { sessionId = Just sessionId
                                 , username = username
+                                , password = Nothing
                                 , personalityType = existingUserData.personalityType
                                 , userClicks = existingUserData.userClicks
                                 , isOnline = True
