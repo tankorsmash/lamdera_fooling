@@ -19,6 +19,7 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import Element.Lazy as Lazy
 import External.Animator.Animator as Animator
 import FontAwesome as FA
 import FontAwesome.Attributes as FAA
@@ -32,6 +33,7 @@ import Html.Events
 import Interface as UI
 import Lamdera
 import List.Extra
+import Password
 import Process
 import String.Extra
 import Task
@@ -65,7 +67,6 @@ import Types
 import UUID
 import Url
 import Url.Parser as Parser exposing ((</>), Parser)
-import Password
 
 
 type alias Model =
@@ -320,8 +321,8 @@ verticalDivider =
         ]
 
 
-view : FrontendModel -> DashboardModel -> Element Msg
-view tempFrontendModel model =
+view : FrontendModel -> DashboardModel -> UserData -> Element Msg
+view tempFrontendModel model userData =
     let
         actualView =
             row
@@ -339,10 +340,13 @@ view tempFrontendModel model =
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
                     case model.currentTabType of
                         DashboardActionsTabType ->
-                            viewActions model
+                            viewActions model userData
 
                         DashboardUpgradesTabType ->
-                            viewUpgrades model
+                            viewUpgrades model userData
+
+                        DashboardProfileTabType ->
+                            viewProfile model userData
                 ]
     in
     row [ width fill, height fill ]
@@ -351,8 +355,15 @@ view tempFrontendModel model =
         ]
 
 
-viewUpgrades : DashboardModel -> Element Msg
-viewUpgrades model =
+viewProfile : DashboardModel -> UserData -> Element Msg
+viewProfile model userData =
+    column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
+        [ sectionHeader "Profile"
+        ]
+
+
+viewUpgrades : DashboardModel -> UserData -> Element Msg
+viewUpgrades model userData =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ sectionHeader "Upgrades"
         , el [ alignLeft ] <|
@@ -365,6 +376,7 @@ buttonPrimaryColor =
     UI.hex_to_color "6F6AF8"
 
 
+buttonPrimaryHoveredColor : Element.Color
 buttonPrimaryHoveredColor =
     Color.Convert.hexToColor "6F6AF8"
         |> Result.withDefault Color.red
@@ -565,13 +577,13 @@ energizeAction model =
         ]
 
 
-sectionHeader : String -> Element msg
+sectionHeader : String -> Element Msg
 sectionHeader headerTxt =
     row [ width fill, padding 10 ]
         [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
             text headerTxt
         , -- profile dropdown
-          el [ alignRight ] <|
+          el [ alignRight, Events.onClick <| ChangeTab DashboardProfileTabType, Element.pointer ] <|
             row [ spacing 10 ]
                 [ --TODO show xp and clicks here
                   el
@@ -587,8 +599,17 @@ sectionHeader headerTxt =
         ]
 
 
-viewActions : DashboardModel -> Element Msg
-viewActions model =
+viewHash : String -> Element Msg
+viewHash password =
+    Password.generateHash password
+        |> Result.map Password.getHash
+        |> Result.withDefault ""
+        |> Debug.toString
+        |> text
+
+
+viewActions : DashboardModel -> UserData -> Element Msg
+viewActions model userData =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ -- header row
           sectionHeader "Actions"
@@ -597,11 +618,11 @@ viewActions model =
             , argueAction model
             , energizeAction model
             ]
-        , text <| Debug.toString <| Password.generateHash "thisismypassword"
         ]
 
-update : Types.DashboardMsg -> Model -> ( Model, Cmd c )
-update msg model =
+
+update : Types.DashboardMsg -> Model -> Types.UserData -> ( Model, Cmd msg )
+update msg model userData =
     let
         noop =
             ( model, Cmd.none )

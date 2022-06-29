@@ -388,13 +388,19 @@ update msg model =
             )
 
         GotPlayerDashboardMsg dashboardMsg ->
-            let
-                ( newDashboardModel, dashboardCmd ) =
-                    Dashboard.update dashboardMsg model.dashboardModel
-            in
-            ( { model | dashboardModel = newDashboardModel }
-            , Cmd.map GotPlayerDashboardMsg dashboardCmd
-            )
+            model.user
+                |> getUserData
+                |> Maybe.map
+                    (\userData ->
+                        let
+                            ( newDashboardModel, dashboardCmd ) =
+                                Dashboard.update dashboardMsg model.dashboardModel userData
+                        in
+                        ( { model | dashboardModel = newDashboardModel }
+                        , Cmd.map GotPlayerDashboardMsg dashboardCmd
+                        )
+                    )
+                |> Maybe.withDefault noop
 
         SendWantsToCraftXp numXp ->
             ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
@@ -527,7 +533,7 @@ view model =
 viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
 viewPlayerDashboardPage model userData =
     Element.map GotPlayerDashboardMsg <|
-        Dashboard.view model model.dashboardModel
+        Dashboard.view model model.dashboardModel userData 
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg

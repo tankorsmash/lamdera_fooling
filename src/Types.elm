@@ -428,6 +428,7 @@ type alias AdminFrontendModel =
 type DashboardTabType
     = DashboardActionsTabType
     | DashboardUpgradesTabType
+    | DashboardProfileTabType
 
 
 type DashboardMsg
