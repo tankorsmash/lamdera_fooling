@@ -7,14 +7,17 @@ import Hex.Convert as Hex
 import HmacSha1
 import HmacSha1.Key as Key
 import PBKDF2 exposing (pbkdf2)
+import Random
+import Random.Char
+import Random.String
 
 
 type HashedPassword
-    = HashedPassword String
+    = HashedPassword { hash : String, salt : String }
 
 
 getHash : HashedPassword -> String
-getHash (HashedPassword hash) =
+getHash (HashedPassword { hash }) =
     hash
 
 
@@ -23,10 +26,20 @@ compareHashes (HashedPassword left) (HashedPassword right) =
     left == right
 
 
-generateHash : String -> Result PBKDF2.Error HashedPassword
-generateHash password =
-    computeHash password Env.pbkdf2Salt
-        |> Result.map HashedPassword
+generateHash : String -> Random.Seed -> ( Result PBKDF2.Error HashedPassword, Random.Seed )
+generateHash password seed =
+    let
+        ( salt, newSeed ) =
+            Random.step
+                (Random.String.string 64 Random.Char.unicode)
+                seed
+    in
+    computeHash password salt
+        |> Result.map
+            (\hash ->
+                HashedPassword { hash = hash, salt = salt }
+            )
+        |> (\res -> Tuple.pair res newSeed)
 
 
 hmacSha1 : Bytes -> Bytes -> Bytes

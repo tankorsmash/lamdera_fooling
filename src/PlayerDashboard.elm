@@ -599,13 +599,14 @@ sectionHeader headerTxt =
         ]
 
 
-viewHash : String -> Element Msg
-viewHash password =
-    Password.generateHash password
-        |> Result.map Password.getHash
-        |> Result.withDefault ""
-        |> Debug.toString
-        |> text
+--TODO generate this on the model, since we'll need to generate a new one
+-- viewHash : String -> Element Msg
+-- viewHash password =
+--     Password.generateHash password
+--         |> Result.map Password.getHash
+--         |> Result.withDefault ""
+--         |> Debug.toString
+--         |> text
 
 
 viewActions : DashboardModel -> UserData -> Element Msg
