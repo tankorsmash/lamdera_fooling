@@ -434,6 +434,7 @@ type DashboardTabType
 type DashboardMsg
     = NoOpDashboardFrontend
     | ChangeTab DashboardTabType
+    | LogUserOutFromDashboard
 
 
 type DashboardToBackend

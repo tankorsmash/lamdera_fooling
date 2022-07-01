@@ -360,6 +360,7 @@ viewProfile : DashboardModel -> UserData -> Element Msg
 viewProfile model userData =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ sectionHeader "Profile"
+        , actionButtonWithAttrs [] LogUserOutFromDashboard "Log out"
         ]
 
 
@@ -638,3 +639,7 @@ update msg model userData =
 
         ChangeTab tabType ->
             ( { model | currentTabType = tabType }, Cmd.none )
+
+        LogUserOutFromDashboard ->
+            -- the Frontend.elm is handling this, so we dont have to do anything
+            noop

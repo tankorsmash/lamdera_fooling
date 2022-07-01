@@ -387,6 +387,9 @@ update msg model =
             , Cmd.map GotAdminFrontendMsg adminCmd
             )
 
+        GotPlayerDashboardMsg Types.LogUserOutFromDashboard ->
+            ( model, Lamdera.sendToBackend <| UserLoggedOut )
+
         GotPlayerDashboardMsg dashboardMsg ->
             model.user
                 |> getUserData
