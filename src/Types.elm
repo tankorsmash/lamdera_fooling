@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserData, adminSendToBackend, buildChatMessageUuuid, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initBackendModel, initFrontendModel, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, ChatMessageId, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), FrontpageModel, FrontpageMsg(..), FrontpageToBackend(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDataId, PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserClickData, UserData, UserId, adminSendToBackend, buildChatMessageUuuid, createGroup, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initAdminFrontendModel, initBackendModel, initDashboardModel, initFrontendModel, initTeams, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -9,11 +9,11 @@ import Element
 import External.Animator.Animator as Animator
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra
+import Password
 import Random
 import Time
 import UUID
 import Url exposing (Url)
-import Password
 
 
 type PersonalityType
@@ -239,7 +239,13 @@ initFrontendModel url key =
         }
     , adminFrontendModel = initAdminFrontendModel url key
     , dashboardModel = initDashboardModel url key
+    , frontpageModel = initFrontpageModel url key
     }
+
+
+initFrontpageModel : Url -> Key -> FrontpageModel
+initFrontpageModel url key =
+    { url = url, key = key }
 
 
 type alias ChatMessageId =
@@ -302,6 +308,7 @@ type alias FrontendModel =
     , timelines : Timelines
     , adminFrontendModel : AdminFrontendModel
     , dashboardModel : DashboardModel
+    , frontpageModel : FrontpageModel
     }
 
 
@@ -488,6 +495,7 @@ type FrontendMsg
     | FocusError (Result Browser.Dom.Error ())
     | GotAdminFrontendMsg AdminFrontendMsg
     | GotPlayerDashboardMsg DashboardMsg
+    | GotFrontpageMsg FrontpageMsg
     | SendWantsToCraftXp Int
 
 
@@ -514,6 +522,18 @@ type BackendMsg
     | OnClientConnect SessionId ClientId
     | OnClientDisconnect SessionId ClientId
     | UpdateTick Time.Posix
+
+
+type alias FrontpageModel =
+    { url : Url.Url, key : Browser.Navigation.Key }
+
+
+type FrontpageMsg
+    = NoOpFrontpage
+
+
+type FrontpageToBackend
+    = NoOpFrontpageToBackend
 
 
 type alias PersonalityTypeDict a =

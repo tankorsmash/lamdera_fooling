@@ -17,6 +17,7 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import External.Animator.Animator as Animator
+import Frontpage
 import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
@@ -34,6 +35,8 @@ import Types
         , CyclingTimeline
         , FrontendModel
         , FrontendMsg(..)
+        , FrontpageModel
+        , FrontpageMsg(..)
         , Group
         , LabelValue(..)
         , PersonalityType(..)
@@ -405,6 +408,15 @@ update msg model =
                     )
                 |> Maybe.withDefault noop
 
+        GotFrontpageMsg frontpageMsg ->
+            let
+                ( newFrontpageModel, frontpageCmd ) =
+                    Frontpage.update frontpageMsg model.frontpageModel
+            in
+            ( { model | frontpageModel = newFrontpageModel }
+            , Cmd.map GotFrontpageMsg frontpageCmd
+            )
+
         SendWantsToCraftXp numXp ->
             ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
 
@@ -507,19 +519,29 @@ view model =
             , UI.noUserSelect
             ]
           <|
+            let
+                route =
+                    Parser.parse routeParser model.url
+                        |> Maybe.withDefault GamePage
+            in
             case model.user of
                 AnonymousUser maybePersonalityType ->
-                    viewAnon model maybePersonalityType
+                    case route of
+                        FrontPage ->
+                            viewFrontPage model
+
+                        _ ->
+                            viewAnon model maybePersonalityType
 
                 PreppingUser clientId personalityType ->
-                    viewPrepping model personalityType
+                    case route of
+                        FrontPage ->
+                            viewFrontPage model
+
+                        _ ->
+                            viewPrepping model personalityType
 
                 FullUser userData ->
-                    let
-                        route =
-                            Parser.parse routeParser model.url
-                                |> Maybe.withDefault GamePage
-                    in
                     case route of
                         GamePage ->
                             viewGamePage model userData
@@ -529,6 +551,10 @@ view model =
 
                         PlayerDashboardPage ->
                             viewPlayerDashboardPage model userData
+
+                        FrontPage ->
+                            -- NOTE this is the player dashboard anyway
+                            viewPlayerDashboardPage model userData
         ]
     }
 
@@ -536,7 +562,7 @@ view model =
 viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
 viewPlayerDashboardPage model userData =
     Element.map GotPlayerDashboardMsg <|
-        Dashboard.view model model.dashboardModel userData 
+        Dashboard.view model model.dashboardModel userData
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg
@@ -545,10 +571,17 @@ viewAdminPage model userData =
         AdminPage.view model.adminFrontendModel
 
 
+viewFrontPage : Model -> Element FrontendMsg
+viewFrontPage model =
+    Element.map GotFrontpageMsg <|
+        Frontpage.view model.frontpageModel
+
+
 type Route
     = GamePage
     | AdminPage
     | PlayerDashboardPage
+    | FrontPage
 
 
 routeParser : Parser (Route -> a) a
@@ -557,6 +590,7 @@ routeParser =
         [ Parser.map GamePage Parser.top
         , Parser.map AdminPage (Parser.s "ules")
         , Parser.map PlayerDashboardPage (Parser.s "dashboard")
+        , Parser.map FrontPage (Parser.s "frontpage")
         ]
 
 
