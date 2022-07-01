@@ -35,6 +35,7 @@ import Lamdera
 import List.Extra
 import Password
 import Process
+import Random
 import String.Extra
 import Task
 import Time
@@ -599,14 +600,17 @@ sectionHeader headerTxt =
         ]
 
 
---TODO generate this on the model, since we'll need to generate a new one
+
+-- TODO generate this on the model, since we'll need to generate a new one
 -- viewHash : String -> Element Msg
 -- viewHash password =
---     Password.generateHash password
---         |> Result.map Password.getHash
+--     Password.generateHash password (Random.initialSeed 12345)
+--         |> Tuple.first
+--         >> Result.map Password.getHash
 --         |> Result.withDefault ""
 --         |> Debug.toString
 --         |> text
+--
 
 
 viewActions : DashboardModel -> UserData -> Element Msg
