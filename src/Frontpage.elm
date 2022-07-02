@@ -141,7 +141,7 @@ view model =
                         [ width fill
                         , height fill
                         , Background.image "/imgs/frontpage_shake.png"
-                        , Element.htmlAttribute <| Attr.title "<a href='http://www.freepik.com'>Designed by pch.vector / Freepik</a>"
+                        , Element.htmlAttribute <| Attr.title "Designed by pch.vector / Freepik.com"
 
                         -- , centerX
                         -- , centerY
