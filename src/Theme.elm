@@ -23,6 +23,19 @@ darkHeaderColor =
     UI.hex_to_color "191449"
 
 
+lightenDarkHeaderColor : Float -> Element.Color
+lightenDarkHeaderColor lighten =
+    darkHeaderRawColor
+        |> Color.Manipulate.lighten lighten
+        |> Color.toRgba
+        |> UI.rgbaToColor
+
+
+darkHeaderRawColor : Color.Color
+darkHeaderRawColor =
+    UI.getRawColorFromHex "191449"
+
+
 textColor : Element.Color
 textColor =
     UI.hex_to_color "837F98"
@@ -46,11 +59,13 @@ buttonPrimaryHoveredColor =
         |> Color.toRgba
         |> UI.rgbaToColor
 
+
 fontFamilyPoppins : Element.Attribute msg
 fontFamilyPoppins =
     fontFamily
         "Poppins"
         "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap"
+
 
 fontFamily : String -> String -> Element.Attribute msg
 fontFamily fontName fontUrl =
@@ -80,6 +95,7 @@ lightPurpleColor =
         |> Color.Manipulate.lighten 0.15
         |> UI.convertColor
 
+
 lightenPurpleColor : Float -> Element.Color
 lightenPurpleColor pct =
     UI.getRawColorFromHex "6363FC"
@@ -90,4 +106,3 @@ lightenPurpleColor pct =
 offWhiteColor : Element.Color
 offWhiteColor =
     UI.hex_to_color "F4F6FD"
-

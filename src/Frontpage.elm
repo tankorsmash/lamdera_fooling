@@ -113,24 +113,43 @@ view model =
                 { angle = Angle.turns 0.25 |> Angle.inRadians
                 , steps = [ Theme.lightenPurpleColor 0.27, Theme.lightenPurpleColor 0.3 ]
                 }
+            , Font.color Theme.darkHeaderColor
             ]
             [ -- header
-              row
-                [ centerX
-                , Font.bold
-                , Font.color Theme.darkHeaderColor
-                , Theme.fontFamilyPoppins
-                , spacing 5
-                , Font.size 30
-                , padding 20
+              row [ centerX, width fill ]
+                [ row
+                    [ centerX
+                    , Font.bold
+                    , Theme.fontFamilyPoppins
+                    , spacing 5
+                    , Font.size 30
+                    , padding 20
+                    ]
+                    [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer
+                    , text "Clikr"
+                    ]
+                , -- links next to header
+                  row [ spacing 10, Font.size 12, alignRight ]
+                    [ el [ alignRight, Font.bold ] <| text "Log in"
+                    , el
+                        [ alignRight
+                        , Border.rounded 30
+                        , Border.width 2
+                        , padding 10
+                        , Border.color <| Theme.lightenDarkHeaderColor 0.2
+                        , Font.color <| Theme.lightenDarkHeaderColor 0.2
+                        , Font.bold
+                        ]
+                      <|
+                        text "Sign up"
+                    ]
                 ]
-                [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer, text "Clikr" ]
             , row [ width fill, height fill ]
                 [ column [ alignTop, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
                     [ el [ centerY ] <| text "You are a nobody."
                     , el [ centerY ] <| text "Become some different."
                     , el [ centerY ] <| paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
-                    , el [ centerY ] <| paragraph [ Font.size 30 , Font.bold] [ text "Start ", el [ Font.underline ] <| text " today!" ]
+                    , el [ centerY ] <| paragraph [ Font.size 30, Font.bold ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
                     ]
                 , column
                     [ alignRight
@@ -147,7 +166,6 @@ view model =
                         ]
                         []
                     ]
-
                 ]
             ]
         ]
