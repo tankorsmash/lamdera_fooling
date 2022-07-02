@@ -1,5 +1,6 @@
 module Frontpage exposing (update, view)
 
+import Angle
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -92,7 +93,7 @@ update msg model =
 
 view : Model -> Element Msg
 view model =
-    column [ width fill, height fill, padding 100 ]
+    column [ width fill, height fill, padding 100, Background.color Theme.offWhiteColor ]
         [ Element.html <| FontAwesome.Styles.css
         , -- bubble element
           column
@@ -109,6 +110,8 @@ view model =
                 }
             , Font.color <| Theme.offWhiteColor
             , Font.size 30
+            , Background.gradient {
+                angle = Angle.turns 0.25 |> Angle.inRadians, steps = [Theme.lightenPurpleColor 0.27,  Theme.lightenPurpleColor 0.30] }
             ]
             [ -- header
               row
