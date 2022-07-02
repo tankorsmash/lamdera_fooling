@@ -130,26 +130,24 @@ view model =
                     [ el [ centerY ] <| text "You are a nobody."
                     , el [ centerY ] <| text "Become some different."
                     , el [ centerY ] <| paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
-                    , el [ centerY ] <| paragraph [ Font.size 30 ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
+                    , el [ centerY ] <| paragraph [ Font.size 30 , Font.bold] [ text "Start ", el [ Font.underline ] <| text " today!" ]
                     ]
                 , column
                     [ alignRight
                     , width (fillPortion 2)
                     , height fill
+                    , paddingXY 50 0
                     ]
                     [ column
                         [ width fill
                         , height fill
+                        , padding 50
                         , Background.image "/imgs/frontpage_shake.png"
                         , Element.htmlAttribute <| Attr.title "Designed by pch.vector / Freepik.com"
-
-                        -- , centerX
-                        -- , centerY
                         ]
                         []
                     ]
 
-                -- [Element.image [] {src="/imgs/frontpage_shake.png", description="<a href="http://www.freepik.com">Designed by pch.vector / Freepik</a>"}]
                 ]
             ]
         ]
