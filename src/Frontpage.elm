@@ -93,9 +93,11 @@ update msg model =
 view : Model -> Element Msg
 view model =
     column [ width fill, height fill ]
-        [ row [ width fill, padding 10 ]
+        [ Element.html <| FontAwesome.Styles.css
+        , row [ width fill, padding 10 ]
             [ el [ alignLeft, Font.bold, Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins ] <|
                 text "Frontpage"
-            , el [ alignRight ] <| UI.fontAwesome FAR.comment
+            , el [ alignRight ] <|
+                UI.fontAwesome FAR.comment
             ]
         ]
