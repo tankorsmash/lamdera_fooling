@@ -92,12 +92,33 @@ update msg model =
 
 view : Model -> Element Msg
 view model =
-    column [ width fill, height fill ]
+    column [ width fill, height fill, padding 100 ]
         [ Element.html <| FontAwesome.Styles.css
-        , row [ width fill, padding 10 ]
-            [ el [ alignLeft, Font.bold, Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins ] <|
-                text "Frontpage"
-            , el [ alignRight ] <|
-                UI.fontAwesome FAR.comment
+        , -- bubble element
+          column
+            [ width (fill |> Element.maximum 1200)
+            , height fill
+            , padding 20
+            , centerX
+            , Border.rounded 30
+            , Border.shadow
+                { offset = ( 5, 16 )
+                , size = 0
+                , blur = 11
+                , color = Theme.lightenPurpleColor 0.25
+                }
+            , Font.color <| Theme.offWhiteColor
+            , Font.size 30
+            ]
+            [ -- header
+              row
+                [ centerX
+                , Font.bold
+                , Font.color Theme.darkHeaderColor
+                , Theme.fontFamilyPoppins
+                , spacing 5
+                , padding 20
+                ]
+                [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer, text "Clikr" ]
             ]
         ]

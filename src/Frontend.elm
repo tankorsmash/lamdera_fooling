@@ -499,7 +499,7 @@ view model =
                     Element.none
                 ]
     in
-    { title = "Testing Lamdera | TankorSmash"
+    { title = "Clikr | TankorSmash"
     , body =
         [ elm_ui_hack_layout
         , Element.layoutWith

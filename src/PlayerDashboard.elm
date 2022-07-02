@@ -80,32 +80,6 @@ type alias Msg =
 
 
 
-getRawColorFromHex : String -> Color.Color
-getRawColorFromHex hexStr =
-    Color.Convert.hexToColor hexStr
-        |> Result.withDefault (Color.rgb 1 0 1)
-
-
-rawPurpleColor : Color.Color
-rawPurpleColor =
-    getRawColorFromHex "6363FC"
-
-
-purpleColor : Element.Color
-purpleColor =
-    rawPurpleColor
-        |> UI.convertColor
-
-
-lightPurpleColor =
-    getRawColorFromHex "6363FC"
-        |> Color.Manipulate.lighten 0.15
-        |> UI.convertColor
-
-
-offWhiteColor =
-    UI.hex_to_color "F4F6FD"
-
 
 clickableSidebarIcon : FA.Icon a -> msg -> Element msg
 clickableSidebarIcon icon msg =
@@ -137,7 +111,7 @@ clickableSidebarIcon icon msg =
 viewSidebar : Model -> Element Msg
 viewSidebar model =
     column
-        [ Background.color <| purpleColor
+        [ Background.color <| Theme.purpleColor
         , height fill
         , padding 20
         , spacing 40
@@ -146,9 +120,9 @@ viewSidebar model =
             { offset = ( 0, 6 )
             , size = 0
             , blur = 11
-            , color = lightPurpleColor
+            , color = Theme.lightPurpleColor
             }
-        , Font.color <| offWhiteColor
+        , Font.color <| Theme.offWhiteColor
         ]
         [ el [ Theme.fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" ] <|
             text "Clikr"
@@ -396,10 +370,10 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
             [ centerY, height fill ]
 
         emptyColor =
-            Background.color <| UI.convertColor <| Color.Manipulate.lighten 0.2 <| rawPurpleColor
+            Background.color <| UI.convertColor <| Color.Manipulate.lighten 0.2 <| Theme.rawPurpleColor
 
         filledColor =
-            Background.color <| UI.convertColor <| Color.Manipulate.desaturate 0.35 <| rawPurpleColor
+            Background.color <| UI.convertColor <| Color.Manipulate.desaturate 0.35 <| Theme.rawPurpleColor
 
         completedColor =
             Background.color <| UI.convertColor <| Color.darkGreen

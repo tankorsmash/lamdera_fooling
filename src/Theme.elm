@@ -62,3 +62,32 @@ fontFamily fontName fontUrl =
         , Font.sansSerif
         ]
 
+
+rawPurpleColor : Color.Color
+rawPurpleColor =
+    UI.getRawColorFromHex "6363FC"
+
+
+purpleColor : Element.Color
+purpleColor =
+    rawPurpleColor
+        |> UI.convertColor
+
+
+lightPurpleColor : Element.Color
+lightPurpleColor =
+    UI.getRawColorFromHex "6363FC"
+        |> Color.Manipulate.lighten 0.15
+        |> UI.convertColor
+
+lightenPurpleColor : Float -> Element.Color
+lightenPurpleColor pct =
+    UI.getRawColorFromHex "6363FC"
+        |> Color.Manipulate.lighten pct
+        |> UI.convertColor
+
+
+offWhiteColor : Element.Color
+offWhiteColor =
+    UI.hex_to_color "F4F6FD"
+
