@@ -123,25 +123,29 @@ view model =
                     , Theme.fontFamilyPoppins
                     , spacing 5
                     , Font.size 30
-                    , padding 20
+                    , Element.paddingEach { top = 30, left = 20, right = 20, bottom = 0 }
                     ]
                     [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer
                     , text "Clikr"
                     ]
                 , -- links next to header
-                  row [ spacing 10, Font.size 12, alignRight ]
-                    [ el [ alignRight, Font.bold ] <| text "Log in"
-                    , el
-                        [ alignRight
-                        , Border.rounded 30
-                        , Border.width 2
-                        , padding 10
-                        , Border.color <| Theme.lightenDarkHeaderColor 0.2
-                        , Font.color <| Theme.lightenDarkHeaderColor 0.2
-                        , Font.bold
+                  row [ alignRight, Element.spacing 50, padding 10 ]
+                    [ row [ Font.size 12, Element.spacing 25 ]
+                        [ text "Our Mission", text "Pricing", text "About" ]
+                    , row [ spacing 10, Font.size 12, alignRight ]
+                        [ el [ alignRight, Font.bold ] <| text "Log in"
+                        , el
+                            [ alignRight
+                            , Border.rounded 30
+                            , Border.width 2
+                            , paddingXY 15 10
+                            , Border.color <| Theme.lightenDarkHeaderColor 0.2
+                            , Font.color <| Theme.lightenDarkHeaderColor 0.2
+                            , Font.bold
+                            ]
+                          <|
+                            text "Sign up"
                         ]
-                      <|
-                        text "Sign up"
                     ]
                 ]
             , row [ width fill, height fill ]
