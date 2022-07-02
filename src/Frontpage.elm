@@ -126,14 +126,30 @@ view model =
                 ]
                 [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer, text "Clikr" ]
             , row [ width fill, height fill ]
-                [ column [ alignLeft, centerY, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
-                    [ text "You are a nobody."
-                    , text "Become some different."
-                    , paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
-                    , paragraph [ Font.size 30 ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
+                [ column [ alignTop, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
+                    [ el [ centerY ] <| text "You are a nobody."
+                    , el [ centerY ] <| text "Become some different."
+                    , el [ centerY ] <| paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
+                    , el [ centerY ] <| paragraph [ Font.size 30 ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
                     ]
-                , column [ width fill, height fill ]
-                    []
+                , column
+                    [ alignRight
+                    , width (fillPortion 2)
+                    , height fill
+                    ]
+                    [ column
+                        [ width fill
+                        , height fill
+                        , Background.image "/imgs/frontpage_shake.png"
+                        , Element.htmlAttribute <| Attr.title "<a href='http://www.freepik.com'>Designed by pch.vector / Freepik</a>"
+
+                        -- , centerX
+                        -- , centerY
+                        ]
+                        []
+                    ]
+
+                -- [Element.image [] {src="/imgs/frontpage_shake.png", description="<a href="http://www.freepik.com">Designed by pch.vector / Freepik</a>"}]
                 ]
             ]
         ]
