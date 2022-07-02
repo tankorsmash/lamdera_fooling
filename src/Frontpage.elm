@@ -38,6 +38,7 @@ import Process
 import Random
 import String.Extra
 import Task
+import Theme
 import Time
 import Types
     exposing
@@ -91,4 +92,10 @@ update msg model =
 
 view : Model -> Element Msg
 view model =
-    text "Frontpage"
+    column [ width fill, height fill ]
+        [ row [ width fill, padding 10 ]
+            [ el [ alignLeft, Font.bold, Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins ] <|
+                text "Frontpage"
+            , el [ alignRight ] <| UI.fontAwesome FAR.comment
+            ]
+        ]

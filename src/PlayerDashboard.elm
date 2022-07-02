@@ -1,5 +1,6 @@
 module PlayerDashboard exposing (update, view)
 
+import Theme
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -78,16 +79,6 @@ type alias Msg =
     DashboardMsg
 
 
-fontFamily : String -> String -> Element.Attribute msg
-fontFamily fontName fontUrl =
-    Font.family
-        [ Font.external
-            { name = fontName
-            , url = fontUrl
-            }
-        , Font.sansSerif
-        ]
-
 
 getRawColorFromHex : String -> Color.Color
 getRawColorFromHex hexStr =
@@ -140,7 +131,7 @@ clickableSidebarIcon icon msg =
             , Element.pointer
             ]
         <|
-            fontAwesome icon
+            UI.fontAwesome icon
 
 
 viewSidebar : Model -> Element Msg
@@ -159,7 +150,7 @@ viewSidebar model =
             }
         , Font.color <| offWhiteColor
         ]
-        [ el [ fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" ] <|
+        [ el [ Theme.fontFamily "Roboto Slab" "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500&display=swap" ] <|
             text "Clikr"
         , column [ alignTop, centerX, spacing 20 ]
             [ clickableSidebarIcon FAR.hand (ChangeTab DashboardActionsTabType)
@@ -169,50 +160,6 @@ viewSidebar model =
         ]
 
 
-exampleFontAwesomeLayeredIcon : Element msg
-exampleFontAwesomeLayeredIcon =
-    Element.html <|
-        FontAwesome.Layering.layers [ FAA.lg ]
-            [ FA.view FAS.checkToSlot
-            , FontAwesome.Layering.counter [] "123"
-            ]
-
-
-fontAwesome : FA.Icon a -> Element msg
-fontAwesome =
-    FA.view >> Element.html >> el [ centerX, centerY, Font.center ]
-
-
-offWhiteBackgroundColor : Element.Color
-offWhiteBackgroundColor =
-    UI.hex_to_color "F8FAFB"
-
-
-whiteFontColor : Element.Color
-whiteFontColor =
-    UI.hex_to_color "F0F1FF"
-
-
-darkHeaderColor : Element.Color
-darkHeaderColor =
-    UI.hex_to_color "191449"
-
-
-textColor : Element.Color
-textColor =
-    UI.hex_to_color "837F98"
-
-
-borderColor : Element.Color
-borderColor =
-    UI.hex_to_color "DFDFE1"
-
-
-fontFamilyPoppins : Element.Attribute msg
-fontFamilyPoppins =
-    fontFamily
-        "Poppins"
-        "https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Slab:wght@900&display=swap"
 
 
 viewChat : Model -> List Types.ChatMessage -> Time.Posix -> Element Msg
@@ -246,7 +193,7 @@ viewChat model allChatMessages lastTick =
                 , --chat content
                   column [ width fill, spacing 5 ]
                     [ --user image
-                      paragraph [ Font.color darkHeaderColor, fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
+                      paragraph [ Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
                     , -- chat text
                       paragraph [ width fill ] [ text <| chatMessage.message ]
                     ]
@@ -265,7 +212,7 @@ viewChat model allChatMessages lastTick =
                     , UI.border_bottom 1
                     , paddingXY 10 0
                     , centerX
-                    , Border.color borderColor
+                    , Border.color Theme.borderColor
                     ]
                   <|
                     text ""
@@ -275,16 +222,16 @@ viewChat model allChatMessages lastTick =
     column [ width fill, height fill, paddingXY 0 10 ]
         [ --header
           row [ width fill, padding 10 ]
-            [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+            [ el [ alignLeft, Font.bold, Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins ] <|
                 text "All Chat"
-            , el [ alignRight ] <| fontAwesome FAR.comment
+            , el [ alignRight ] <| UI.fontAwesome FAR.comment
             ]
         , -- search bar
           el [ padding 5, width fill ] <|
             Input.text
                 [ Border.rounded 30
-                , Border.color borderColor
-                , Background.color offWhiteBackgroundColor
+                , Border.color Theme.borderColor
+                , Background.color Theme.offWhiteBackgroundColor
                 , padding 3
                 , width fill
                 ]
@@ -293,7 +240,7 @@ viewChat model allChatMessages lastTick =
                 , placeholder =
                     Just
                         (Input.placeholder
-                            [ Font.color borderColor
+                            [ Font.color Theme.borderColor
                             , UI.scaled_font 1
                             , Element.moveRight 7
                             ]
@@ -302,7 +249,7 @@ viewChat model allChatMessages lastTick =
                         )
                 , label = Input.labelHidden "search chat"
                 }
-        , column [ Font.color textColor, spacing 10, padding 10 ] <|
+        , column [ Font.color Theme.textColor, spacing 10, padding 10 ] <|
             List.intersperse chatDivider <|
                 List.map viewChatMessage allChatMessages
         ]
@@ -315,7 +262,7 @@ verticalDivider =
             [ height fill
             , UI.border_right 1
             , centerX
-            , Border.color borderColor
+            , Border.color Theme.borderColor
             ]
           <|
             text " "
@@ -329,8 +276,8 @@ view tempFrontendModel model userData =
             row
                 [ width fill
                 , height fill
-                , Background.color offWhiteBackgroundColor
-                , Font.color textColor
+                , Background.color Theme.offWhiteBackgroundColor
+                , Font.color Theme.textColor
                 ]
                 [ el [ height fill, paddingXY 30 20 ] <|
                     viewSidebar model
@@ -373,25 +320,13 @@ viewUpgrades model userData =
         ]
 
 
-buttonPrimaryColor : Element.Color
-buttonPrimaryColor =
-    UI.hex_to_color "6F6AF8"
-
-
-buttonPrimaryHoveredColor : Element.Color
-buttonPrimaryHoveredColor =
-    Color.Convert.hexToColor "6F6AF8"
-        |> Result.withDefault Color.red
-        |> Color.Manipulate.lighten 0.05
-        |> Color.toRgba
-        |> UI.rgbaToColor
 
 
 actionButtonWithAttrs attrs msg txt =
     button
         ([ centerX
          , Font.size 16
-         , Background.color buttonPrimaryColor
+         , Background.color Theme.buttonPrimaryColor
          ]
             ++ attrs
         )
@@ -404,9 +339,9 @@ actionButtonWithAttrs attrs msg txt =
 
 
 primaryButtonConfig =
-    { font_color = whiteFontColor
-    , button_color = buttonPrimaryColor
-    , hovered_button_color = buttonPrimaryHoveredColor
+    { font_color = Theme.whiteFontColor
+    , button_color = Theme.buttonPrimaryColor
+    , hovered_button_color = Theme.buttonPrimaryHoveredColor
     , hovered_font_color = UI.color_white
     }
 
@@ -497,14 +432,14 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
                     , Background.color <|
                         case progress of
                             Completed ->
-                                buttonPrimaryColor
+                                Theme.buttonPrimaryColor
 
                             _ ->
-                                offWhiteBackgroundColor
+                                Theme.offWhiteBackgroundColor
                     , Border.rounded 30
                     , padding 5
-                    , Font.color darkHeaderColor
-                    , fontFamilyPoppins
+                    , Font.color Theme.darkHeaderColor
+                    , Theme.fontFamilyPoppins
                     ]
                 <|
                     text ("+" ++ (String.fromInt <| clicksOutput))
@@ -582,7 +517,7 @@ energizeAction model =
 sectionHeader : String -> Element Msg
 sectionHeader headerTxt =
     row [ width fill, padding 10 ]
-        [ el [ alignLeft, Font.bold, Font.color darkHeaderColor, fontFamilyPoppins ] <|
+        [ el [ alignLeft, Font.bold, Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins ] <|
             text headerTxt
         , -- profile dropdown
           el [ alignRight, Events.onClick <| ChangeTab DashboardProfileTabType, Element.pointer ] <|
@@ -596,7 +531,7 @@ sectionHeader headerTxt =
                     ]
                   <|
                     text ""
-                , el [ width (px 32) ] <| fontAwesome <| FAS.chevronDown
+                , el [ width (px 32) ] <| UI.fontAwesome <| FAS.chevronDown
                 ]
         ]
 
