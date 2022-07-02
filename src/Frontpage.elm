@@ -1,7 +1,7 @@
 module Frontpage exposing (update, view)
 
-import Angle
 import AdminPage
+import Angle
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
@@ -109,9 +109,10 @@ view model =
                 , color = Theme.lightenPurpleColor 0.25
                 }
             , Font.color <| Theme.offWhiteColor
-            , Font.size 30
-            , Background.gradient {
-                angle = Angle.turns 0.25 |> Angle.inRadians, steps = [Theme.lightenPurpleColor 0.27,  Theme.lightenPurpleColor 0.30] }
+            , Background.gradient
+                { angle = Angle.turns 0.25 |> Angle.inRadians
+                , steps = [ Theme.lightenPurpleColor 0.27, Theme.lightenPurpleColor 0.3 ]
+                }
             ]
             [ -- header
               row
@@ -120,8 +121,19 @@ view model =
                 , Font.color Theme.darkHeaderColor
                 , Theme.fontFamilyPoppins
                 , spacing 5
+                , Font.size 30
                 , padding 20
                 ]
                 [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer, text "Clikr" ]
+            , row [ width fill, height fill ]
+                [ column [ alignLeft, centerY, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
+                    [ text "You are a nobody."
+                    , text "Become some different."
+                    , paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
+                    , paragraph [ Font.size 30 ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
+                    ]
+                , column [ width fill, height fill ]
+                    []
+                ]
             ]
         ]
