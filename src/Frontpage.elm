@@ -70,6 +70,7 @@ import Types
 import UUID
 import Url
 import Url.Parser as Parser exposing ((</>), Parser)
+import Urls
 
 
 type alias Model =
@@ -133,8 +134,8 @@ view model =
                     [ row [ Font.size 12, Element.spacing 25 ]
                         [ text "Our Mission", text "Pricing", text "About" ]
                     , row [ spacing 10, Font.size 12, alignRight ]
-                        [ el [ alignRight, Font.bold ] <| text "Log in"
-                        , el
+                        [ Element.link [ alignRight, Font.bold ] { url = Urls.login, label = text "Log in" }
+                        , Element.link
                             [ alignRight
                             , Border.rounded 30
                             , Border.width 2
@@ -143,8 +144,7 @@ view model =
                             , Font.color <| Theme.lightenDarkHeaderColor 0.2
                             , Font.bold
                             ]
-                          <|
-                            text "Sign up"
+                            { label = text "Sign up", url = Urls.signUp }
                         ]
                     ]
                 ]
