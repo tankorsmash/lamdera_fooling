@@ -26,6 +26,7 @@ import Lamdera
 import List.Extra
 import PlayerDashboard as Dashboard
 import Process
+import SignUp
 import String.Extra
 import Task
 import Time
@@ -417,6 +418,15 @@ update msg model =
             , Cmd.map GotFrontpageMsg frontpageCmd
             )
 
+        GotSignUpMsg signupMsg ->
+            let
+                ( newSignUpModel, signupCmd ) =
+                    SignUp.update signupMsg model.signupModel
+            in
+            ( { model | signupModel = newSignUpModel }
+            , Cmd.map GotSignUpMsg signupCmd
+            )
+
         SendWantsToCraftXp numXp ->
             ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
 
@@ -530,6 +540,10 @@ view model =
                         FrontPage ->
                             viewFrontPage model
 
+                        SignUpPage ->
+                            -- NOTE this is the player dashboard anyway
+                            viewSignUpPage model
+
                         _ ->
                             viewAnon model maybePersonalityType
 
@@ -555,6 +569,10 @@ view model =
                         FrontPage ->
                             -- NOTE this is the player dashboard anyway
                             viewPlayerDashboardPage model userData
+
+                        SignUpPage ->
+                            -- TODO: make this a redirect instead of a forward
+                            viewPlayerDashboardPage model userData
         ]
     }
 
@@ -577,11 +595,18 @@ viewFrontPage model =
         Frontpage.view model.frontpageModel
 
 
+viewSignUpPage : Model -> Element FrontendMsg
+viewSignUpPage model =
+    Element.map GotSignUpMsg <|
+        SignUp.view model.signupModel
+
+
 type Route
     = GamePage
     | AdminPage
     | PlayerDashboardPage
     | FrontPage
+    | SignUpPage
 
 
 routeParser : Parser (Route -> a) a
@@ -591,6 +616,7 @@ routeParser =
         , Parser.map AdminPage (Parser.s "ules")
         , Parser.map PlayerDashboardPage (Parser.s "dashboard")
         , Parser.map FrontPage (Parser.s "frontpage")
+        , Parser.map SignUpPage (Parser.s "signup")
         ]
 
 

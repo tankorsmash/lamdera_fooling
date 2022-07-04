@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, ChatMessageId, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), FrontpageModel, FrontpageMsg(..), FrontpageToBackend(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDataId, PersonalityTypeDict, Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserClickData, UserData, UserId, adminSendToBackend, buildChatMessageUuuid, createGroup, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initAdminFrontendModel, initBackendModel, initDashboardModel, initFrontendModel, initTeams, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, ChatMessageId, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), FrontpageModel, FrontpageMsg(..), FrontpageToBackend(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDataId, PersonalityTypeDict, SignUpModel, SignUpMsg(..), SignUpToBackend(..), Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserClickData, UserData, UserId, adminSendToBackend, buildChatMessageUuuid, createGroup, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initAdminFrontendModel, initBackendModel, initDashboardModel, initFrontendModel, initFrontpageModel, initTeams, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -240,11 +240,16 @@ initFrontendModel url key =
     , adminFrontendModel = initAdminFrontendModel url key
     , dashboardModel = initDashboardModel url key
     , frontpageModel = initFrontpageModel url key
+    , signupModel = initSignUpModel url key
     }
 
 
 initFrontpageModel : Url -> Key -> FrontpageModel
 initFrontpageModel url key =
+    { url = url, key = key }
+
+initSignUpModel : Url -> Key -> SignUpModel
+initSignUpModel url key =
     { url = url, key = key }
 
 
@@ -309,6 +314,7 @@ type alias FrontendModel =
     , adminFrontendModel : AdminFrontendModel
     , dashboardModel : DashboardModel
     , frontpageModel : FrontpageModel
+    , signupModel : SignUpModel
     }
 
 
@@ -496,6 +502,7 @@ type FrontendMsg
     | GotAdminFrontendMsg AdminFrontendMsg
     | GotPlayerDashboardMsg DashboardMsg
     | GotFrontpageMsg FrontpageMsg
+    | GotSignUpMsg SignUpMsg
     | SendWantsToCraftXp Int
 
 
@@ -534,6 +541,18 @@ type FrontpageMsg
 
 type FrontpageToBackend
     = NoOpFrontpageToBackend
+
+
+type alias SignUpModel =
+    { url : Url.Url, key : Browser.Navigation.Key }
+
+
+type SignUpMsg
+    = NoOpSignUp
+
+
+type SignUpToBackend
+    = NoOpSignUpToBackend
 
 
 type alias PersonalityTypeDict a =
