@@ -612,7 +612,7 @@ type Route
 routeParser : Parser (Route -> a) a
 routeParser =
     Parser.oneOf
-        [ Parser.map GamePage Parser.top
+        [ Parser.map FrontPage Parser.top
         , Parser.map AdminPage (Parser.s "ules")
         , Parser.map PlayerDashboardPage (Parser.s "dashboard")
         , Parser.map FrontPage (Parser.s "frontpage")
