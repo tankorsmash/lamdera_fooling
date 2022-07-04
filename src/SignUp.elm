@@ -176,8 +176,8 @@ view model =
                         [ width fill
                         , height fill
                         , padding 50
-                        , Background.image "/imgs/frontpage_shake.png"
-                        , Element.htmlAttribute <| Attr.title "Designed by pch.vector / Freepik.com"
+                        , Background.image "/imgs/signup_shake.png"
+                        , Element.htmlAttribute <| Attr.title "Designed by vectorjuice / Freepik.com"
                         ]
                         []
                     ]
