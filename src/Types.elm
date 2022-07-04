@@ -248,9 +248,14 @@ initFrontpageModel : Url -> Key -> FrontpageModel
 initFrontpageModel url key =
     { url = url, key = key }
 
+
 initSignUpModel : Url -> Key -> SignUpModel
 initSignUpModel url key =
-    { url = url, key = key }
+    { url = url
+    , key = key
+    , username = Nothing
+    , password = Nothing
+    }
 
 
 type alias ChatMessageId =
@@ -544,11 +549,19 @@ type FrontpageToBackend
 
 
 type alias SignUpModel =
-    { url : Url.Url, key : Browser.Navigation.Key }
+    { url : Url.Url
+    , key : Browser.Navigation.Key
+    , username : Maybe String
+    , password : Maybe String
+    }
 
 
 type SignUpMsg
     = NoOpSignUp
+    | SignUpUsernameChanged String
+    | SignUpPasswordChanged String
+    | SignUpSubmit
+
 
 
 type SignUpToBackend

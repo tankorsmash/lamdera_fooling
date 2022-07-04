@@ -81,6 +81,16 @@ type alias Msg =
     Types.SignUpMsg
 
 
+stringToMaybe : String -> Maybe String
+stringToMaybe str =
+    case str of
+        "" ->
+            Nothing
+
+        _ ->
+            Just str
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
@@ -90,6 +100,15 @@ update msg model =
     case msg of
         Types.NoOpSignUp ->
             noop
+
+        Types.SignUpUsernameChanged username ->
+            ( { model | username = stringToMaybe username }, Cmd.none )
+
+        Types.SignUpPasswordChanged password ->
+            ( { model | password = stringToMaybe password }, Cmd.none )
+
+        Types.SignUpSubmit ->
+            Debug.todo "branch 'SignUpSubmit' not implemented"
 
 
 view : Model -> Element Msg
@@ -131,10 +150,8 @@ view model =
                     ]
                 , -- links next to header
                   row [ alignRight, Element.spacing 50, padding 10 ]
-                    [ row [ Font.size 12, Element.spacing 25 ]
-                        [ text "Our Mission", text "Pricing", text "About" ]
-                    , row [ spacing 10, Font.size 12, alignRight ]
-                        [ Element.link [ alignRight, Font.bold ] { url = Urls.login, label = text "Log in" }
+                    [ row [ spacing 10, Font.size 12, alignRight ]
+                        [ Element.link [ alignRight, Font.size 10 ] { url = Urls.login, label = text "Returning user?" }
                         , Element.link
                             [ alignRight
                             , Border.rounded 30
@@ -165,10 +182,19 @@ view model =
                         []
                     ]
                 , column [ alignTop, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
-                    [ el [ centerY ] <| text "You are a nobody."
-                    , el [ centerY ] <| text "Become some different."
-                    , el [ centerY ] <| paragraph [] [ text "Become someone", el [ Font.bold ] <| text " better." ]
-                    , el [ centerY ] <| paragraph [ Font.size 30, Font.bold ] [ text "Start ", el [ Font.underline ] <| text " today!" ]
+                    [ Input.username [ centerY ]
+                        { onChange = Types.SignUpUsernameChanged
+                        , text = model.username |> Maybe.withDefault ""
+                        , placeholder = Just <| Input.placeholder [] <| text "What they will call you"
+                        , label = Input.labelAbove [] <| text "Username"
+                        }
+                    , Input.newPassword [ centerY ]
+                        { onChange = Types.SignUpPasswordChanged
+                        , text = model.password |> Maybe.withDefault ""
+                        , placeholder = Just <| Input.placeholder [] <| text "Unique password"
+                        , label = Input.labelAbove [] <| text "Password"
+                        , show = False
+                        }
                     ]
                 ]
             ]
