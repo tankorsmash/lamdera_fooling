@@ -1,4 +1,4 @@
-module PlayerDashboard exposing (update, view)
+module PlayerDashboard exposing (update, view, button)
 
 import Theme
 import AdminPage

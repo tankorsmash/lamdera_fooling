@@ -35,6 +35,7 @@ import Interface as UI
 import Lamdera
 import List.Extra
 import Password
+import PlayerDashboard exposing (button)
 import Process
 import Random
 import String.Extra
@@ -195,6 +196,9 @@ view model =
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
+                    , button [ centerY, Border.rounded 5 ]
+                        Types.SignUpSubmit
+                        "Submit"
                     ]
                 ]
             ]
