@@ -1,4 +1,4 @@
-module SignUp exposing (update, view)
+module SignUp exposing (update, view, suite)
 
 import AdminPage
 import Angle
@@ -21,6 +21,7 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Element.Lazy as Lazy
+import Expect exposing (Expectation)
 import External.Animator.Animator as Animator
 import FontAwesome as FA
 import FontAwesome.Attributes as FAA
@@ -28,6 +29,7 @@ import FontAwesome.Layering
 import FontAwesome.Regular as FAR
 import FontAwesome.Solid as FAS
 import FontAwesome.Styles
+import Fuzz exposing (Fuzzer, int, list, string, tuple)
 import Html exposing (div, span)
 import Html.Attributes as Attr
 import Html.Events
@@ -40,6 +42,7 @@ import Process
 import Random
 import String.Extra
 import Task
+import Test exposing (describe, test)
 import Theme
 import Time
 import Types
@@ -196,6 +199,7 @@ view model =
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
+                    , text <| "Is password valid?: " ++ Debug.toString False
                     , el [ width fill, paddingXY 0 15 ] <|
                         button [ centerY, Border.rounded 5 ]
                             Types.SignUpSubmit
@@ -203,4 +207,13 @@ view model =
                     ]
                 ]
             ]
+        ]
+
+
+suite : Test.Test
+suite =
+    describe "temp"
+        [ test "idk" <|
+            \_ ->
+                Expect.fail "ASDS"
         ]
