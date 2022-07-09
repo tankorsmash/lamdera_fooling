@@ -196,9 +196,10 @@ view model =
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
-                    , button [ centerY, Border.rounded 5 ]
-                        Types.SignUpSubmit
-                        "Submit"
+                    , el [ width fill, paddingXY 0 15 ] <|
+                        button [ centerY, Border.rounded 5 ]
+                            Types.SignUpSubmit
+                            "Submit"
                     ]
                 ]
             ]
