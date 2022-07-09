@@ -40,6 +40,9 @@ import Password
 import PlayerDashboard exposing (button)
 import Process
 import Random
+import Random.Char
+import Random.String
+import Shrink
 import String.Extra
 import Task
 import Test exposing (describe, fuzz, only, test)
@@ -100,6 +103,11 @@ passwordMinLength =
     5
 
 
+passwordMaxLength : number
+passwordMaxLength =
+    200
+
+
 type RawPassword
     = RawPassword String
 
@@ -117,6 +125,8 @@ validatePasswordMinLength ((RawPassword rawPassword) as wholePassword) =
         Err <| ValidationErrorMessage "password is too short"
 
 
+{-| Doesn't support unicode i think, because the length is an issue |
+-}
 validatePassword : String -> Result ValidationErrorMessage RawPassword
 validatePassword password =
     password
@@ -124,6 +134,16 @@ validatePassword password =
            String.trim
         |> RawPassword
         |> validatePasswordMinLength
+        |> Result.andThen validatePasswordMaxLength
+
+
+validatePasswordMaxLength : RawPassword -> Result ValidationErrorMessage RawPassword
+validatePasswordMaxLength ((RawPassword rawPassword) as wholePassword) =
+    if String.length rawPassword <= passwordMaxLength then
+        Ok wholePassword
+
+    else
+        Err <| ValidationErrorMessage "password is too short"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -245,14 +265,31 @@ view model =
         ]
 
 
+stringLenFuzzer : Int -> Int -> Fuzzer String
+stringLenFuzzer minLength maxLength =
+    Fuzz.custom
+        (Random.String.rangeLengthString
+            minLength
+            maxLength
+            Random.Char.latin
+        )
+        Shrink.string
+
+
 suite : Test.Test
 suite =
     let
-        maxLengthStringFuzzer length =
-            Fuzz.string |> Fuzz.map (String.left length)
+        _ =
+            123
     in
     describe "password validation"
-        [ fuzz (maxLengthStringFuzzer 4) "min length 5 is required" <|
+        [ fuzz (stringLenFuzzer 0 (passwordMinLength - 1)) "min length 5 is required" <|
+            \rawPassword ->
+                Expect.err <| validatePassword rawPassword
+        , fuzz (stringLenFuzzer passwordMinLength passwordMaxLength) "length is just right" <|
+            \rawPassword ->
+                Expect.ok <| validatePassword rawPassword
+        , fuzz (stringLenFuzzer (passwordMaxLength + 1) (passwordMaxLength + 1000)) "max length" <|
             \rawPassword ->
                 Expect.err <| validatePassword rawPassword
         ]
