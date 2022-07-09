@@ -26,7 +26,7 @@ import Lamdera
 import List.Extra
 import PlayerDashboard as Dashboard
 import Process
-import SignUp
+import Signup
 import String.Extra
 import Task
 import Time
@@ -421,7 +421,7 @@ update msg model =
         GotSignUpMsg signupMsg ->
             let
                 ( newSignUpModel, signupCmd ) =
-                    SignUp.update signupMsg model.signupModel
+                    Signup.update signupMsg model.signupModel
             in
             ( { model | signupModel = newSignUpModel }
             , Cmd.map GotSignUpMsg signupCmd
@@ -598,7 +598,7 @@ viewFrontPage model =
 viewSignUpPage : Model -> Element FrontendMsg
 viewSignUpPage model =
     Element.map GotSignUpMsg <|
-        SignUp.view model.signupModel
+        Signup.view model.signupModel
 
 
 type Route
@@ -612,7 +612,7 @@ type Route
 routeParser : Parser (Route -> a) a
 routeParser =
     Parser.oneOf
-        [ Parser.map FrontPage Parser.top
+        [ Parser.map GamePage Parser.top
         , Parser.map AdminPage (Parser.s "ules")
         , Parser.map PlayerDashboardPage (Parser.s "dashboard")
         , Parser.map FrontPage (Parser.s "frontpage")
