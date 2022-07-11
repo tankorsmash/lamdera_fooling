@@ -7,6 +7,7 @@
     "dependencies": {
         "direct": {
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
+            "SiriusStarr/elm-password-strength": "1.0.2",
             "TSFoster/elm-uuid": "4.2.0",
             "adauguet/elm-pbkdf2": "1.0.0",
             "avh4/elm-color": "1.0.0",
@@ -45,6 +46,7 @@
             "elm/regex": "1.0.0",
             "elm/svg": "1.0.1",
             "elm/virtual-dom": "1.0.2",
+            "elm-community/dict-extra": "2.4.0",
             "fredcy/elm-parseint": "2.0.1",
             "ianmackenzie/elm-1d-parameter": "1.0.1",
             "ianmackenzie/elm-float-extra": "1.1.0",

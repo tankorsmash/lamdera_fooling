@@ -78,6 +78,7 @@ import UUID
 import Url
 import Url.Parser as Parser exposing ((</>), Parser)
 import Urls
+import ZxcvbnPlus
 
 
 type alias Model =
@@ -250,11 +251,14 @@ view model =
                     , Input.newPassword [ centerY ]
                         { onChange = Types.SignUpPasswordChanged
                         , text = model.password |> Maybe.withDefault ""
-                        , placeholder = Just <| Input.placeholder [] <| text "Unique password"
+                        , placeholder = Just <| Input.placeholder [] <| text "Strong password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
-                    , text <| "Is password valid?: " ++ Debug.toString False
+                    , model.password
+                        |> Maybe.map
+                            (Lazy.lazy viewPasswordStrength)
+                        |> Maybe.withDefault Element.none
                     , el [ width fill, paddingXY 0 15 ] <|
                         button [ centerY, Border.rounded 5 ]
                             Types.SignUpSubmit
@@ -263,6 +267,50 @@ view model =
                 ]
             ]
         ]
+
+
+viewPasswordStrength : String -> Element Msg
+viewPasswordStrength password =
+    password
+        |> ZxcvbnPlus.zxcvbnPlus []
+        |> .score
+        |> scoreToInt
+        |> (\str ->
+                let
+                    msg =
+                        "Strength: " ++ String.fromInt str ++ "/5"
+
+                    fontColor =
+                        if str <= 1 then
+                            Color.lightRed
+
+                        else if str == 2 then
+                            Color.lightYellow |> Color.Manipulate.darken 0.25
+
+                        else
+                            Color.lightGreen
+                in
+                el [ Font.color <| UI.convertColor fontColor, Font.size 14, centerX ] <| text msg
+           )
+
+
+scoreToInt : ZxcvbnPlus.Score -> Int
+scoreToInt score =
+    case score of
+        ZxcvbnPlus.TooGuessable ->
+            0
+
+        ZxcvbnPlus.VeryGuessable ->
+            1
+
+        ZxcvbnPlus.SomewhatGuessable ->
+            2
+
+        ZxcvbnPlus.SafelyUnguessable ->
+            3
+
+        ZxcvbnPlus.VeryUnguessable ->
+            4
 
 
 stringLenFuzzer : Int -> Int -> Fuzzer String
