@@ -164,8 +164,23 @@ update msg model =
             let
                 isValid =
                     validatePassword password
+
+                convertedPassword =
+                    case password of
+                        "" ->
+                            Nothing
+
+                        actualPassword ->
+                            Just
+                                { rawPassword = actualPassword
+                                , passwordStrength =
+                                    actualPassword
+                                        |> ZxcvbnPlus.zxcvbnPlus []
+                                        |> .score
+                                        |> scoreToInt
+                                }
             in
-            ( { model | password = stringToMaybe password }, Cmd.none )
+            ( { model | password = convertedPassword }, Cmd.none )
 
         Types.SignUpSubmit ->
             Debug.todo "branch 'SignUpSubmit' not implemented"
@@ -250,48 +265,48 @@ view model =
                         }
                     , Input.newPassword [ centerY ]
                         { onChange = Types.SignUpPasswordChanged
-                        , text = model.password |> Maybe.withDefault ""
+                        , text = model.password |> Maybe.map .rawPassword |> Maybe.withDefault ""
                         , placeholder = Just <| Input.placeholder [] <| text "Strong password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
                     , model.password
                         |> Maybe.map
-                            (Lazy.lazy viewPasswordStrength)
+                            (.passwordStrength >> viewPasswordStrength)
                         |> Maybe.withDefault Element.none
-                    , el [ width fill, paddingXY 0 15 ] <|
-                        button [ centerY, Border.rounded 5 ]
-                            Types.SignUpSubmit
-                            "Submit"
+                    , model.password
+                        |> Maybe.map
+                            (always
+                                (el [ width fill, paddingXY 0 15 ] <|
+                                    button [ centerY, Border.rounded 5 ]
+                                        Types.SignUpSubmit
+                                        "Submit"
+                                )
+                            )
+                        |> Maybe.withDefault Element.none
                     ]
                 ]
             ]
         ]
 
 
-viewPasswordStrength : String -> Element Msg
-viewPasswordStrength password =
-    password
-        |> ZxcvbnPlus.zxcvbnPlus []
-        |> .score
-        |> scoreToInt
-        |> (\str ->
-                let
-                    msg =
-                        "Strength: " ++ String.fromInt str ++ "/5"
+viewPasswordStrength : Int -> Element Msg
+viewPasswordStrength passwordStrength =
+    let
+        msg =
+            "Strength: " ++ String.fromInt passwordStrength ++ "/5"
 
-                    fontColor =
-                        if str <= 1 then
-                            Color.lightRed
+        fontColor =
+            if passwordStrength <= 1 then
+                Color.lightRed
 
-                        else if str == 2 then
-                            Color.lightYellow |> Color.Manipulate.darken 0.25
+            else if passwordStrength == 2 then
+                Color.lightYellow |> Color.Manipulate.darken 0.25
 
-                        else
-                            Color.lightGreen
-                in
-                el [ Font.color <| UI.convertColor fontColor, Font.size 14, centerX ] <| text msg
-           )
+            else
+                Color.lightGreen
+    in
+    el [ Font.color <| UI.convertColor fontColor, Font.size 14, centerX ] <| text msg
 
 
 scoreToInt : ZxcvbnPlus.Score -> Int

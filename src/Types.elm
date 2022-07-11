@@ -548,11 +548,18 @@ type FrontpageToBackend
     = NoOpFrontpageToBackend
 
 
+type alias SignupPasswordData =
+    { rawPassword : String
+    , --this would be a zxcvbn strength value, but i dont want to depend on it if i can
+      passwordStrength : Int
+    }
+
+
 type alias SignUpModel =
     { url : Url.Url
     , key : Browser.Navigation.Key
     , username : Maybe String
-    , password : Maybe String
+    , password : Maybe SignupPasswordData
     }
 
 
@@ -561,7 +568,6 @@ type SignUpMsg
     | SignUpUsernameChanged String
     | SignUpPasswordChanged String
     | SignUpSubmit
-
 
 
 type SignUpToBackend
