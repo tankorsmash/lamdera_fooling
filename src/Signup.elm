@@ -313,35 +313,31 @@ view model =
                         , show = False
                         }
                     , --personality type
-                      UI.showIf isReadyToSubmit
-                        (Input.radioRow [ width fill, paddingXY 0 10, spacing 20, centerX ]
-                            { onChange = Types.SignUpPersonalitySelected
-                            , options =
-                                [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
-                                , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
-                                ]
-                            , selected = Just model.personalityType
-                            , label = Input.labelAbove [] (text "Your outlook on life")
-                            }
-                        )
+                      Input.radioRow [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 10, spacing 20, centerX ]
+                        { onChange = Types.SignUpPersonalitySelected
+                        , options =
+                            [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
+                            , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
+                            ]
+                        , selected = Just model.personalityType
+                        , label = Input.labelAbove [ Element.transparent <| not isReadyToSubmit ] (text "Your outlook on life")
+                        }
                     , model.password
                         |> Maybe.map
-                            (.passwordStrength >> viewPasswordStrength)
-                        |> Maybe.withDefault Element.none
-                    , UI.showIf isReadyToSubmit
-                        (el [ width fill, paddingXY 0 15 ] <|
-                            button [ centerY, Border.rounded 5 ]
-                                Types.SignUpSubmit
-                                "Submit"
-                        )
+                            (.passwordStrength >> viewPasswordStrength (model.password == Nothing))
+                        |> Maybe.withDefault (el [Font.size 14]<|  text " ")
+                    , el [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 15 ] <|
+                        button [ centerY, Border.rounded 5 ]
+                            Types.SignUpSubmit
+                            "Submit"
                     ]
                 ]
             ]
         ]
 
 
-viewPasswordStrength : Int -> Element Msg
-viewPasswordStrength passwordStrength =
+viewPasswordStrength : Bool -> Int -> Element Msg
+viewPasswordStrength hidePasswordStrength passwordStrength =
     let
         msg =
             "Strength: " ++ String.fromInt passwordStrength ++ "/5"
@@ -356,7 +352,14 @@ viewPasswordStrength passwordStrength =
             else
                 Color.lightGreen
     in
-    el [ Font.color <| UI.convertColor fontColor, Font.size 14, centerX ] <| text msg
+    el
+        [ Font.color <| UI.convertColor fontColor
+        , Font.size 14
+        , centerX
+        , Element.transparent hidePasswordStrength
+        ]
+    <|
+        text msg
 
 
 scoreToInt : ZxcvbnPlus.Score -> Int

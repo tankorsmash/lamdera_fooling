@@ -1300,7 +1300,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                 discussionLevel =
                     currentLevels.discuss |> getCurrentLevelLevel
             in
-            UI.showIf (xp >= 10 || getLevel discussionLevel > 0) <|
+            UI.renderIf (xp >= 10 || getLevel discussionLevel > 0) <|
                 column [ centerX, width fill, spacing 10 ]
                     [ viewProgressButton (getCurrentLevelProgress currentLevels.discuss lastTick) (basicBonuses.discuss.clickBonus discussionLevel) ( "Discuss", Discuss )
                     , UI.button <|
@@ -1329,7 +1329,7 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
                 argueLevel =
                     currentLevels.argue |> getCurrentLevelLevel
             in
-            UI.showIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
+            UI.renderIf (xp >= 10 || (ClickPricing.getLevel argueLevel > 0)) <|
                 column [ centerX, width fill, spacing 10 ]
                     [ viewProgressButton (getCurrentLevelProgress currentLevels.argue lastTick) (basicBonuses.argue.clickBonus argueLevel) ( "Argue", Argue )
                     , UI.button <|

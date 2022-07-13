@@ -150,7 +150,7 @@ viewChat model allChatMessages lastTick =
                     , Border.rounded 100
                     , --online dot
                       Element.inFront <|
-                        UI.showIf chatMessage.userData.isOnline <|
+                        UI.renderIf chatMessage.userData.isOnline <|
                             el
                                 [ width (px 16)
                                 , height (px 16)
