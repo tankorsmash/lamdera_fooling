@@ -195,6 +195,7 @@ update msg model =
                             , Types.SignupNewUserToBackend
                                 { username = username
                                 , hashedPassword = hashedPassword
+                                , personalityType = model.personalityType
                                 }
                                 |> Types.SignupSendingToBackend
                                 |> Lamdera.sendToBackend
@@ -300,9 +301,7 @@ view model =
                     , --signup error
                       model.signupSubmitError
                         |> Maybe.map
-                            (\errorString ->
-                                text errorString
-                            )
+                            (el [ Font.color <| UI.color_danger ] << text)
                         |> Maybe.withDefault Element.none
                     , --password input
                       Input.newPassword [ centerY ]
@@ -325,7 +324,7 @@ view model =
                     , model.password
                         |> Maybe.map
                             (.passwordStrength >> viewPasswordStrength (model.password == Nothing))
-                        |> Maybe.withDefault (el [Font.size 14]<|  text " ")
+                        |> Maybe.withDefault (el [ Font.size 14 ] <| text " ")
                     , el [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 15 ] <|
                         button [ centerY, Border.rounded 5 ]
                             Types.SignUpSubmit

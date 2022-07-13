@@ -585,7 +585,7 @@ type SignUpMsg
 
 type SignupToBackend
     = NoOpSignUpToBackend
-    | SignupNewUserToBackend { username : String, hashedPassword : Password.HashedPassword }
+    | SignupNewUserToBackend { username : String, hashedPassword : Password.HashedPassword, personalityType : PersonalityType }
 
 
 type alias PersonalityTypeDict a =
