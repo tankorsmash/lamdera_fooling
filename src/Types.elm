@@ -257,6 +257,7 @@ initSignUpModel url key =
     , password = Nothing
     , globalSeed = Random.initialSeed 12345
     , signupSubmitError = Nothing
+    , personalityType = Realistic
     }
 
 
@@ -568,6 +569,7 @@ type alias SignupModel =
     , key : Browser.Navigation.Key
     , username : Maybe String
     , password : Maybe SignupPasswordData
+    , personalityType : PersonalityType
     , globalSeed : Random.Seed
     , signupSubmitError : Maybe String
     }
@@ -577,6 +579,7 @@ type SignUpMsg
     = NoOpSignUp
     | SignUpUsernameChanged String
     | SignUpPasswordChanged String
+    | SignUpPersonalitySelected PersonalityType
     | SignUpSubmit
 
 

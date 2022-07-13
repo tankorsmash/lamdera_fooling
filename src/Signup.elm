@@ -207,6 +207,9 @@ update msg model =
                 model.password
                 |> Maybe.withDefault noop
 
+        Types.SignUpPersonalitySelected personalityType ->
+            ( { model | personalityType = personalityType }, Cmd.none )
+
 
 view : Model -> Element Msg
 view model =
@@ -297,6 +300,15 @@ view model =
                         , placeholder = Just <| Input.placeholder [] <| text "Strong password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
+                        }
+                    , Input.radioRow [ width fill, paddingXY 0 10, spacing 20, centerX]
+                        { onChange = Types.SignUpPersonalitySelected
+                        , options =
+                            [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
+                            , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
+                            ]
+                        , selected = Just model.personalityType
+                        , label = Input.labelAbove [] (text "Your outlook on life")
                         }
                     , model.password
                         |> Maybe.map
