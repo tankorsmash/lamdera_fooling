@@ -158,7 +158,13 @@ update msg model =
             noop
 
         Types.SignUpUsernameChanged username ->
-            ( { model | username = stringToMaybe username }, Cmd.none )
+            ( { model
+                | username = stringToMaybe username
+                , --clear error on username change
+                  signupSubmitError = Nothing
+              }
+            , Cmd.none
+            )
 
         Types.SignUpPasswordChanged password ->
             let
@@ -180,7 +186,13 @@ update msg model =
                                         |> scoreToInt
                                 }
             in
-            ( { model | password = convertedPassword }, Cmd.none )
+            ( { model
+                | password = convertedPassword
+                , --clear error on password change
+                  signupSubmitError = Nothing
+              }
+            , Cmd.none
+            )
 
         Types.SignUpSubmit ->
             Maybe.map2
@@ -302,7 +314,7 @@ view model =
                       model.signupSubmitError
                         |> Maybe.map
                             (el [ Font.color <| UI.color_danger ] << text)
-                        |> Maybe.withDefault Element.none
+                        |> Maybe.withDefault (text " ")
                     , --password input
                       Input.newPassword [ centerY ]
                         { onChange = Types.SignUpPasswordChanged
@@ -321,12 +333,13 @@ view model =
                         , selected = Just model.personalityType
                         , label = Input.labelAbove [ Element.transparent <| not isReadyToSubmit ] (text "Your outlook on life")
                         }
-                    , model.password
+                    , --password strength
+                      model.password
                         |> Maybe.map
                             (.passwordStrength >> viewPasswordStrength (model.password == Nothing))
                         |> Maybe.withDefault (el [ Font.size 14 ] <| text " ")
                     , el [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 15 ] <|
-                        button [ centerY, Border.rounded 5 ]
+                        button [ centerY, Border.rounded 5, Element.transparent <| model.signupSubmitError /= Nothing ]
                             Types.SignUpSubmit
                             "Submit"
                     ]
