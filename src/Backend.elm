@@ -1118,6 +1118,9 @@ updateFromFrontend sessionId clientId msg model =
         SignupSendingToBackend signupMsg ->
             updateFromSignupFrontend sessionId clientId signupMsg model
 
+        LoginSendingToBackend loginMsg ->
+            updateFromLoginFrontend sessionId clientId loginMsg model
+
 
 updateFromSignupFrontend : SessionId -> SessionId -> Types.SignupToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromSignupFrontend sessionId clientId msg model =
@@ -1126,7 +1129,7 @@ updateFromSignupFrontend sessionId clientId msg model =
             ( model, Cmd.none )
     in
     case msg of
-        NoOpSignUpToBackend ->
+        NoOpSignupToBackend ->
             noop
 
         SignupNewUserToBackend { username, hashedPassword, personalityType } ->
@@ -1154,6 +1157,36 @@ updateFromSignupFrontend sessionId clientId msg model =
                         , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newUsers))
                         ]
                     )
+
+
+updateFromLoginFrontend : SessionId -> SessionId -> Types.LoginToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromLoginFrontend sessionId clientId msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
+    case msg of
+        NoOpLoginToBackend ->
+            noop
+
+        LoginExistingUserToBackend { username, hashedPassword } ->
+            case getUserByUsername model.users username of
+                Just existingUser ->
+                    let
+                        _ =
+                            model.users
+                    in
+                    ( model
+                    , Cmd.batch
+                        [ Lamdera.sendToFrontend sessionId (NewUser existingUser)
+
+                        --TODO mark this user as online by updating the user and telling everyone they're online
+                        -- , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newUsers))
+                        ]
+                    )
+
+                Nothing ->
+                    ( model, Lamdera.sendToFrontend clientId (NewToLoginFrontend <| LoginRejectedUserDoesNotExist) )
 
 
 updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )

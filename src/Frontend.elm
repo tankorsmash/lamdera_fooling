@@ -24,6 +24,7 @@ import Html.Events
 import Interface as UI
 import Lamdera
 import List.Extra
+import Login
 import PlayerDashboard as Dashboard
 import Process
 import Signup
@@ -430,6 +431,15 @@ update msg model =
         SendWantsToCraftXp numXp ->
             ( model, Lamdera.sendToBackend <| Types.UserWantsToCraftXp numXp )
 
+        GotLoginMsg loginMsg ->
+            let
+                ( newSignUpModel, loginCmd ) =
+                    Login.update loginMsg model.loginModel
+            in
+            ( { model | loginModel = newSignUpModel }
+            , Cmd.map GotLoginMsg loginCmd
+            )
+
 
 
 -- end of update
@@ -496,6 +506,13 @@ updateFromBackend msg model =
             in
             ( Types.setSignupModel model newSignupFrontendModel, Cmd.map GotSignupMsg signupCmd )
 
+        NewToLoginFrontend toLoginFrontend ->
+            let
+                ( newLoginFrontendModel, loginCmd ) =
+                    Login.updateFromBackend toLoginFrontend model.loginModel
+            in
+            ( Types.setLoginModel model newLoginFrontendModel, Cmd.map GotLoginMsg loginCmd )
+
 
 view : Model -> Browser.Document FrontendMsg
 view model =
@@ -548,8 +565,10 @@ view model =
                             viewFrontPage model
 
                         SignUpPage ->
-                            -- NOTE this is the player dashboard anyway
                             viewSignUpPage model
+
+                        LoginPage ->
+                            viewLoginPage model
 
                         _ ->
                             viewAnon model maybePersonalityType
@@ -580,6 +599,10 @@ view model =
                         SignUpPage ->
                             -- TODO: make this a redirect instead of a forward
                             viewPlayerDashboardPage model userData
+
+                        LoginPage ->
+                            -- TODO: make this a redirect instead of a forward
+                            viewPlayerDashboardPage model userData
         ]
     }
 
@@ -608,12 +631,19 @@ viewSignUpPage model =
         Signup.view model.signupModel
 
 
+viewLoginPage : Model -> Element FrontendMsg
+viewLoginPage model =
+    Element.map GotLoginMsg <|
+        Login.view model.loginModel
+
+
 type Route
     = GamePage
     | AdminPage
     | PlayerDashboardPage
     | FrontPage
     | SignUpPage
+    | LoginPage
 
 
 routeParser : Parser (Route -> a) a
@@ -624,6 +654,7 @@ routeParser =
         , Parser.map PlayerDashboardPage (Parser.s "dashboard")
         , Parser.map FrontPage (Parser.s "frontpage")
         , Parser.map SignUpPage (Parser.s "signup")
+        , Parser.map LoginPage (Parser.s "login")
         ]
 
 

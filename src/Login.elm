@@ -1,4 +1,4 @@
-module Signup exposing (suite, update, updateFromBackend, view)
+module Login exposing (suite, update, updateFromBackend, view)
 
 import AdminPage
 import Angle
@@ -82,11 +82,11 @@ import ZxcvbnPlus
 
 
 type alias Model =
-    Types.SignupModel
+    Types.LoginModel
 
 
 type alias Msg =
-    Types.SignupMsg
+    Types.LoginMsg
 
 
 stringToMaybe : String -> Maybe String
@@ -154,10 +154,10 @@ update msg model =
             ( model, Cmd.none )
     in
     case msg of
-        Types.NoOpSignup ->
+        Types.NoOpLogin ->
             noop
 
-        Types.SignupUsernameChanged username ->
+        Types.LoginUsernameChanged username ->
             ( { model
                 | username = stringToMaybe username
                 , --clear error on username change
@@ -166,7 +166,7 @@ update msg model =
             , Cmd.none
             )
 
-        Types.SignupPasswordChanged password ->
+        Types.LoginPasswordChanged password ->
             let
                 isValid =
                     validatePassword password
@@ -194,7 +194,7 @@ update msg model =
             , Cmd.none
             )
 
-        Types.SignupSubmit ->
+        Types.LoginSubmit ->
             Maybe.map2
                 (\username { rawPassword } ->
                     let
@@ -204,12 +204,11 @@ update msg model =
                     case hashedPasswordResult of
                         Ok hashedPassword ->
                             ( { model | globalSeed = newSeed }
-                            , Types.SignupNewUserToBackend
+                            , Types.LoginExistingUserToBackend
                                 { username = username
                                 , hashedPassword = hashedPassword
-                                , personalityType = model.personalityType
                                 }
-                                |> Types.SignupSendingToBackend
+                                |> Types.LoginSendingToBackend
                                 |> Lamdera.sendToBackend
                             )
 
@@ -219,9 +218,6 @@ update msg model =
                 model.username
                 model.password
                 |> Maybe.withDefault noop
-
-        Types.SignupPersonalitySelected personalityType ->
-            ( { model | personalityType = personalityType }, Cmd.none )
 
 
 view : Model -> Element Msg
@@ -249,7 +245,7 @@ view model =
             , Font.color Theme.darkHeaderColor
             ]
             [ -- header
-              row [ centerX, width fill ]
+             row [ centerX, width fill ]
                 [ row
                     [ centerX
                     , Font.bold
@@ -259,12 +255,12 @@ view model =
                     , Element.paddingEach { top = 30, left = 20, right = 20, bottom = 0 }
                     ]
                     [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer
-                    , text "Signup"
+                    , text "Login"
                     ]
                 , -- links next to header
                   row [ alignRight, Element.spacing 50, padding 10 ]
                     [ row [ spacing 10, Font.size 12, alignRight ]
-                        [ Element.link [ alignRight, Font.size 10 ] { url = Urls.login, label = text "Returning user?" }
+                        [ Element.link [ alignRight, Font.size 10 ] { url = Urls.signUp, label = text "New user?" }
                         , Element.link
                             [ alignRight
                             , Border.rounded 30
@@ -305,7 +301,7 @@ view model =
                                     False
                     in
                     [ Input.username [ centerY ]
-                        { onChange = Types.SignupUsernameChanged
+                        { onChange = Types.LoginUsernameChanged
                         , text = model.username |> Maybe.withDefault ""
                         , placeholder = Just <| Input.placeholder [] <| text "What they will call you"
                         , label = Input.labelAbove [] <| text "Username"
@@ -317,30 +313,15 @@ view model =
                         |> Maybe.withDefault (text " ")
                     , --password input
                       Input.newPassword [ centerY ]
-                        { onChange = Types.SignupPasswordChanged
+                        { onChange = Types.LoginPasswordChanged
                         , text = model.password |> Maybe.map .rawPassword |> Maybe.withDefault ""
                         , placeholder = Just <| Input.placeholder [] <| text "Strong password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
-                    , --personality type
-                      Input.radioRow [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 10, spacing 20, centerX ]
-                        { onChange = Types.SignupPersonalitySelected
-                        , options =
-                            [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
-                            , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
-                            ]
-                        , selected = Just model.personalityType
-                        , label = Input.labelAbove [ Element.transparent <| not isReadyToSubmit ] (text "Your outlook on life")
-                        }
-                    , --password strength
-                      model.password
-                        |> Maybe.map
-                            (.passwordStrength >> viewPasswordStrength (model.password == Nothing))
-                        |> Maybe.withDefault (el [ Font.size 14 ] <| text " ")
                     , el [ Element.transparent <| not isReadyToSubmit, width fill, paddingXY 0 15 ] <|
                         button [ centerY, Border.rounded 5, Element.transparent <| model.signupSubmitError /= Nothing ]
-                            Types.SignupSubmit
+                            Types.LoginSubmit
                             "Submit"
                     ]
                 ]
@@ -393,21 +374,24 @@ scoreToInt score =
             4
 
 
-updateFromBackend : Types.ToSignupFrontend -> Model -> ( Model, Cmd Msg )
-updateFromBackend toSignup model =
+updateFromBackend : Types.ToLoginFrontend -> Model -> ( Model, Cmd Msg )
+updateFromBackend toLogin model =
     let
         noop =
             ( model, Cmd.none )
     in
-    case toSignup of
-        Types.NoOpToSignupFrontend ->
+    case toLogin of
+        Types.NoOpToLoginFrontend ->
             noop
 
-        Types.SignupRejectedUserExists ->
-            ( { model | signupSubmitError = Just "Username is taken" }, Cmd.none )
+        Types.LoginRejectedUserDoesNotExist ->
+            ( { model | signupSubmitError = Just "Username does not exist" }, Cmd.none )
 
-        Types.SignupAccepted _ ->
-            Debug.todo "branch 'SignupAccepted _' not implemented"
+        Types.LoginRejectedPasswordMismatch ->
+            ( { model | signupSubmitError = Just "Password incorrect" }, Cmd.none )
+
+        Types.LoginAccepted _ ->
+            Debug.todo "branch 'LoginAccepted _' not implemented"
 
 
 stringLenFuzzer : Int -> Int -> Fuzzer String
