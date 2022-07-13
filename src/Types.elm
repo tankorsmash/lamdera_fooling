@@ -1,4 +1,4 @@
-module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, ChatMessageId, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), FrontpageModel, FrontpageMsg(..), FrontpageToBackend(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDataId, PersonalityTypeDict, SignUpModel, SignUpMsg(..), SignUpToBackend(..), Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserClickData, UserData, UserId, adminSendToBackend, buildChatMessageUuuid, createGroup, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initAdminFrontendModel, initBackendModel, initDashboardModel, initFrontendModel, initFrontpageModel, initTeams, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setUserData, stringToPersonalityType)
+module Types exposing (AdminFrontendModel, AdminFrontendMsg(..), AdminToBackend(..), BackendModel, BackendMsg(..), ChatMessage, ChatMessageId, CyclingTimeline, DashboardModel, DashboardMsg(..), DashboardTabType(..), DashboardToBackend(..), FrontendModel, FrontendMsg(..), FrontpageModel, FrontpageMsg(..), FrontpageToBackend(..), Group, GroupId, LabelValue(..), PersonalityType(..), PersonalityTypeDataId, PersonalityTypeDict, SignUpMsg(..), SignupModel, SignupPasswordData, SignupToBackend(..), Team, Teams, TeamsUserClicks, Timelines, ToAdminFrontend(..), ToBackend(..), ToFrontend(..), ToSignupFrontend(..), Upgrade(..), UpgradeType(..), User(..), UserClickData, UserData, UserId, adminSendToBackend, buildChatMessageUuuid, createGroup, createUserData, generateUuid, getGroupNumGroupMembers, getSessionId, getTeamByPersonality, getUserData, getUserGroup, getUsername, initAdminFrontendModel, initBackendModel, initDashboardModel, initFrontendModel, initFrontpageModel, initSignUpModel, initTeams, mapFullUser, mapPreppingUser, mapUserData, otherPersonalityType, personalityTypeToDataId, setAdminFrontendModel, setSignupModel, setUserData, stringToPersonalityType)
 
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -249,12 +249,14 @@ initFrontpageModel url key =
     { url = url, key = key }
 
 
-initSignUpModel : Url -> Key -> SignUpModel
+initSignUpModel : Url -> Key -> SignupModel
 initSignUpModel url key =
     { url = url
     , key = key
     , username = Nothing
     , password = Nothing
+    , globalSeed = Random.initialSeed 12345
+    , signupSubmitError = Nothing
     }
 
 
@@ -319,7 +321,7 @@ type alias FrontendModel =
     , adminFrontendModel : AdminFrontendModel
     , dashboardModel : DashboardModel
     , frontpageModel : FrontpageModel
-    , signupModel : SignUpModel
+    , signupModel : SignupModel
     }
 
 
@@ -434,6 +436,11 @@ setAdminFrontendModel model adminFrontendModel =
     { model | adminFrontendModel = adminFrontendModel }
 
 
+setSignupModel : FrontendModel -> SignupModel -> FrontendModel
+setSignupModel model signupFrontendModel =
+    { model | signupModel = signupFrontendModel }
+
+
 type alias AdminFrontendModel =
     { url : Url.Url
     , key : Key
@@ -507,7 +514,7 @@ type FrontendMsg
     | GotAdminFrontendMsg AdminFrontendMsg
     | GotPlayerDashboardMsg DashboardMsg
     | GotFrontpageMsg FrontpageMsg
-    | GotSignUpMsg SignUpMsg
+    | GotSignupMsg SignUpMsg
     | SendWantsToCraftXp Int
 
 
@@ -527,6 +534,7 @@ type ToBackend
     | UserWantsToLeaveGroup
     | UserWantsToCraftXp Int
     | AdminSendingToBackend AdminToBackend
+    | SignupSendingToBackend SignupToBackend
 
 
 type BackendMsg
@@ -555,11 +563,13 @@ type alias SignupPasswordData =
     }
 
 
-type alias SignUpModel =
+type alias SignupModel =
     { url : Url.Url
     , key : Browser.Navigation.Key
     , username : Maybe String
     , password : Maybe SignupPasswordData
+    , globalSeed : Random.Seed
+    , signupSubmitError : Maybe String
     }
 
 
@@ -570,8 +580,9 @@ type SignUpMsg
     | SignUpSubmit
 
 
-type SignUpToBackend
+type SignupToBackend
     = NoOpSignUpToBackend
+    | SignupNewUserToBackend { username : String, hashedPassword : Password.HashedPassword }
 
 
 type alias PersonalityTypeDict a =
@@ -609,6 +620,12 @@ type ToAdminFrontend
     | DownloadedChatMessages (List ChatMessage)
 
 
+type ToSignupFrontend
+    = NoOpToSignupFrontend
+    | SignupRejectedUserExists
+    | SignupAccepted User
+
+
 type ToFrontend
     = NoOpToFrontend
     | NewTotalClicks Int
@@ -620,3 +637,4 @@ type ToFrontend
     | NewTick Time.Posix
     | NewAllChatMessages (List ChatMessage)
     | NewToAdminFrontend ToAdminFrontend
+    | NewToSignupFrontend ToSignupFrontend

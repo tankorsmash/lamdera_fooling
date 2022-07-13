@@ -418,13 +418,13 @@ update msg model =
             , Cmd.map GotFrontpageMsg frontpageCmd
             )
 
-        GotSignUpMsg signupMsg ->
+        GotSignupMsg signupMsg ->
             let
                 ( newSignUpModel, signupCmd ) =
                     Signup.update signupMsg model.signupModel
             in
             ( { model | signupModel = newSignUpModel }
-            , Cmd.map GotSignUpMsg signupCmd
+            , Cmd.map GotSignupMsg signupCmd
             )
 
         SendWantsToCraftXp numXp ->
@@ -488,6 +488,13 @@ updateFromBackend msg model =
                     AdminPage.updateFromBackend toAdminFrontend model.adminFrontendModel
             in
             ( setAdminFrontendModel model newAdminFrontendModel, Cmd.map GotAdminFrontendMsg adminCmd )
+
+        NewToSignupFrontend toSignupFrontend ->
+            let
+                ( newSignupFrontendModel, signupCmd ) =
+                    Signup.updateFromBackend toSignupFrontend model.signupModel
+            in
+            ( Types.setSignupModel model newSignupFrontendModel, Cmd.map GotSignupMsg signupCmd )
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -597,7 +604,7 @@ viewFrontPage model =
 
 viewSignUpPage : Model -> Element FrontendMsg
 viewSignUpPage model =
-    Element.map GotSignUpMsg <|
+    Element.map GotSignupMsg <|
         Signup.view model.signupModel
 
 

@@ -1,4 +1,4 @@
-module Signup exposing (suite, update, view)
+module Signup exposing (suite, update, updateFromBackend, view)
 
 import AdminPage
 import Angle
@@ -82,7 +82,7 @@ import ZxcvbnPlus
 
 
 type alias Model =
-    Types.SignUpModel
+    Types.SignupModel
 
 
 type alias Msg =
@@ -183,7 +183,29 @@ update msg model =
             ( { model | password = convertedPassword }, Cmd.none )
 
         Types.SignUpSubmit ->
-            Debug.todo "branch 'SignUpSubmit' not implemented"
+            Maybe.map2
+                (\username { rawPassword } ->
+                    let
+                        ( hashedPasswordResult, newSeed ) =
+                            Password.generateHash rawPassword model.globalSeed
+                    in
+                    case hashedPasswordResult of
+                        Ok hashedPassword ->
+                            ( { model | globalSeed = newSeed }
+                            , Types.SignupNewUserToBackend
+                                { username = username
+                                , hashedPassword = hashedPassword
+                                }
+                                |> Types.SignupSendingToBackend
+                                |> Lamdera.sendToBackend
+                            )
+
+                        Err _ ->
+                            ( { model | password = Nothing, globalSeed = newSeed }, Cmd.none )
+                )
+                model.username
+                model.password
+                |> Maybe.withDefault noop
 
 
 view : Model -> Element Msg
@@ -263,6 +285,12 @@ view model =
                         , placeholder = Just <| Input.placeholder [] <| text "What they will call you"
                         , label = Input.labelAbove [] <| text "Username"
                         }
+                    , model.signupSubmitError
+                        |> Maybe.map
+                            (\errorString ->
+                                text errorString
+                            )
+                        |> Maybe.withDefault Element.none
                     , Input.newPassword [ centerY ]
                         { onChange = Types.SignUpPasswordChanged
                         , text = model.password |> Maybe.map .rawPassword |> Maybe.withDefault ""
@@ -326,6 +354,23 @@ scoreToInt score =
 
         ZxcvbnPlus.VeryUnguessable ->
             4
+
+
+updateFromBackend : Types.ToSignupFrontend -> Model -> ( Model, Cmd Msg )
+updateFromBackend toSignup model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
+    case toSignup of
+        Types.NoOpToSignupFrontend ->
+            noop
+
+        Types.SignupRejectedUserExists ->
+            ( { model | signupSubmitError = Just "Username is taken" }, Cmd.none )
+
+        Types.SignupAccepted _ ->
+            Debug.todo "branch 'SignupAccepted _' not implemented"
 
 
 stringLenFuzzer : Int -> Int -> Fuzzer String

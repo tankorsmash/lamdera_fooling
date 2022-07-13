@@ -1115,6 +1115,28 @@ updateFromFrontend sessionId clientId msg model =
                         noop
                 )
 
+        SignupSendingToBackend _ ->
+            Debug.todo "branch 'SignupSendingToBackend _' not implemented"
+
+
+updateFromSignupFrontend : SessionId -> SessionId -> Types.SignupToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromSignupFrontend sessionId clientId msg model =
+    let
+        noop =
+            ( model, Cmd.none )
+    in
+    case msg of
+        NoOpSignUpToBackend ->
+            noop
+
+        SignupNewUserToBackend { username, hashedPassword } ->
+            case getUserByUsername model.users username of
+                Just _ ->
+                    ( model, Lamdera.sendToFrontend clientId (NewToSignupFrontend <| SignupRejectedUserExists) )
+
+                Nothing ->
+                    Debug.todo "branch 'SignupNewUserToBackend _' not implemented"
+
 
 updateFromAdminFrontend : SessionId -> SessionId -> Types.AdminToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromAdminFrontend sessionId clientId msg model =
