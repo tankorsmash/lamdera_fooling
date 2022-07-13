@@ -281,49 +281,59 @@ view model =
                         ]
                         []
                     ]
-                , column [ alignTop, width fill, height fill, paddingXY 100 150, spacing 10, Font.color <| Theme.darkHeaderColor ]
+                , column [ alignTop, width fill, height fill, paddingXY 100 100, spacing 10, Font.color <| Theme.darkHeaderColor ] <|
+                    let
+                        isReadyToSubmit =
+                            case ( model.username, model.password ) of
+                                ( Just _, Just _ ) ->
+                                    True
+
+                                _ ->
+                                    False
+                    in
                     [ Input.username [ centerY ]
                         { onChange = Types.SignUpUsernameChanged
                         , text = model.username |> Maybe.withDefault ""
                         , placeholder = Just <| Input.placeholder [] <| text "What they will call you"
                         , label = Input.labelAbove [] <| text "Username"
                         }
-                    , model.signupSubmitError
+                    , --signup error
+                      model.signupSubmitError
                         |> Maybe.map
                             (\errorString ->
                                 text errorString
                             )
                         |> Maybe.withDefault Element.none
-                    , Input.newPassword [ centerY ]
+                    , --password input
+                      Input.newPassword [ centerY ]
                         { onChange = Types.SignUpPasswordChanged
                         , text = model.password |> Maybe.map .rawPassword |> Maybe.withDefault ""
                         , placeholder = Just <| Input.placeholder [] <| text "Strong password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
-                    , Input.radioRow [ width fill, paddingXY 0 10, spacing 20, centerX]
-                        { onChange = Types.SignUpPersonalitySelected
-                        , options =
-                            [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
-                            , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
-                            ]
-                        , selected = Just model.personalityType
-                        , label = Input.labelAbove [] (text "Your outlook on life")
-                        }
+                    , --personality type
+                      UI.showIf isReadyToSubmit
+                        (Input.radioRow [ width fill, paddingXY 0 10, spacing 20, centerX ]
+                            { onChange = Types.SignUpPersonalitySelected
+                            , options =
+                                [ Input.option Types.Idealistic (el [ width fill ] <| text "Idealistic")
+                                , Input.option Types.Realistic (el [ width fill ] <| text "Realistic")
+                                ]
+                            , selected = Just model.personalityType
+                            , label = Input.labelAbove [] (text "Your outlook on life")
+                            }
+                        )
                     , model.password
                         |> Maybe.map
                             (.passwordStrength >> viewPasswordStrength)
                         |> Maybe.withDefault Element.none
-                    , model.password
-                        |> Maybe.map
-                            (always
-                                (el [ width fill, paddingXY 0 15 ] <|
-                                    button [ centerY, Border.rounded 5 ]
-                                        Types.SignUpSubmit
-                                        "Submit"
-                                )
-                            )
-                        |> Maybe.withDefault Element.none
+                    , UI.showIf isReadyToSubmit
+                        (el [ width fill, paddingXY 0 15 ] <|
+                            button [ centerY, Border.rounded 5 ]
+                                Types.SignUpSubmit
+                                "Submit"
+                        )
                     ]
                 ]
             ]
