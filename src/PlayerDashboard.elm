@@ -510,19 +510,6 @@ sectionHeader headerTxt =
         ]
 
 
-
--- TODO generate this on the model, since we'll need to generate a new one
--- viewHash : String -> Element Msg
--- viewHash password =
---     Password.generateHash password (Random.initialSeed 12345)
---         |> Tuple.first
---         >> Result.map Password.getHash
---         |> Result.withDefault ""
---         |> Debug.toString
---         |> text
---
-
-
 viewActions : DashboardModel -> UserData -> Element Msg
 viewActions model userData =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
