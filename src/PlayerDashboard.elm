@@ -208,6 +208,7 @@ viewChat userChatMessage allChatMessages lastTick =
                 , width fill
                 , UI.onEnter DashboardChatInputSent
                 , UI.defineHtmlId "chat-message-input"
+                , UI.scaled_font 1
                 ]
                 { onChange = Just >> Types.DashboardChatInputChanged
                 , text = userChatMessage |> Maybe.withDefault ""
@@ -215,7 +216,6 @@ viewChat userChatMessage allChatMessages lastTick =
                     Just
                         (Input.placeholder
                             [ Font.color Theme.borderColor
-                            , UI.scaled_font 1
                             , Element.moveRight 7
                             ]
                          <|
