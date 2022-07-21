@@ -10,6 +10,7 @@ import Color
 import Dict
 import Duration
 import Easings
+import Element.Lazy as Lazy
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
@@ -610,31 +611,31 @@ view model =
 viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
 viewPlayerDashboardPage model userData =
     Element.map GotPlayerDashboardMsg <|
-        Dashboard.view model model.dashboardModel userData
+        Lazy.lazy3 Dashboard.view model model.dashboardModel userData
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg
 viewAdminPage model userData =
     Element.map GotAdminFrontendMsg <|
-        AdminPage.view model.adminFrontendModel
+        Lazy.lazy AdminPage.view model.adminFrontendModel
 
 
 viewFrontPage : Model -> Element FrontendMsg
 viewFrontPage model =
     Element.map GotFrontpageMsg <|
-        Frontpage.view model.frontpageModel
+        Lazy.lazy Frontpage.view model.frontpageModel
 
 
 viewSignUpPage : Model -> Element FrontendMsg
 viewSignUpPage model =
     Element.map GotSignupMsg <|
-        Signup.view model.signupModel
+        Lazy.lazy Signup.view model.signupModel
 
 
 viewLoginPage : Model -> Element FrontendMsg
 viewLoginPage model =
     Element.map GotLoginMsg <|
-        Login.view model.loginModel
+        Lazy.lazy Login.view model.loginModel
 
 
 type Route

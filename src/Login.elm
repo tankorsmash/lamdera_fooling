@@ -220,6 +220,26 @@ update msg model =
                 |> Maybe.withDefault noop
 
 
+noArgsLazy : Element msg -> Element msg
+noArgsLazy element =
+    Lazy.lazy (always element) ()
+
+
+viewHeader : Element Msg
+viewHeader =
+    row
+        [ centerX
+        , Font.bold
+        , Theme.fontFamilyPoppins
+        , spacing 5
+        , Font.size 30
+        , Element.paddingEach { top = 30, left = 20, right = 20, bottom = 0 }
+        ]
+        [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer
+        , text "Login"
+        ]
+
+
 view : Model -> Element Msg
 view model =
     column [ width fill, height fill, padding 100, Background.color Theme.offWhiteColor ]
@@ -245,18 +265,8 @@ view model =
             , Font.color Theme.darkHeaderColor
             ]
             [ -- header
-             row [ centerX, width fill ]
-                [ row
-                    [ centerX
-                    , Font.bold
-                    , Theme.fontFamilyPoppins
-                    , spacing 5
-                    , Font.size 30
-                    , Element.paddingEach { top = 30, left = 20, right = 20, bottom = 0 }
-                    ]
-                    [ el [ Font.size 25 ] <| UI.fontAwesome <| FAS.arrowPointer
-                    , text "Login"
-                    ]
+              row [ centerX, width fill ] <|
+                [ noArgsLazy viewHeader
                 , -- links next to header
                   row [ alignRight, Element.spacing 50, padding 10 ]
                     [ row [ spacing 10, Font.size 12, alignRight ]
@@ -303,7 +313,7 @@ view model =
                     [ Input.username [ centerY ]
                         { onChange = Types.LoginUsernameChanged
                         , text = model.username |> Maybe.withDefault ""
-                        , placeholder = Just <| Input.placeholder [] <| text "What they will call you"
+                        , placeholder = Just <| Input.placeholder [] <| text "Who are you again?"
                         , label = Input.labelAbove [] <| text "Username"
                         }
                     , --signup error
@@ -315,7 +325,7 @@ view model =
                       Input.newPassword [ centerY ]
                         { onChange = Types.LoginPasswordChanged
                         , text = model.password |> Maybe.map .rawPassword |> Maybe.withDefault ""
-                        , placeholder = Just <| Input.placeholder [] <| text "Strong password"
+                        , placeholder = Just <| Input.placeholder [] <| text "Your password"
                         , label = Input.labelAbove [] <| text "Password"
                         , show = False
                         }
