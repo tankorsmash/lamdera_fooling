@@ -1465,7 +1465,7 @@ with the live data
 processChatMessages : List User -> List ChatMessage -> List ChatMessage
 processChatMessages users allChatMessages =
     allChatMessages
-        |> List.take 5
+        |> List.take 15
         |> List.map
             (\({ userData } as chatMessage) ->
                 getUserByUsername users userData.username
