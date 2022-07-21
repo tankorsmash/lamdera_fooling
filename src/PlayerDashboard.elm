@@ -132,63 +132,65 @@ viewSidebar model =
         ]
 
 
+chatDivider : Element Msg
+chatDivider =
+    row [ width fill, padding 5 ]
+        [ el [ width <| fillPortion 1 ] <| text ""
+        , el
+            [ width <| fillPortion 8
+            , UI.border_bottom 1
+            , paddingXY 10 0
+            , centerX
+            , Border.color Theme.borderColor
+            ]
+          <|
+            text ""
+        , el [ width <| fillPortion 1 ] <| text ""
+        ]
+
+
+viewChatMessage : Time.Posix -> ChatMessage -> Element Msg
+viewChatMessage lastTick chatMessage =
+    row [ width fill, spacing 10, UI.scaled_font 1 ]
+        [ --profile pic
+          el
+            [ Background.color <| UI.hex_to_color "E4E5E7"
+            , width (px 48)
+            , height (px 48)
+            , Border.rounded 100
+            , --online dot
+              Element.inFront <|
+                UI.renderIf chatMessage.userData.isOnline <|
+                    el
+                        [ width (px 16)
+                        , height (px 16)
+                        , Background.color <| UI.color_pastel_green_4
+                        , Border.rounded 100
+                        , alignBottom
+                        , alignRight
+                        ]
+                    <|
+                        text " "
+            ]
+          <|
+            text " "
+        , --chat content
+          column [ width fill, spacing 5 ]
+            [ --user image
+              paragraph [ Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
+            , -- chat text
+              paragraph [ width fill ] [ text <| chatMessage.message ]
+            ]
+        , --date
+          column [ alignTop ]
+            [ --NOTE not paragraph because we dont want the text to wrap
+              el [ centerY, Font.size 10 ] <| text <| relativeTime lastTick chatMessage.date
+            ]
+        ]
+
+
 viewChat : Maybe String -> List Types.ChatMessage -> Time.Posix -> Element Msg
 viewChat userChatMessage allChatMessages lastTick =
-    let
-        viewChatMessage : ChatMessage -> Element Msg
-        viewChatMessage chatMessage =
-            row [ width fill, spacing 10, UI.scaled_font 1 ]
-                [ --profile pic
-                  el
-                    [ Background.color <| UI.hex_to_color "E4E5E7"
-                    , width (px 48)
-                    , height (px 48)
-                    , Border.rounded 100
-                    , --online dot
-                      Element.inFront <|
-                        UI.renderIf chatMessage.userData.isOnline <|
-                            el
-                                [ width (px 16)
-                                , height (px 16)
-                                , Background.color <| UI.color_pastel_green_4
-                                , Border.rounded 100
-                                , alignBottom
-                                , alignRight
-                                ]
-                            <|
-                                text " "
-                    ]
-                  <|
-                    text " "
-                , --chat content
-                  column [ width fill, spacing 5 ]
-                    [ --user image
-                      paragraph [ Font.color Theme.darkHeaderColor, Theme.fontFamilyPoppins, UI.scaled_font 1 ] [ text <| chatMessage.userData.username ]
-                    , -- chat text
-                      paragraph [ width fill ] [ text <| chatMessage.message ]
-                    ]
-                , --date
-                  column [ alignTop ]
-                    [ --NOTE not paragraph because we dont want the text to wrap
-                      el [ centerY, Font.size 10 ] <| text <| relativeTime lastTick chatMessage.date
-                    ]
-                ]
-
-        chatDivider =
-            row [ width fill, padding 5 ]
-                [ el [ width <| fillPortion 1 ] <| text ""
-                , el
-                    [ width <| fillPortion 8
-                    , UI.border_bottom 1
-                    , paddingXY 10 0
-                    , centerX
-                    , Border.color Theme.borderColor
-                    ]
-                  <|
-                    text ""
-                , el [ width <| fillPortion 1 ] <| text ""
-                ]
-    in
     column [ width fill, height fill, paddingXY 0 10 ]
         [ --header
           row [ width fill, padding 10 ]
@@ -223,7 +225,7 @@ viewChat userChatMessage allChatMessages lastTick =
                 }
         , column [ width fill, height fill, Element.scrollbarY, Font.color Theme.textColor, spacing 10, padding 10 ] <|
             (allChatMessages
-                |> List.map viewChatMessage
+                |> List.map (viewChatMessage lastTick)
                 |> List.intersperse chatDivider
             )
         ]
