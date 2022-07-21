@@ -257,7 +257,7 @@ view allChatMessages lastTick model userData =
                 ]
                 [ el [ height fill, paddingXY 30 20 ] <|
                     viewSidebar model
-                , el [ width (fillPortion 5), height fill, paddingXY 0 20 ] <|
+                , el [ width (fillPortion 3), height fill, paddingXY 0 20 ] <|
                     viewChat model.userChatMessage allChatMessages lastTick
                 , el [ height fill, padding 15 ] <|
                     verticalDivider
