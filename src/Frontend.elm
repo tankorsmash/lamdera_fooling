@@ -476,6 +476,9 @@ updateFromBackend msg model =
         NewUser user ->
             ( { model | user = user }, Cmd.none )
 
+        LoggedUserOut newAnonUser ->
+            ( { model | user = newAnonUser }, Nav.pushUrl model.key "/login" )
+
         NewTotalUsers totalUsers ->
             ( { model | totalUsers = totalUsers }, Cmd.none )
 
@@ -508,11 +511,16 @@ updateFromBackend msg model =
             ( Types.setSignupModel model newSignupFrontendModel, Cmd.map GotSignupMsg signupCmd )
 
         NewToLoginFrontend toLoginFrontend ->
-            let
-                ( newLoginFrontendModel, loginCmd ) =
-                    Login.updateFromBackend toLoginFrontend model.loginModel
-            in
-            ( Types.setLoginModel model newLoginFrontendModel, Cmd.map GotLoginMsg loginCmd )
+            case toLoginFrontend of
+                Types.LoginAccepted fullUser ->
+                    ( { model | user = fullUser }, Nav.pushUrl model.key "/dashboard" )
+
+                _ ->
+                    let
+                        ( newLoginFrontendModel, loginCmd ) =
+                            Login.updateFromBackend toLoginFrontend model.loginModel
+                    in
+                    ( Types.setLoginModel model newLoginFrontendModel, Cmd.map GotLoginMsg loginCmd )
 
 
 routeToTitle : Route -> String

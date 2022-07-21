@@ -76,6 +76,7 @@ import Types
         )
 import UUID
 import Url
+import Url.Builder as UrlBuilder
 import Url.Parser as Parser exposing ((</>), Parser)
 import Urls
 import ZxcvbnPlus
@@ -270,8 +271,7 @@ view model =
                 , -- links next to header
                   row [ alignRight, Element.spacing 50, padding 10 ]
                     [ row [ spacing 10, Font.size 12, alignRight ]
-                        [ Element.link [ alignRight, Font.size 10 ] { url = Urls.signUp, label = text "New user?" }
-                        , Element.link
+                        [ Element.link
                             [ alignRight
                             , Border.rounded 30
                             , Border.width 2
@@ -400,8 +400,9 @@ updateFromBackend toLogin model =
         Types.LoginRejectedPasswordMismatch ->
             ( { model | signupSubmitError = Just "Password incorrect" }, Cmd.none )
 
-        Types.LoginAccepted _ ->
-            Debug.todo "branch 'LoginAccepted _' not implemented"
+        Types.LoginAccepted fullUser ->
+            -- handled in Frontend.elm, so we can safely ignore it (in fact it should never arrive here)
+            noop
 
 
 stringLenFuzzer : Int -> Int -> Fuzzer String

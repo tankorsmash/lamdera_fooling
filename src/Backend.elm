@@ -948,7 +948,7 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( newModel
             , Cmd.batch
-                [ Lamdera.sendToFrontend sessionId <| NewUser toCreate
+                [ Lamdera.sendToFrontend sessionId <| LoggedUserOut toCreate
                 , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newModel.users))
                 ]
             )
@@ -1178,7 +1178,8 @@ updateFromLoginFrontend sessionId clientId msg model =
                     in
                     ( model
                     , Cmd.batch
-                        [ Lamdera.sendToFrontend sessionId (NewUser existingUser)
+                        [ Lamdera.sendToFrontend sessionId (NewToLoginFrontend <| LoginAccepted existingUser)
+                        -- [ Lamdera.sendToFrontend sessionId (NewUser existingUser)
 
                         --TODO mark this user as online by updating the user and telling everyone they're online
                         -- , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newUsers))

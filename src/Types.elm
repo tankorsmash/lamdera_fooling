@@ -683,6 +683,7 @@ type ToFrontend
     | NewTotalClicks Int
     | NewTeams Teams
     | NewUser User
+    | LoggedUserOut User
     | NewTotalUsers Int
     | NewClicksByUser Int
     | NewUsernamesByPersonalityTypes TeamsUserClicks
