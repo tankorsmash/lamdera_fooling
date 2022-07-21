@@ -625,16 +625,16 @@ updateFromFrontend sessionId clientId msg model =
         noop =
             ( model, Cmd.none )
 
-        getCurrentUserData : Maybe UserData
-        getCurrentUserData =
-            getUserBySessionId model.users sessionId
-                |> Maybe.andThen getUserData
-
         mapCurrentUserData : (UserData -> ( Model, Cmd BackendMsg )) -> ( Model, Cmd BackendMsg )
         mapCurrentUserData callback =
             getCurrentUserData
                 |> Maybe.map callback
                 |> Maybe.withDefault noop
+
+        getCurrentUserData : Maybe UserData
+        getCurrentUserData =
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
     in
     case msg of
         NoOpToBackend ->
@@ -1121,6 +1121,56 @@ updateFromFrontend sessionId clientId msg model =
         LoginSendingToBackend loginMsg ->
             updateFromLoginFrontend sessionId clientId loginMsg model
 
+        DashboardSendingToBackend dashboardMsg ->
+            updateFromDashboardFrontend sessionId clientId dashboardMsg model
+
+
+updateFromDashboardFrontend : SessionId -> ClientId -> DashboardToBackend -> Model -> ( Model, Cmd BackendMsg )
+updateFromDashboardFrontend sessionId clientId dashboardMsg model =
+    let
+        noop =
+            ( model, Cmd.none )
+
+        mapCurrentUserData : (UserData -> ( Model, Cmd BackendMsg )) -> ( Model, Cmd BackendMsg )
+        mapCurrentUserData callback =
+            getCurrentUserData
+                |> Maybe.map callback
+                |> Maybe.withDefault noop
+
+        getCurrentUserData : Maybe UserData
+        getCurrentUserData =
+            getUserBySessionId model.users sessionId
+                |> Maybe.andThen getUserData
+    in
+    case dashboardMsg of
+        NoOpDashboardToBackend ->
+            noop
+
+        DashboardUserSentMessage chatContent ->
+            mapCurrentUserData
+                (\userData ->
+                    let
+                        newMessage : ChatMessage
+                        newMessage =
+                            { userData = userData
+                            , message = chatContent
+                            , date = model.lastTick
+                            , uuid = buildChatMessageUuuid userData.username chatContent model.lastTick
+                            }
+
+                        newAllChatMessages =
+                            newMessage :: model.allChatMessages
+                    in
+                    ( { model | allChatMessages = newAllChatMessages }
+                    , Cmd.batch
+                        [ Lamdera.broadcast <| NewAllChatMessages <| processChatMessages model.users newAllChatMessages
+
+                        -- TODO figure out if broadcasting to everyone is a good idea, or if there's away to register admins who are listening
+                        , Lamdera.broadcast <| NewToAdminFrontend <| DownloadedChatMessages <| newAllChatMessages
+                        ]
+                    )
+                )
+
 
 updateFromSignupFrontend : SessionId -> SessionId -> Types.SignupToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromSignupFrontend sessionId clientId msg model =
@@ -1179,8 +1229,8 @@ updateFromLoginFrontend sessionId clientId msg model =
                     ( model
                     , Cmd.batch
                         [ Lamdera.sendToFrontend sessionId (NewToLoginFrontend <| LoginAccepted existingUser)
-                        -- [ Lamdera.sendToFrontend sessionId (NewUser existingUser)
 
+                        -- [ Lamdera.sendToFrontend sessionId (NewUser existingUser)
                         --TODO mark this user as online by updating the user and telling everyone they're online
                         -- , Lamdera.broadcast (NewUsernamesByPersonalityTypes (convertUsersToTeamsUserClicks newUsers))
                         ]

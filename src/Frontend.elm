@@ -649,7 +649,7 @@ view model =
 viewPlayerDashboardPage : Model -> UserData -> Element FrontendMsg
 viewPlayerDashboardPage model userData =
     Element.map GotPlayerDashboardMsg <|
-        Lazy.lazy3 Dashboard.view model model.dashboardModel userData
+        Lazy.lazy4 Dashboard.view model.allChatMessages model.lastTick model.dashboardModel userData
 
 
 viewAdminPage : Model -> UserData -> Element FrontendMsg

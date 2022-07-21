@@ -307,12 +307,19 @@ type alias DashboardModel =
     { key : Key
     , url : Url.Url
     , currentTabType : DashboardTabType
+    , userChatMessage : Maybe String
+    , allChatMessages : List ChatMessage
     }
 
 
 initDashboardModel : Url -> Key -> DashboardModel
 initDashboardModel url key =
-    { url = url, key = key, currentTabType = DashboardActionsTabType }
+    { url = url
+    , key = key
+    , currentTabType = DashboardActionsTabType
+    , userChatMessage = Nothing
+    , allChatMessages = []
+    }
 
 
 type alias FrontendModel =
@@ -479,10 +486,13 @@ type DashboardMsg
     = NoOpDashboardFrontend
     | ChangeTab DashboardTabType
     | LogUserOutFromDashboard
-
+    | DashboardChatInputChanged (Maybe String)
+    | DashboardChatInputSent
+    | DashboardFocusError (Result Browser.Dom.Error ())
 
 type DashboardToBackend
     = NoOpDashboardToBackend
+    | DashboardUserSentMessage String
 
 
 type AdminFrontendMsg
@@ -556,6 +566,7 @@ type ToBackend
     | AdminSendingToBackend AdminToBackend
     | SignupSendingToBackend SignupToBackend
     | LoginSendingToBackend LoginToBackend
+    | DashboardSendingToBackend DashboardToBackend
 
 
 type BackendMsg

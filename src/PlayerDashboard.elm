@@ -1,6 +1,5 @@
-module PlayerDashboard exposing (update, view, button)
+module PlayerDashboard exposing (button, update, view)
 
-import Theme
 import AdminPage
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -39,6 +38,7 @@ import Process
 import Random
 import String.Extra
 import Task
+import Theme
 import Time
 import Types
     exposing
@@ -77,8 +77,6 @@ type alias Model =
 
 type alias Msg =
     DashboardMsg
-
-
 
 
 clickableSidebarIcon : FA.Icon a -> msg -> Element msg
@@ -134,10 +132,8 @@ viewSidebar model =
         ]
 
 
-
-
-viewChat : Model -> List Types.ChatMessage -> Time.Posix -> Element Msg
-viewChat model allChatMessages lastTick =
+viewChat : Maybe String -> List Types.ChatMessage -> Time.Posix -> Element Msg
+viewChat userChatMessage allChatMessages lastTick =
     let
         viewChatMessage : ChatMessage -> Element Msg
         viewChatMessage chatMessage =
@@ -206,11 +202,13 @@ viewChat model allChatMessages lastTick =
                 [ Border.rounded 30
                 , Border.color Theme.borderColor
                 , Background.color Theme.offWhiteBackgroundColor
-                , padding 3
+                , paddingXY 20 5
                 , width fill
+                , UI.onEnter DashboardChatInputSent
+                , UI.defineHtmlId "chat-message-input"
                 ]
-                { onChange = always NoOpDashboardFrontend
-                , text = ""
+                { onChange = Just >> Types.DashboardChatInputChanged
+                , text = userChatMessage |> Maybe.withDefault ""
                 , placeholder =
                     Just
                         (Input.placeholder
@@ -243,8 +241,8 @@ verticalDivider =
         ]
 
 
-view : FrontendModel -> DashboardModel -> UserData -> Element Msg
-view tempFrontendModel model userData =
+view : List ChatMessage -> Time.Posix -> DashboardModel -> UserData -> Element Msg
+view allChatMessages lastTick model userData =
     let
         actualView =
             row
@@ -256,7 +254,7 @@ view tempFrontendModel model userData =
                 [ el [ height fill, paddingXY 30 20 ] <|
                     viewSidebar model
                 , el [ width (fillPortion 5), height fill, paddingXY 0 20 ] <|
-                    viewChat model tempFrontendModel.allChatMessages tempFrontendModel.lastTick
+                    viewChat model.userChatMessage allChatMessages lastTick
                 , el [ height fill, padding 15 ] <|
                     verticalDivider
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
@@ -292,8 +290,6 @@ viewUpgrades model userData =
         , el [ alignLeft ] <|
             actionButtonWithAttrs [ width (px 150) ] NoOpDashboardFrontend "Craft XP"
         ]
-
-
 
 
 actionButtonWithAttrs attrs msg txt =
@@ -536,7 +532,22 @@ viewActions model userData =
         ]
 
 
-update : Types.DashboardMsg -> Model -> Types.UserData -> ( Model, Cmd msg )
+{-| delays a few ms to give it time to redraw, seems like 0ms and 1ms aren't long enough
+-}
+focusElement : String -> Cmd Msg
+focusElement htmlId =
+    Process.sleep 10
+        |> Task.andThen
+            (always (Browser.Dom.focus htmlId))
+        |> Task.attempt DashboardFocusError
+
+
+focusChatInput : Cmd Msg
+focusChatInput =
+    focusElement "chat-message-input"
+
+
+update : Types.DashboardMsg -> Model -> Types.UserData -> ( Model, Cmd Msg )
 update msg model userData =
     let
         noop =
@@ -552,3 +563,34 @@ update msg model userData =
         LogUserOutFromDashboard ->
             -- the Frontend.elm is handling this, so we dont have to do anything
             noop
+
+        DashboardChatInputChanged userChatMessage ->
+            ( { model | userChatMessage = userChatMessage }, Cmd.none )
+
+        DashboardChatInputSent ->
+            let
+                _ =
+                    Debug.log "input sent" 123
+            in
+            ( { model | userChatMessage = Nothing }
+            , model.userChatMessage
+                |> Maybe.map
+                    (\chatMsg ->
+                        Cmd.batch
+                            [ Lamdera.sendToBackend <|
+                                (Types.DashboardSendingToBackend <|
+                                    DashboardUserSentMessage chatMsg
+                                )
+                            , focusChatInput
+                            ]
+                    )
+                |> Maybe.withDefault Cmd.none
+            )
+
+        DashboardFocusError error ->
+            case error of
+                Ok _ ->
+                    noop
+
+                Err (Browser.Dom.NotFound errText) ->
+                    noop
