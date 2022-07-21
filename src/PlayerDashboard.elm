@@ -221,9 +221,11 @@ viewChat userChatMessage allChatMessages lastTick =
                         )
                 , label = Input.labelHidden "search chat"
                 }
-        , column [ width fill, Font.color Theme.textColor, spacing 10, padding 10 ] <|
-            List.intersperse chatDivider <|
-                List.map viewChatMessage allChatMessages
+        , column [ width fill, height fill, Element.scrollbarY, Font.color Theme.textColor, spacing 10, padding 10 ] <|
+            (allChatMessages
+                |> List.map viewChatMessage
+                |> List.intersperse chatDivider
+            )
         ]
 
 
