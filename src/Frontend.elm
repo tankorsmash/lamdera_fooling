@@ -10,13 +10,13 @@ import Color
 import Dict
 import Duration
 import Easings
-import Element.Lazy as Lazy
 import Element exposing (Color, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, column, el, explain, fill, fillPortion, height, modular, padding, paddingXY, paragraph, rgb, rgb255, row, scrollbars, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import Element.Lazy as Lazy
 import External.Animator.Animator as Animator
 import Frontpage
 import Html exposing (div, span)
@@ -515,6 +515,32 @@ updateFromBackend msg model =
             ( Types.setLoginModel model newLoginFrontendModel, Cmd.map GotLoginMsg loginCmd )
 
 
+routeToTitle : Route -> String
+routeToTitle route =
+    let
+        prefix =
+            case route of
+                GamePage ->
+                    "Play"
+
+                AdminPage ->
+                    "Admin"
+
+                PlayerDashboardPage ->
+                    "Dashboard"
+
+                FrontPage ->
+                    "FrontPage"
+
+                SignUpPage ->
+                    "Signup"
+
+                LoginPage ->
+                    "Login"
+    in
+    prefix ++ " | Clikr"
+
+
 view : Model -> Browser.Document FrontendMsg
 view model =
     let
@@ -533,8 +559,13 @@ view model =
                   <|
                     Element.none
                 ]
+
+        route : Route
+        route =
+            Parser.parse routeParser model.url
+                |> Maybe.withDefault GamePage
     in
-    { title = "Clikr | TankorSmash"
+    { title = routeToTitle route
     , body =
         [ elm_ui_hack_layout
         , Element.layoutWith
@@ -555,9 +586,8 @@ view model =
             ]
           <|
             let
-                route =
-                    Parser.parse routeParser model.url
-                        |> Maybe.withDefault GamePage
+                _ =
+                    123
             in
             case model.user of
                 AnonymousUser maybePersonalityType ->
