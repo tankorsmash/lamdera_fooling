@@ -1429,17 +1429,21 @@ actionArea deviceClass lastTick xp numGroupMembers ({ currentLevels } as userDat
 
                 energizeCycleCapLevel =
                     currentLevels.energizeCycleCap |> getCurrentLevelLevel
+
+                duration =
+                    basicBonuses.energize.durationMs energizeLevel
             in
             column [ centerX, width fill, spacing 10 ]
                 [ viewCycleButton
                     (ClickPricing.getCurrentLevelCycleProgress
                         currentLevels.energize
                         lastTick
-                        (basicBonuses.energize.durationMs energizeLevel)
+                        duration
                     )
-                    (ClickPricing.getAvailableCyclesCurrentLevel currentLevels.energize
+                    (ClickPricing.getAvailableCyclesCurrentLevel
+                        currentLevels.energize
                         lastTick
-                        (basicBonuses.energize.durationMs energizeLevel)
+                        duration
                         |> Maybe.map
                             (min <|
                                 basicBonuses.energize.cycleCap energizeCycleCapLevel
