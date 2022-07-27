@@ -465,8 +465,7 @@ discussAction : DashboardModel -> Element Msg
 discussAction model =
     -- TODO use actual values
     row [ width fill ]
-        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Discuss"
-        , viewProgressButton (ClickPricing.Progress 0.45) 99 ( "", NoOpDashboardFrontend )
+        [ viewProgressButton (ClickPricing.Progress 0.45) 99 ( "Discuss", NoOpDashboardFrontend )
         ]
 
 
@@ -474,8 +473,7 @@ argueAction : DashboardModel -> Element Msg
 argueAction model =
     -- TODO use actual values
     row [ width fill ]
-        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Argue"
-        , viewProgressButton (ClickPricing.Progress 0.95) 12 ( "", NoOpDashboardFrontend )
+        [ viewProgressButton (ClickPricing.Progress 0.95) 12 ( "Argue", NoOpDashboardFrontend )
         ]
 
 
@@ -483,8 +481,7 @@ energizeAction : DashboardModel -> Element Msg
 energizeAction model =
     -- TODO use actual values
     row [ width fill ]
-        [ actionButtonWithAttrs [] NoOpDashboardFrontend "Energize"
-        , viewProgressButton (ClickPricing.Progress 0.25) 23 ( "", NoOpDashboardFrontend )
+        [ viewProgressButton (ClickPricing.Progress 0.25) 23 ( "Energize", NoOpDashboardFrontend )
         ]
 
 
