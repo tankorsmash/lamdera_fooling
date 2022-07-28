@@ -309,6 +309,8 @@ type alias DashboardModel =
     , currentTabType : DashboardTabType
     , userChatMessage : Maybe String
     , allChatMessages : List ChatMessage
+    -- no userData here, because we're passing it down from the Frontend in the view and update
+    -- , userData : UserData
     }
 
 
@@ -489,6 +491,7 @@ type DashboardMsg
     | DashboardChatInputChanged (Maybe String)
     | DashboardChatInputSent
     | DashboardFocusError (Result Browser.Dom.Error ())
+
 
 type DashboardToBackend
     = NoOpDashboardToBackend

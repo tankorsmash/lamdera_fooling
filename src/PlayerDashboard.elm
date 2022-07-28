@@ -264,7 +264,7 @@ view allChatMessages lastTick model userData =
                 , el [ width (fillPortion 6), height fill, paddingXY 10 20 ] <|
                     case model.currentTabType of
                         DashboardActionsTabType ->
-                            viewActions model userData
+                            viewActions model userData lastTick
 
                         DashboardUpgradesTabType ->
                             viewUpgrades model userData
@@ -461,27 +461,38 @@ viewProgressButton progress clicksOutput ( actionText, actionMsg ) =
         ]
 
 
-discussAction : DashboardModel -> Element Msg
-discussAction model =
-    -- TODO use actual values
+discussAction : DashboardModel -> CurrentLevel -> Time.Posix -> Element Msg
+discussAction model currentLevel lastTick =
+    let
+        progress =
+            getCurrentLevelProgress currentLevel lastTick
+    in
     row [ width fill ]
-        [ viewProgressButton (ClickPricing.Progress 0.45) 99 ( "Discuss", NoOpDashboardFrontend )
+        [ viewProgressButton progress 99 ( "Discuss", NoOpDashboardFrontend )
         ]
 
 
-argueAction : DashboardModel -> Element Msg
-argueAction model =
+argueAction : DashboardModel -> CurrentLevel -> Time.Posix -> Element Msg
+argueAction model currentLevel lastTick =
     -- TODO use actual values
+    let
+        progress =
+            getCurrentLevelProgress currentLevel lastTick
+    in
     row [ width fill ]
-        [ viewProgressButton (ClickPricing.Progress 0.95) 12 ( "Argue", NoOpDashboardFrontend )
+        [ viewProgressButton progress 12 ( "Argue", NoOpDashboardFrontend )
         ]
 
 
-energizeAction : DashboardModel -> Element Msg
-energizeAction model =
+energizeAction : DashboardModel -> CurrentLevel -> Time.Posix -> Element Msg
+energizeAction model currentLevel lastTick =
     -- TODO use actual values
+    let
+        progress =
+            getCurrentLevelProgress currentLevel lastTick
+    in
     row [ width fill ]
-        [ viewProgressButton (ClickPricing.Progress 0.25) 23 ( "Energize", NoOpDashboardFrontend )
+        [ viewProgressButton progress 23 ( "Energize", NoOpDashboardFrontend )
         ]
 
 
@@ -507,15 +518,15 @@ sectionHeader headerTxt =
         ]
 
 
-viewActions : DashboardModel -> UserData -> Element Msg
-viewActions model userData =
+viewActions : DashboardModel -> UserData -> Time.Posix -> Element Msg
+viewActions model { currentLevels } lastTick =
     column [ width fill, height fill, paddingXY 0 10, spacing 20 ]
         [ -- header row
           sectionHeader "Actions"
         , column [ width fill, Element.paddingEach { top = 0, right = 40, bottom = 10, left = 0 }, spacing 20 ]
-            [ discussAction model
-            , argueAction model
-            , energizeAction model
+            [ discussAction model currentLevels.discuss lastTick
+            , argueAction model currentLevels.argue lastTick
+            , energizeAction model currentLevels.energize lastTick
             ]
         ]
 
